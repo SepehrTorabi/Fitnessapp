@@ -8,6 +8,7 @@ import { useAuthStore } from '@/stores/auth'
 import type { DashboardData } from '@/api/types'
 import WeeklyChart from '@/components/WeeklyChart.vue'
 import MacroBars from '@/components/MacroBars.vue'
+import { DsAlert, DsBadge, DsButton, DsCard, DsStatCard, DsTable } from '@/design-system/components'
 
 const auth = useAuthStore()
 const { t } = useI18n()
@@ -24,6 +25,8 @@ const remaining = computed(() => {
   const value = today.value?.remainingKcal
   return value === null || value === undefined ? null : Math.round(value)
 })
+
+const isOver = computed(() => remaining.value !== null && remaining.value < 0)
 
 onMounted(async () => {
   try {
@@ -42,55 +45,46 @@ onMounted(async () => {
 
     <!-- Without body data there is no target, and the whole dashboard is empty
          numbers. Say what is missing instead of showing zeroes. -->
-    <div v-if="auth.needsProfile || auth.needsWeight" class="card onboarding">
-      <h2>{{ t('dashboard.onboardingTitle') }}</h2>
-      <p class="muted">
-        {{ auth.needsProfile ? t('dashboard.onboardingProfile') : t('dashboard.onboardingWeight') }}
-      </p>
-      <RouterLink to="/profile">
-        <button type="button">{{ t('dashboard.onboardingButton') }}</button>
+    <DsAlert v-if="auth.needsProfile || auth.needsWeight" status="info" :title="t('dashboard.onboardingTitle')" class="onboarding">
+      {{ auth.needsProfile ? t('dashboard.onboardingProfile') : t('dashboard.onboardingWeight') }}
+
+      <RouterLink to="/profile" class="onboarding-action">
+        <DsButton variant="outline" size="sm" href="/profile">
+          {{ t('dashboard.onboardingButton') }}
+        </DsButton>
       </RouterLink>
-    </div>
+    </DsAlert>
 
     <p v-if="loading" class="muted">{{ t('common.loading') }}</p>
-    <p v-else-if="error" class="alert alert-error">{{ error }}</p>
+    <DsAlert v-else-if="error" status="error">{{ error }}</DsAlert>
 
     <template v-else-if="data && today">
       <div class="grid grid-3 stats">
-        <div class="card">
-          <p class="stat-label">{{ t('dashboard.eatenToday') }}</p>
-          <p class="stat-value">
-            {{ Math.round(today.consumed.kcal) }}<span class="unit">{{ t('common.kcal') }}</span>
-          </p>
-        </div>
-
-        <div class="card">
-          <p class="stat-label">{{ t('dashboard.burned') }}</p>
-          <p class="stat-value">
-            {{ Math.round(today.caloriesBurned) }}<span class="unit">{{ t('common.kcal') }}</span>
-          </p>
-        </div>
-
-        <div class="card">
-          <p class="stat-label">
-            {{ remaining !== null && remaining < 0 ? t('dashboard.overBudget') : t('dashboard.leftToday') }}
-          </p>
-          <p
-            class="stat-value"
-            :class="remaining === null ? '' : remaining < 0 ? 'value-over' : 'value-good'"
-          >
-            {{ remaining === null ? t('common.none') : Math.abs(remaining)
-            }}<span class="unit">{{ t('common.kcal') }}</span>
-          </p>
-          <p v-if="today.target" class="small muted">
-            {{ t('dashboard.budget', { kcal: Math.round(today.budgetKcal ?? 0) }) }}
-          </p>
-        </div>
+        <DsStatCard
+          :label="t('dashboard.eatenToday')"
+          :value="`${Math.round(today.consumed.kcal)} ${t('common.kcal')}`"
+        />
+        <DsStatCard
+          :label="t('dashboard.burned')"
+          :value="`${Math.round(today.caloriesBurned)} ${t('common.kcal')}`"
+        />
+        <DsStatCard
+          :label="isOver ? t('dashboard.overBudget') : t('dashboard.leftToday')"
+          :value="
+            remaining === null
+              ? t('common.none')
+              : `${Math.abs(remaining)} ${t('common.kcal')}`
+          "
+          :trend="remaining === null ? undefined : isOver ? 'down' : 'up'"
+          :trend-label="
+            today.target ? t('dashboard.budget', { kcal: Math.round(today.budgetKcal ?? 0) }) : undefined
+          "
+        />
       </div>
 
       <!-- The week's chart gets the full width: seven bars and their budget
            markers need the room to stay readable. -->
-      <div class="card main">
+      <DsCard class="block">
         <WeeklyChart :days="data.history" />
 
         <!-- A plain link, not a fetch-and-blob: the endpoint is same-origin, so
@@ -99,31 +93,29 @@ onMounted(async () => {
              holds the file in memory. -->
         <div class="export row-between">
           <p class="muted small export-hint">{{ t('dashboard.exportHint') }}</p>
-          <a class="export-button" href="/api/me/export/diary.pdf">
-            <span aria-hidden="true">&#8595;</span> {{ t('dashboard.exportPdf') }}
-          </a>
+          <DsButton variant="outline" size="sm" href="/api/me/export/diary.pdf">
+            {{ t('dashboard.exportPdf') }}
+          </DsButton>
         </div>
-      </div>
+      </DsCard>
 
-      <div class="card main">
+      <DsCard class="block">
         <h3>{{ t('dashboard.macrosToday') }}</h3>
         <MacroBars :consumed="today.consumed" :target="today.target?.macros ?? null" />
 
-        <div v-if="today.target" class="target-detail">
-          <p class="small muted">
-            {{
-              t('dashboard.targetExplain', {
-                target: today.target.targetKcal,
-                bmr: today.target.bmr,
-                tdee: today.target.tdee,
-                formula: t(`formula.${today.target.formula}`),
-              })
-            }}
-          </p>
-        </div>
-      </div>
+        <p v-if="today.target" class="small muted target-detail">
+          {{
+            t('dashboard.targetExplain', {
+              target: today.target.targetKcal,
+              bmr: today.target.bmr,
+              tdee: today.target.tdee,
+              formula: t(`formula.${today.target.formula}`),
+            })
+          }}
+        </p>
+      </DsCard>
 
-      <div class="card">
+      <DsCard class="block">
         <div class="row-between">
           <h3>{{ t('dashboard.todaysEntries') }}</h3>
           <RouterLink to="/diary" class="small">{{ t('dashboard.addSomething') }}</RouterLink>
@@ -133,35 +125,36 @@ onMounted(async () => {
           {{ t('dashboard.nothingToday') }}
         </p>
 
-        <table v-else>
+        <DsTable v-else v-slot="{ styles }">
           <thead>
             <tr>
-              <th>{{ t('dashboard.tableFood') }}</th>
-              <th>{{ t('dashboard.tableMeal') }}</th>
-              <th class="num">{{ t('dashboard.tableAmount') }}</th>
-              <th class="num">{{ t('common.kcal') }}</th>
-              <th class="num">{{ t('dashboard.tableMacros') }}</th>
+              <th :class="styles.headCell" scope="col">{{ t('dashboard.tableFood') }}</th>
+              <th :class="styles.headCell" scope="col">{{ t('dashboard.tableMeal') }}</th>
+              <th :class="[styles.headCell, 'num']" scope="col">{{ t('dashboard.tableAmount') }}</th>
+              <th :class="[styles.headCell, 'num']" scope="col">{{ t('common.kcal') }}</th>
+              <th :class="[styles.headCell, 'num']" scope="col">{{ t('dashboard.tableMacros') }}</th>
             </tr>
           </thead>
           <tbody>
-            <tr v-for="entry in data.recentEntries" :key="entry.id">
-              <td>{{ entry.label }}</td>
-              <td class="muted">{{ t(`meal.${entry.mealType}`) }}</td>
-              <td class="num">{{ entry.quantity }} {{ entry.portionLabel ?? entry.unit }}</td>
-              <td class="num">{{ Math.round(entry.nutrients.kcal) }}</td>
-              <td class="num muted">
+            <tr v-for="entry in data.recentEntries" :key="entry.id" :class="styles.tableRow">
+              <td :class="styles.bodyCell">{{ entry.label }}</td>
+              <td :class="styles.bodyCell">
+                <DsBadge :label="t(`meal.${entry.mealType}`)" />
+              </td>
+              <td :class="[styles.bodyCell, 'num']">
+                {{ entry.quantity }} {{ entry.portionLabel ?? entry.unit }}
+              </td>
+              <td :class="[styles.bodyCell, 'num']">{{ Math.round(entry.nutrients.kcal) }}</td>
+              <td :class="[styles.bodyCell, 'num', 'muted']">
                 {{ Math.round(entry.nutrients.proteinG) }} /
                 {{ Math.round(entry.nutrients.carbsG) }} /
                 {{ Math.round(entry.nutrients.fatG) }}
               </td>
             </tr>
           </tbody>
-        </table>
-      </div>
+        </DsTable>
+      </DsCard>
 
-      <!-- Pluralised by vue-i18n: German and English do not split the singular
-           and plural in the same place, so the whole sentence is one message
-           with two forms rather than a word stitched on at runtime. -->
       <p v-if="data.averages.daysLogged > 0" class="muted small averages">
         {{
           t(
@@ -180,37 +173,25 @@ onMounted(async () => {
 </template>
 
 <style scoped>
-.onboarding { border-left: 3px solid var(--accent); margin-bottom: 16px; }
-.stats { margin-bottom: 16px; }
-.main { margin-bottom: 16px; }
-.unit { font-size: 14px; font-weight: 600; color: var(--text-muted); margin-left: 5px; }
-.value-good { color: var(--good); }
-.value-over { color: var(--over); }
-.target-detail { margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--border); }
-.averages { margin-top: 16px; }
+.onboarding { margin-bottom: var(--spacing-medium); }
+.onboarding-action { display: inline-block; margin-top: var(--spacing-small); }
+.onboarding-action:hover { text-decoration: none; }
+
+.stats { margin-bottom: var(--spacing-medium); }
+.block { margin-bottom: var(--spacing-medium); }
+
+.target-detail {
+  margin: var(--spacing-medium) 0 0;
+  padding-top: var(--spacing-small);
+  border-top: var(--border-width-small) solid var(--border-primary);
+}
 
 .export {
-  margin-top: 18px;
-  padding-top: 14px;
-  border-top: 1px solid var(--border);
+  margin-top: var(--spacing-medium);
+  padding-top: var(--spacing-small);
+  border-top: var(--border-width-small) solid var(--border-primary);
 }
 
 .export-hint { margin: 0; }
-
-.export-button {
-  display: inline-block;
-  padding: 8px 14px;
-  border-radius: var(--radius-sm);
-  background: var(--surface-2);
-  border: 1px solid var(--border);
-  color: var(--text);
-  font-size: 14px;
-  font-weight: 600;
-}
-
-.export-button:hover {
-  border-color: var(--accent);
-  color: var(--accent);
-  text-decoration: none;
-}
+.averages { margin-top: var(--spacing-medium); }
 </style>

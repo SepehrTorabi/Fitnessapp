@@ -1,0 +1,48 @@
+/* Core brand — neutral, professional, universal */
+[data-brand="core"] {
+  --primary-500: #2f6fed;
+  --primary-600: #1e56c4;
+  --primary-700: #123d91;
+  --primary-100: #e4eefd;
+  --primary-200: #b9d2fa;
+  --secondary-400: #6e9cf5;
+
+  --surface-action:           #2f6fed;
+  --surface-action-hover:     #e4eefd;
+  --surface-action-hover-dark:#1e56c4;
+  --text-action:              #1e56c4;
+  --text-action-hover:        #123d91;
+  --border-action:            #2f6fed;
+  --border-action-hover:      #1e56c4;
+  --border-focus:             #2f6fed;
+  --icons-action:             #1e56c4;
+  --icons-action-hover:       #123d91;
+
+  --font-display: 'Inclusive Sans', sans-serif;
+  --type-font-weight-display: 700;
+  --type-font-weight-heading: 700;
+}
+
+/* Descendant selector (space, not compound) — data-brand lives on <html>,
+   data-theme="dark" lives on the nested .preview-frame div being themed, so
+   these two attributes are never on the same element. A compound selector
+   here ([data-brand="core"][data-theme="dark"]) would never match anything. */
+[data-brand="core"] [data-theme="dark"] {
+  --surface-page:    #111820;
+  --surface-primary: #1a2333;
+  --surface-subtle:  #222d40;
+  --text-headings:   #d8e8f8;
+  --text-body:       #a8b8cc;
+  --text-action:     #6e9cf5;
+  --text-action-hover: #a8c4f5;
+  --text-brand:      #6e9cf5;
+  --surface-action:  #2f6fed;
+  --surface-action-hover:      color-mix(in srgb, var(--primary-700) 30%, black);
+  --surface-action-hover-dark: color-mix(in srgb, var(--primary-700) 45%, black);
+  --border-primary:  #2a3a50;
+  --border-action:       var(--primary-500);
+  --border-action-hover: #6e9cf5;
+  --border-focus:         #6e9cf5;
+  --icons-action:         #6e9cf5;
+  --icons-action-hover:   #a8c4f5;
+}

@@ -1,19 +1,26 @@
 /**
- * Colour-scheme handling.
+ * Colour-scheme handling, on top of the design system's tokens.
  *
- * Three states, not two. "system" follows the operating system and is the
- * default, because a user who never opens the settings should still get a dark
- * interface at night if that is how their machine is set up. "light" and "dark"
- * are explicit overrides.
+ * Three settings, two palettes. "system" is a preference, not a palette: the
+ * design system defines light and dark and nothing in between, so "system" is
+ * resolved to one of them before anything is painted, and a media-query
+ * listener keeps it in step while the user stays on that setting.
  *
- * The state is expressed as a data-theme attribute on <html>, which the CSS in
- * assets/main.css keys off. "system" sets no attribute at all, leaving the
- * prefers-color-scheme media query to decide - the browser then tracks the
- * system setting for us, live, with no JavaScript involved.
+ * The two attributes live on different elements on purpose. `core.css` scopes
+ * its dark palette with a descendant selector - `[data-brand="core"] [data-theme="dark"]` -
+ * because in the design system's own project the theme sits on a nested preview
+ * frame. Putting both on <html> would make that selector match nothing and the
+ * brand's dark colours would silently never apply. So the brand goes on <html>
+ * and the theme on <body>.
  */
 
 export const THEMES = ['system', 'light', 'dark'] as const
 export type Theme = (typeof THEMES)[number]
+
+/** The design system brand this application uses. */
+const BRAND = 'core'
+
+const STORAGE_KEY = 'fitnessapp.theme'
 
 export function isTheme(value: unknown): value is Theme {
   return typeof value === 'string' && (THEMES as readonly string[]).includes(value)
@@ -25,43 +32,59 @@ export function resolveSystemTheme(): 'light' | 'dark' {
 }
 
 /**
+ * Removed and re-registered by applyTheme, so the OS listener is active only
+ * while the user is actually on "system".
+ */
+let stopWatchingSystem: (() => void) | null = null
+
+/**
  * Put a theme on screen and remember it for the next cold start.
  */
 export function applyTheme(theme: Theme): void {
-  const root = document.documentElement
+  document.documentElement.setAttribute('data-brand', BRAND)
 
+  paint(theme === 'system' ? resolveSystemTheme() : theme)
+
+  stopWatchingSystem?.()
+  stopWatchingSystem = null
+
+  // Only "system" has anything to follow. On an explicit choice the listener is
+  // dropped, so the OS flipping at sunset cannot override what the user picked.
   if (theme === 'system') {
-    // No attribute: the media query in the stylesheet takes over, and the
-    // browser keeps it in step with the OS without us listening for anything.
-    root.removeAttribute('data-theme')
-  } else {
-    root.setAttribute('data-theme', theme)
+    stopWatchingSystem = onSystemThemeChange(paint)
   }
 
-  // Tells the browser how to paint things the stylesheet does not own -
-  // scrollbars, the default form-control styling, the canvas behind the page.
-  root.style.colorScheme = theme === 'system' ? 'light dark' : theme
-
   try {
-    localStorage.setItem('fitnessapp.theme', theme)
+    localStorage.setItem(STORAGE_KEY, theme)
   } catch {
     // Private windows and blocked site data. The account holds the real copy.
   }
 }
 
+function paint(resolved: 'light' | 'dark'): void {
+  // <body> is the element the design system's dark rules are written against.
+  // It exists by the time this runs - the entry module is loaded at the end of
+  // the body - but guard anyway rather than failing silently in another host.
+  const target = document.body ?? document.documentElement
+
+  target.setAttribute('data-theme', resolved)
+
+  // Paints what the stylesheet does not own: scrollbars, default form controls,
+  // the canvas behind the page.
+  document.documentElement.style.colorScheme = resolved
+}
+
 /**
  * Read the cached theme and apply it before Vue mounts.
  *
- * Called from main.ts ahead of createApp, so the very first paint is already
- * the right colour. Doing this inside a component would mean rendering light
- * and then flipping to dark a frame later, which is the flash everyone
- * recognises from badly behaved dark modes.
+ * Called from main.ts ahead of createApp, so the very first paint is already the
+ * right colour rather than light-then-dark a frame later.
  */
 export function applyCachedThemeEarly(): void {
   let cached: string | null = null
 
   try {
-    cached = localStorage.getItem('fitnessapp.theme')
+    cached = localStorage.getItem(STORAGE_KEY)
   } catch {
     cached = null
   }
@@ -71,9 +94,6 @@ export function applyCachedThemeEarly(): void {
 
 /**
  * Watch for the operating system flipping between light and dark.
- *
- * The CSS reacts on its own; this exists so components that need to *know* the
- * resolved theme - a chart choosing colours in JavaScript, say - can re-render.
  *
  * @returns a function that removes the listener
  */

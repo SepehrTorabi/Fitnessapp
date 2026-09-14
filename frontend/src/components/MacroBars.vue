@@ -2,8 +2,7 @@
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import type { Nutrients } from '@/api/types'
-
-const { t } = useI18n()
+import { DsProgressBar } from '@/design-system/components'
 
 /**
  * Protein, carbohydrate and fat against their targets.
@@ -11,11 +10,18 @@ const { t } = useI18n()
  * Three progress bars rather than a pie: the question is "how far through each
  * target am I", which is a magnitude comparison against a known maximum, and a
  * pie cannot show overshoot at all.
+ *
+ * The bars are the design system's ProgressBar, tinted per macro. The three
+ * tints come from its accent ramps and were checked as a trio - the closest
+ * pair is ΔE 17.7 under deuteranopia - but each bar is labelled in words
+ * anyway, so the colour is recognition rather than the only way to read it.
  */
 const props = defineProps<{
   consumed: Nutrients
   target: Nutrients | null
 }>()
+
+const { t } = useI18n()
 
 interface Row {
   key: string
@@ -49,13 +55,6 @@ const rows = computed<Row[]>(() => [
   },
 ])
 
-/** Capped at 100% so an overshoot does not draw outside the track. */
-function fillPercent(row: Row): number {
-  if (row.target === null || row.target <= 0) return 0
-
-  return Math.min(100, (row.consumed / row.target) * 100)
-}
-
 function isOver(row: Row): boolean {
   return row.target !== null && row.consumed > row.target
 }
@@ -69,20 +68,18 @@ function isOver(row: Row): boolean {
           <span class="dot" :style="{ background: row.color }"></span>{{ row.label }}
         </span>
         <span class="macro-value">
-          {{ Math.round(row.consumed) }}<span class="muted"> / {{ row.target === null ? '—' : Math.round(row.target) }} g</span>
+          {{ Math.round(row.consumed) }}<span class="muted">
+            / {{ row.target === null ? '—' : Math.round(row.target) }} g</span>
         </span>
       </div>
 
-      <div
-        class="track"
-        role="progressbar"
-        :aria-valuenow="Math.round(row.consumed)"
-        :aria-valuemin="0"
-        :aria-valuemax="row.target ?? undefined"
-        :aria-label="row.label"
-      >
-        <div class="fill" :style="{ width: `${fillPercent(row)}%`, background: row.color }"></div>
-      </div>
+      <DsProgressBar
+        :value="row.consumed"
+        :max="row.target"
+        :color="row.color"
+        :label="row.label"
+        size="medium"
+      />
 
       <p v-if="isOver(row)" class="small over-note">
         {{ t('macros.overTarget', { grams: Math.round(row.consumed - (row.target ?? 0)) }) }}
@@ -92,25 +89,30 @@ function isOver(row: Row): boolean {
 </template>
 
 <style scoped>
-.macros { display: flex; flex-direction: column; gap: 14px; }
-.macro-head { margin-bottom: 5px; }
-.macro-label { font-size: 13px; font-weight: 600; display: inline-flex; align-items: center; gap: 7px; }
-.macro-value { font-size: 13px; font-variant-numeric: tabular-nums; }
+.macros { display: flex; flex-direction: column; gap: var(--spacing-medium); }
+.macro-head { margin-bottom: var(--spacing-3xs); }
 
-.dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
-
-.track {
-  height: 8px;
-  background: var(--surface-2);
-  border-radius: 999px;
-  overflow: hidden;
+.macro-label {
+  font-size: var(--fontsize-body-small);
+  font-weight: var(--type-font-weight-semi-bold);
+  color: var(--text-headings);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-2xs);
 }
 
-.fill {
-  height: 100%;
-  border-radius: 999px;
-  transition: width 0.25s ease;
+.macro-value {
+  font-size: var(--fontsize-body-small);
+  font-variant-numeric: tabular-nums;
+  color: var(--text-headings);
 }
 
-.over-note { color: var(--over); margin: 4px 0 0; }
+.dot {
+  width: var(--scale-200);
+  height: var(--scale-200);
+  border-radius: var(--border-radius-round);
+  display: inline-block;
+}
+
+.over-note { color: var(--text-error); margin: var(--spacing-3xs) 0 0; }
 </style>

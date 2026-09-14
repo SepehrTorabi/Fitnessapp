@@ -217,14 +217,14 @@ onMounted(loadRecipes)
 
     <div class="tabs">
       <button
-        :class="tab === 'food' ? '' : 'secondary'"
+        :class="tab === 'food' ? 'primary' : 'secondary'"
         type="button"
         @click="tab = 'food'"
       >
         {{ t('foods.newFood') }}
       </button>
       <button
-        :class="tab === 'recipe' ? '' : 'secondary'"
+        :class="tab === 'recipe' ? 'primary' : 'secondary'"
         type="button"
         @click="tab = 'recipe'"
       >

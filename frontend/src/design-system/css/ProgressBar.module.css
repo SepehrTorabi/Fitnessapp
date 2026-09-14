@@ -1,0 +1,143 @@
+.bar {
+  display: grid;
+  gap: var(--spacing-2xs);
+  width: 100%;
+  min-width: 0;
+}
+
+.bar--small {
+  gap: var(--spacing-3xs);
+  --progress-bar-track-height: var(--scale-50);
+}
+
+.bar--medium {
+  --progress-bar-track-height: var(--scale-100);
+}
+
+.bar--large {
+  gap: var(--spacing-xs);
+  --progress-bar-track-height: var(--scale-200);
+}
+
+.bar__label {
+  font-family: var(--font-sans);
+  font-size: var(--fontsize-body-small);
+  line-height: var(--line-height-body-small);
+  font-weight: var(--type-font-weight-semi-bold);
+  color: var(--progress-bar-label-color, var(--text-headings));
+}
+
+.bar__track {
+  width: 100%;
+  height: var(--progress-bar-track-height, var(--scale-100));
+  border-radius: var(--border-radius-round);
+  overflow: hidden;
+  background: var(--progress-bar-track-color, var(--surface-action-hover));
+}
+
+.bar__fill {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--progress-bar-fill-color, var(--surface-action));
+}
+
+.bar--info {
+  --progress-bar-fill-color: var(--text-information);
+  --progress-bar-track-color: var(--surface-information);
+  --progress-bar-label-color: var(--text-information);
+}
+
+.bar--success {
+  --progress-bar-fill-color: var(--text-success);
+  --progress-bar-track-color: var(--surface-success);
+  --progress-bar-label-color: var(--text-success);
+}
+
+.bar--warning {
+  --progress-bar-fill-color: var(--text-warning);
+  --progress-bar-track-color: var(--surface-warning);
+  --progress-bar-label-color: var(--text-warning);
+}
+
+.bar--error {
+  --progress-bar-fill-color: var(--surface-error);
+  --progress-bar-track-color: var(--surface-error);
+  --progress-bar-label-color: var(--text-error);
+}
+
+.circle {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--progress-size, var(--scale-1200));
+  height: var(--progress-size, var(--scale-1200));
+  border-radius: var(--border-radius-round);
+  background: conic-gradient(
+    var(--progress-fill-color, var(--surface-action)) 0deg var(--progress-angle, 288deg),
+    var(--progress-track-color, var(--surface-action-hover)) var(--progress-angle, 288deg) 360deg
+  );
+  color: var(--text-headings);
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.circle--small {
+  --progress-size: var(--scale-800);
+}
+
+.circle--medium {
+  --progress-size: var(--scale-1000);
+}
+
+.circle--large {
+  --progress-size: var(--scale-1200);
+}
+
+.circle--info {
+  --progress-fill-color: var(--text-information);
+  --progress-track-color: var(--surface-information);
+  --progress-label-color: var(--text-information);
+}
+
+.circle--success {
+  --progress-fill-color: var(--surface-success);
+  --progress-track-color: var(--surface-success);
+  --progress-label-color: var(--text-success);
+}
+
+.circle--warning {
+  --progress-fill-color: var(--surface-warning);
+  --progress-track-color: var(--surface-warning);
+  --progress-label-color: var(--text-warning);
+}
+
+.circle--error {
+  --progress-fill-color: var(--surface-error);
+  --progress-track-color: var(--surface-error);
+  --progress-label-color: var(--text-error);
+}
+
+.circle__fill {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+}
+
+.circle__inner {
+  position: absolute;
+  inset: var(--scale-50);
+  border-radius: inherit;
+  background: var(--surface-page);
+}
+
+.circle__label {
+  position: relative;
+  z-index: var(--z-raised);
+  font-family: var(--font-sans);
+  font-size: var(--fontsize-body-small);
+  line-height: var(--line-height-body-small);
+  font-weight: var(--type-font-weight-semi-bold);
+  color: var(--progress-label-color, var(--text-headings));
+}
