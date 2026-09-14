@@ -1,0 +1,63 @@
+# see https://symfony.com/doc/current/reference/configuration/framework.html
+framework:
+    secret: '%env(APP_SECRET)%'
+
+    # Session-backed authentication needs a session, and a cross-site cookie
+    # would be sent along with requests triggered by other sites. Lax lets the
+    # cookie ride normal top-level navigation but not background POSTs.
+    session:
+        cookie_samesite: lax
+        cookie_secure: auto
+        cookie_httponly: true
+
+    http_client:
+        scoped_clients:
+            # Open Food Facts asks every caller to identify itself in the
+            # User-Agent; anonymous traffic gets rate-limited or blocked.
+            open_food_facts.client:
+                base_uri: 'https://world.openfoodfacts.org'
+                headers:
+                    User-Agent: '%env(OPEN_FOOD_FACTS_USER_AGENT)%'
+                # An external lookup is an optional extra. Better to give up
+                # after a few seconds and show local results than to keep a user
+                # waiting on somebody else's server.
+                timeout: 5
+                max_duration: 8
+
+    cache:
+        pools:
+            # The rate limiters get a pool of their own so the test environment
+            # can swap it for an in-memory one - see when@test below.
+            app.rate_limiter.pool:
+                adapter: cache.app
+
+    rate_limiter:
+        # Registration is keyed by client IP: the address being registered is
+        # attacker-chosen, so keying on it would limit nothing.
+        registration:
+            policy: 'sliding_window'
+            limit: 5
+            interval: '1 hour'
+            cache_pool: app.rate_limiter.pool
+
+        # Resending is keyed by e-mail address instead, to stop one inbox being
+        # flooded from many IPs.
+        verification_resend:
+            policy: 'token_bucket'
+            limit: 3
+            rate: { interval: '15 minutes', amount: 1 }
+            cache_pool: app.rate_limiter.pool
+
+when@test:
+    framework:
+        test: true
+        session:
+            storage_factory_id: session.storage.factory.mock_file
+
+        cache:
+            pools:
+                # In-memory, so the counters start empty for every test. With a
+                # persistent pool the twentieth test to register a user would be
+                # rejected for something the nineteen before it did.
+                app.rate_limiter.pool:
+                    adapter: cache.adapter.array

@@ -1,0 +1,38 @@
+{# Confirmation mail. Deliberately plain: table-free, inline styles only, and
+   readable even if the client strips the CSS entirely.
+
+   All text comes from translations/emails.<locale>.yaml, rendered in the
+   recipient's own language - EmailVerifier sets it with ->locale(). #}
+<!DOCTYPE html>
+<html lang="{{ app.request.locale|default('en') }}">
+<body style="margin:0;padding:24px;background:#f5f6f8;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#1f2328;">
+    <div style="max-width:520px;margin:0 auto;background:#ffffff;border-radius:12px;padding:32px;">
+        <h1 style="margin:0 0 16px;font-size:20px;">
+            {{ 'verify.greeting'|trans({'%name%': displayName}, 'emails') }}
+        </h1>
+
+        <p style="margin:0 0 16px;line-height:1.6;">
+            {{ 'verify.intro'|trans({}, 'emails') }}
+        </p>
+
+        <p style="margin:0 0 24px;">
+            <a href="{{ verifyUrl }}"
+               style="display:inline-block;background:#16a34a;color:#ffffff;text-decoration:none;padding:12px 20px;border-radius:8px;font-weight:600;">
+                {{ 'verify.button'|trans({}, 'emails') }}
+            </a>
+        </p>
+
+        <p style="margin:0 0 16px;line-height:1.6;color:#57606a;font-size:14px;">
+            {{ 'verify.fallback_intro'|trans({'%hours%': expiresInHours}, 'emails') }}
+        </p>
+
+        <p style="margin:0 0 24px;word-break:break-all;font-size:13px;color:#57606a;">
+            {{ verifyUrl }}
+        </p>
+
+        <p style="margin:0;line-height:1.6;color:#57606a;font-size:13px;">
+            {{ 'verify.ignore'|trans({}, 'emails') }}
+        </p>
+    </div>
+</body>
+</html>

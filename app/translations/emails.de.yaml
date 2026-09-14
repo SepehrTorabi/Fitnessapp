@@ -1,0 +1,8 @@
+# Text der Transaktions-E-Mails, Deutsch.
+verify:
+    subject: 'Bestätige dein Fitnessapp-Konto'
+    greeting: 'Willkommen, %name%'
+    intro: 'Bestätige deine E-Mail-Adresse, um dein Fitnessapp-Konto zu aktivieren.'
+    button: 'Adresse bestätigen'
+    fallback_intro: 'Der Link ist %hours% Stunden gültig. Falls der Button nicht funktioniert, kopiere diese Adresse in deinen Browser:'
+    ignore: 'Falls du kein Konto erstellt hast, kannst du diese Nachricht ignorieren - ohne Bestätigung wird die Adresse nicht verwendet.'

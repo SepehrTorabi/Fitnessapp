@@ -1,0 +1,370 @@
+/**
+ * English messages.
+ *
+ * This file is the reference catalogue: every other language is a translation
+ * of exactly these keys. `MessageSchema` in ../index.ts is derived from it, so
+ * a key added here that is missing in de.ts is a TypeScript error rather than
+ * an English string appearing in a German interface.
+ *
+ * Keys are grouped by where they appear, not by the words themselves - it is
+ * far easier to translate a screen at a time than an alphabetical list.
+ */
+// No `as const` here on purpose. It would freeze every value into a literal
+// string type, and MessageSchema is derived from this object - German text
+// would then fail to match the English literal it is supposed to replace. What
+// the schema has to pin down is the set of keys, not the words.
+export default {
+  common: {
+    save: 'Save',
+    saving: 'Saving…',
+    cancel: 'Cancel',
+    search: 'Search',
+    searching: 'Searching…',
+    loading: 'Loading…',
+    remove: 'Remove',
+    add: 'Add',
+    saved: 'Saved.',
+    day: 'Day',
+    kcal: 'kcal',
+    grams: 'g',
+    optional: 'optional',
+    none: '—',
+  },
+
+  nav: {
+    brand: 'Fitnessapp',
+    dashboard: 'Dashboard',
+    diary: 'Log food',
+    foods: 'Foods & recipes',
+    profile: 'Body data',
+    settings: 'Settings',
+    signOut: 'Sign out',
+  },
+
+  titles: {
+    dashboard: 'Dashboard',
+    diary: 'Log food',
+    foods: 'Foods & recipes',
+    profile: 'Your body data',
+    settings: 'Settings',
+    login: 'Sign in',
+    register: 'Create an account',
+    verify: 'Confirming your address',
+    notFound: 'Not found',
+  },
+
+  auth: {
+    emailLabel: 'E-mail address',
+    passwordLabel: 'Password',
+    nameLabel: 'Your name',
+    signIn: 'Sign in',
+    signingIn: 'Signing in…',
+    noAccount: 'No account yet?',
+    createOne: 'Create one',
+    haveAccount: 'Already have an account?',
+    createAccount: 'Create account',
+    creating: 'Creating…',
+    passwordHint: 'At least 10 characters.',
+    resendLink: 'Send the confirmation link again',
+    unreachable: 'Could not reach the server. Is the API running?',
+    sendFailed: 'Could not send the mail.',
+
+    checkInbox: 'Check your inbox',
+    confirmationSent: 'We sent a confirmation link to {email}. Open it to activate your account, then sign in.',
+    mailpitHint: 'Running locally? The mail is waiting in Mailpit at {link}.',
+    backToSignIn: 'Back to sign in',
+
+    confirming: 'Confirming…',
+    oneMoment: 'One moment.',
+    allSet: "You're all set",
+    linkFailed: 'That link did not work',
+    linkMissingToken: 'This link is missing its confirmation token.',
+    verifyUnreachable: 'Could not reach the server to confirm your address.',
+    linkExpiredHint:
+      'Confirmation links expire after 24 hours and can only be used once. Try signing in - if the account is still unconfirmed you can ask for a new link there.',
+  },
+
+  dashboard: {
+    greeting: 'Hello, {name}',
+    eatenToday: 'Eaten today',
+    burned: 'Burned through activity',
+    leftToday: 'Left today',
+    overBudget: 'Over budget',
+    budget: 'Budget {kcal} kcal',
+    macrosToday: 'Macros today',
+    targetExplain:
+      'Target {target} kcal — basal rate {bmr}, daily expenditure {tdee}, calculated with {formula}.',
+    todaysEntries: "Today's entries",
+    addSomething: 'Add something',
+    nothingToday: 'Nothing logged today yet.',
+    loadFailed: 'Could not load your dashboard.',
+    averages:
+      'Over the {count} day you logged this week you averaged {kcal} kcal, {protein} g protein. | Over the {count} days you logged this week you averaged {kcal} kcal, {protein} g protein.',
+    onboardingTitle: 'One more step',
+    onboardingProfile:
+      'Tell us your age, height and activity level so we can work out how much you need.',
+    onboardingWeight: 'Add your current weight so we can work out your daily calories.',
+    onboardingButton: 'Fill in your body data',
+    tableFood: 'Food',
+    tableMeal: 'Meal',
+    tableAmount: 'Amount',
+    tableMacros: 'P / C / F',
+    exportPdf: 'Download as PDF',
+    exportHint: 'Every day you have logged, laid out like the printed diary.',
+  },
+
+  chart: {
+    title: 'Calories per day',
+    caption: "Bars are what you ate; the line is that day's budget.",
+    showTable: 'Show table',
+    showChart: 'Show chart',
+    withinBudget: 'Within budget',
+    overBudget: 'Over budget',
+    budgetLine: 'Budget',
+    hoverHint: 'Hover a day for details.',
+    eaten: '{kcal} kcal eaten',
+    ofBudget: 'of {kcal} budget',
+    kcalLeft: '{kcal} kcal left',
+    kcalOver: '{kcal} kcal over',
+    noTarget: 'no target set',
+    ariaLabel: 'Calories eaten per day compared with the daily budget',
+    tableDay: 'Day',
+    tableEaten: 'Eaten',
+    tableBudget: 'Budget',
+    tableDifference: 'Difference',
+  },
+
+  macros: {
+    protein: 'Protein',
+    carbs: 'Carbs',
+    fat: 'Fat',
+    overTarget: '{grams} g over target',
+  },
+
+  diary: {
+    findFood: 'Find a food',
+    searchPlaceholder: 'e.g. oats, chicken, banana',
+    queryTooShort: 'Type at least two characters.',
+    nothingFound: 'Nothing found. You can define this food yourself under Foods & recipes.',
+    searchFailed: 'Search failed.',
+    externalHeading: 'From Open Food Facts',
+    perHundred: '{kcal} kcal / 100 g',
+    importFailed: 'Could not import that product.',
+    barcodeFailed: 'Could not look that barcode up.',
+
+    scanTitle: 'Scan a product',
+    scanIntro: 'Read the barcode off a package with your camera, or type the number in.',
+    openScanner: 'Open the scanner',
+
+    yourRecipes: 'Your recipes',
+    servings: 'Servings',
+    kcalPerServing: '{kcal} kcal per serving',
+    recipeFailed: 'Could not log that recipe.',
+
+    amount: 'Amount',
+    unit: 'Unit',
+    meal: 'Meal',
+    addToDiary: 'Add to diary',
+    adding: 'Adding…',
+    saveFailed: 'Could not save that entry.',
+    preview: '· {grams} g · {protein} g protein · {carbs} g carbs · {fat} g fat',
+
+    totals: 'Totals for this day',
+    left: '{kcal} left',
+    over: '{kcal} over',
+    entries: 'Entries',
+    nothingLogged: 'Nothing logged for this day.',
+    loadDayFailed: 'Could not load that day.',
+
+    activity: 'Activity',
+    activityIntro: "Calories you burned. These are added to the day's budget.",
+    activityWhat: 'What did you do?',
+    activityPlaceholder: 'Running 5 km',
+    activityKcal: 'Calories burned',
+    activityMinutes: 'Minutes (optional)',
+    addActivity: 'Add activity',
+    activityIncomplete: 'Describe the activity and say how many calories it burned.',
+    activityFailed: 'Could not save that activity.',
+    minutesShort: 'min',
+  },
+
+  scanner: {
+    scan: 'Scan a barcode',
+    stop: 'Stop scanning',
+    holdSteady: 'Hold the barcode inside the frame.',
+    manualPlaceholder: '…or type the barcode number',
+    manualLabel: 'Barcode number',
+    lookUp: 'Look up',
+    tooShort: 'A barcode is at least 8 digits.',
+    unsupported: 'This browser cannot use the camera. Type the number in instead.',
+    denied: 'Camera access was denied. Type the number in instead.',
+    failed: 'Could not start the camera. Type the number in instead.',
+  },
+
+  foods: {
+    newFood: 'New food',
+    newRecipe: 'New recipe',
+    defineFood: 'Define a food',
+    defineIntro:
+      'All values per 100 g (or per 100 ml for liquids). Once saved it appears in your search straight away.',
+    name: 'Name',
+    brand: 'Brand (optional)',
+    barcode: 'Barcode (optional)',
+    calories: 'Calories (kcal)',
+    protein: 'Protein (g)',
+    carbs: 'Carbs (g)',
+    fat: 'Fat (g)',
+    fiber: 'Fibre (g, optional)',
+    sugar: 'Sugar (g, optional)',
+    density: 'Density (g per ml)',
+    densityHint:
+      'Only matters if you will measure this in spoons or millilitres. Water is 1, oil about 0.92, honey about 1.42.',
+    portions: 'Named portions (optional)',
+    addPortion: 'Add portion',
+    portionsHint:
+      'What one slice, piece or scoop of this weighs. Without these you can only log it by weight or volume.',
+    portionLabelPlaceholder: 'slice',
+    portionGramsPlaceholder: 'grams',
+    saveFood: 'Save food',
+    foodSaved: '"{label}" is now in your catalogue.',
+    saveFoodFailed: 'Could not save that food.',
+    energyMismatch:
+      'Those macros work out to about {implied} kcal, but you entered {stated}. Worth a second look — a common cause is a value taken per serving instead of per 100 g.',
+
+    buildRecipe: 'Build a recipe',
+    recipeIntro:
+      'A recipe takes its nutrition from its ingredients, so correcting an ingredient later corrects every recipe that uses it.',
+    recipeName: 'Name',
+    recipeServings: 'Servings',
+    recipeNotes: 'Notes (optional)',
+    addIngredient: 'Add an ingredient',
+    searchYourFoods: 'Search your foods',
+    ingredient: 'Ingredient',
+    gramsColumn: 'Grams',
+    needIngredient: 'Add at least one ingredient.',
+    recipeSaved: '"{name}" saved — {kcal} kcal per serving.',
+    saveRecipeFailed: 'Could not save that recipe.',
+    sharePublicly: 'Share this recipe with other users',
+    saveRecipe: 'Save recipe',
+    yourRecipes: 'Your recipes',
+    servingsColumn: 'Servings',
+    kcalPerServingColumn: 'kcal / serving',
+    perServingSummary:
+      '{kcal} kcal per serving | · {grams} g · {protein} g protein · {carbs} g carbs · {fat} g fat',
+    wholeRecipe: 'Whole recipe: {kcal} kcal, {grams} g',
+  },
+
+  profile: {
+    aboutYou: 'About you',
+    aboutIntro: 'These rarely change, so you only fill them in once.',
+    birthDate: 'Date of birth',
+    sex: 'Sex',
+    sexHint: 'The calorie formulas use a different constant per sex, which is the only reason this is asked.',
+    height: 'Height (cm)',
+    activityQuestion: 'How active are you?',
+    goalQuestion: 'What are you aiming for?',
+    saveFailed: 'Could not save your profile.',
+
+    weighIn: "Today's weigh-in",
+    weighInIntro:
+      'Weighing yourself twice in one day replaces the earlier entry rather than adding a second one.',
+    weight: 'Weight (kg)',
+    muscleMass: 'Muscle mass (kg, optional)',
+    fatMass: 'Fat mass (kg, optional)',
+    fatMassHint:
+      'If you know your fat mass, the calculation switches to a formula based on lean mass, which is more accurate than one based on total weight.',
+    saveWeighIn: 'Save weigh-in',
+    weightRequired: 'Enter your weight.',
+    weighInFailed: 'Could not save that weigh-in.',
+
+    dailyTarget: 'Your daily target',
+    noTargetYet: 'Fill in your details and a weigh-in, and your target will appear here.',
+    bmr: 'Basal metabolic rate',
+    tdee: 'Total daily expenditure',
+    proteinRow: 'Protein',
+    carbsRow: 'Carbohydrate',
+    fatRow: 'Fat',
+    calculatedWith: 'Calculated with the {formula} formula.',
+  },
+
+  settings: {
+    title: 'Settings',
+    intro: 'These follow your account, so they are the same on every device you sign in from.',
+
+    languageTitle: 'Language',
+    languageIntro: 'The language of the interface and of the e-mails we send you.',
+
+    themeTitle: 'Appearance',
+    themeIntro: 'Light, dark, or whatever your device is set to.',
+    themeSystem: 'Match my device',
+    themeLight: 'Light',
+    themeDark: 'Dark',
+    themeSystemHint: 'Follows your operating system and changes with it.',
+
+    saveFailed: 'Could not save that setting.',
+    offlineNote: 'Saved on this device only — we could not reach the server.',
+  },
+
+  sex: {
+    male: 'Male',
+    female: 'Female',
+  },
+
+  meal: {
+    breakfast: 'Breakfast',
+    lunch: 'Lunch',
+    dinner: 'Dinner',
+    snack: 'Snack',
+  },
+
+  activityLevel: {
+    sedentary: 'Sedentary — little or no exercise, desk job',
+    lightly_active: 'Lightly active — exercise 1–3 days a week',
+    moderately_active: 'Moderately active — exercise 3–5 days a week',
+    very_active: 'Very active — hard exercise 6–7 days a week',
+    extra_active: 'Extra active — physical job or training twice a day',
+  },
+
+  goal: {
+    lose_weight: 'Lose weight — 20% below maintenance',
+    maintain_weight: 'Maintain weight',
+    gain_muscle: 'Gain muscle — 10% above maintenance',
+  },
+
+  formula: {
+    'katch-mcardle': 'Katch-McArdle',
+    'mifflin-st-jeor': 'Mifflin-St Jeor',
+  },
+
+  notFound: {
+    title: 'Page not found',
+    body: 'That address does not lead anywhere.',
+    back: 'Back to the dashboard',
+  },
+
+  /**
+   * Keyed by the `error` code the API returns, not by its English `message`.
+   * The API sends both; the client prefers a translation of the code and falls
+   * back to the server's own wording for anything not listed here.
+   */
+  errors: {
+    authentication_required: 'You must be signed in to use this endpoint.',
+    authentication_failed: 'Invalid e-mail address or password.',
+    access_denied: 'You are not allowed to do this.',
+    email_taken: 'An account with this e-mail address already exists. Try signing in instead.',
+    invalid_token: 'This confirmation link is invalid or has expired.',
+    too_many_requests: 'Too many attempts. Please wait a little and try again.',
+    query_too_short: 'Enter at least two characters to search.',
+    barcode_not_found: 'No product found for this barcode. You can add it as a new food.',
+    barcode_taken: 'A food with this barcode is already in the database.',
+    food_not_found: 'This food does not exist.',
+    recipe_not_found: 'This recipe does not exist.',
+    entry_not_found: 'This entry does not exist.',
+    activity_not_found: 'This activity does not exist.',
+    import_failed:
+      'This product could not be imported. It may have been removed from the source database.',
+    unresolvable_portion: 'That amount cannot be converted for this food. Enter it in grams instead.',
+    invalid_target: 'Send either a food or a recipe, not both and not neither.',
+    http_error: 'Something went wrong. Please try again.',
+  },
+}

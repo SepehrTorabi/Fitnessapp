@@ -1,0 +1,91 @@
+/* Figma specs: padding 4px all, border-radius 64px, font 12px/600/20px lh, white text */
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-2xs) var(--spacing-small); /* 4px 12px */
+  border-radius: var(--border-radius-round); /* 64px */
+  font-size: var(--fontsize-body-small);     /* 12px */
+  line-height: var(--line-height-body-small);/* 20px */
+  font-weight: var(--type-font-weight-semi-bold);
+  color: var(--text-on-action);
+  white-space: nowrap;
+  box-sizing: border-box;
+  min-width: var(--scale-700);
+}
+
+.badge--dot {
+  width: var(--scale-300);   /* 12px */
+  height: var(--scale-300);
+  min-width: unset;
+  padding: 0;
+  border-radius: var(--border-radius-round);
+}
+
+/* Status backgrounds — solid fills matching Figma variable IDs */
+.badge--default { background: var(--surface-action); }
+.badge--success { background: var(--text-success); }
+.badge--error   { background: var(--text-error); }
+.badge--info    { background: var(--text-information); }
+.badge--warning { background: var(--text-warning); }
+
+/* Status indicator: colored dot + label text, no pill background */
+.badge--status {
+  background: transparent;
+  color: var(--text-body);
+  padding: 0;
+  gap: var(--scale-200);
+  font-weight: var(--type-font-weight-medium);
+  min-width: unset;
+}
+
+.badge__status-dot {
+  display: inline-block;
+  width: var(--scale-200);
+  height: var(--scale-200);
+  border-radius: var(--border-radius-round);
+  flex-shrink: 0;
+}
+
+.badge--status--default .badge__status-dot { background: var(--text-disabled); }
+.badge--status--success .badge__status-dot { background: var(--text-success); }
+.badge--status--error   .badge__status-dot { background: var(--text-error); }
+.badge--status--info    .badge__status-dot { background: var(--text-information); }
+.badge--status--warning .badge__status-dot { background: var(--text-warning); }
+
+.badge--status--success { color: var(--text-success); }
+.badge--status--error   { color: var(--text-error); }
+.badge--status--info    { color: var(--text-information); }
+.badge--status--warning { color: var(--text-warning); }
+
+/* Leading-dot text badge — e.g. a LIVE indicator */
+.badge--withDot {
+  gap: var(--spacing-2xs);
+  padding: var(--scale-100) var(--scale-300);
+  font-weight: var(--type-font-weight-bold);
+  letter-spacing: var(--letter-spacing-caps);
+}
+
+.badge__leadingDot {
+  width: var(--scale-200);
+  height: var(--scale-200);
+  border-radius: var(--border-radius-round);
+  background: var(--text-on-action);
+  flex-shrink: 0;
+}
+
+.badge__leadingDot--pulse {
+  animation: badgeLeadingDotPulse var(--duration-live-pulse) var(--easing-ease-in-out) infinite;
+}
+
+@keyframes badgeLeadingDotPulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: var(--opacity-pulse-dim);
+    transform: scale(0.75);
+  }
+}

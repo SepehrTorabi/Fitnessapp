@@ -1,0 +1,310 @@
+/*
+ * Application styles, on top of the vendored design system.
+ *
+ * The design system owns the visual language: colour, type, spacing, radii. It
+ * is imported below and never edited - see src/design-system/README.md.
+ *
+ * This file does two things and nothing else:
+ *
+ *  1. Bridges the application's own token names onto the design system's
+ *     semantic ones, so a view that has not yet been rebuilt with design system
+ *     components still picks up the new palette and typography.
+ *  2. Holds the handful of layout utilities (.page, .grid, .row) that are about
+ *     this app's page structure rather than about any component.
+ *
+ * Anything that looks like a component - a card, a button, a badge - should come
+ * from src/design-system/components, not from here.
+ */
+
+@import url('https://fonts.googleapis.com/css2?family=Inclusive+Sans:ital,wght@0,400;0,700;1,400&display=swap');
+
+@import '../design-system/tokens/tokens.css';
+@import '../design-system/tokens/core.css';
+
+/*
+ * ── The bridge ───────────────────────────────────────────────────────────────
+ *
+ * Every value here resolves to a design system token; none of them introduce a
+ * colour of their own. As each view is rebuilt on design system components its
+ * uses of these names disappear, and when the last one goes this block goes
+ * with it.
+ *
+ * Declared on <body>, not on :root, and that matters. A var() inside a custom
+ * property is substituted on the element that declares it, not where it is
+ * used - so a bridge on <html> would resolve --surface-primary once, against
+ * <html>, and keep the light value forever. The dark palette is applied to
+ * <body>, so the bridge has to live there too.
+ */
+body {
+  --bg: var(--surface-page);
+  --surface: var(--surface-primary);
+  --surface-2: var(--surface-subtle);
+  --border: var(--border-primary);
+  --text: var(--text-headings);
+  --text-muted: var(--text-body);
+
+  --accent: var(--surface-action);
+  --accent-contrast: var(--text-on-action);
+
+  /* Ink for status text comes straight from the design system. */
+  --good: var(--text-success);
+  --good-soft: var(--surface-success);
+  --over: var(--text-error);
+  --over-soft: var(--surface-error);
+  --neutral: var(--text-disabled);
+
+  /*
+   * The chart's "within budget" fill is the one deliberate departure from the
+   * design system's palette, and a product decision: its green ramp runs
+   * yellow-olive (--success-400 #4DAD0D, --success-300 #79C249) and reads as
+   * lime rather than as "good" on a calorie chart.
+   *
+   * Checked, not just picked. Against the design system's own error colour this
+   * green measures ΔE 17.1 under deuteranopia - better separated than the
+   * system's own pair at 11.1 - and the dark step reaches 24.8. Colour is still
+   * never the only signal: the chart keeps its budget marker, its hover readout
+   * in words, and its table view.
+   */
+  --chart-good: #22c55e;
+  --chart-over: var(--error-400);
+
+  /* One colour per macro, from the design system's accent ramps. Validated as a
+     trio: worst adjacent pair ΔE 17.7 under deuteranopia. */
+  --protein: var(--tertiary-400);
+  --carbs: var(--warning-400);
+  --fat: var(--info-400);
+
+  --radius: var(--border-radius-medium);
+  --radius-sm: var(--border-radius-small);
+  --shadow: none;
+
+  --font: var(--font-sans);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--surface-page);
+  color: var(--text-body);
+  font-family: var(--font-sans);
+  font-size: var(--fontsize-body-medium);
+  line-height: var(--line-height-body-medium);
+  -webkit-font-smoothing: antialiased;
+}
+
+html {
+  /* <body> paints the page colour, but it only covers its own content box -
+     the canvas behind it would stay white when the page is short. */
+  background: var(--surface-page);
+}
+
+/* The dark step of the chart green. Stepped for the dark surface rather than
+   reused from light, the same way the design system steps its own palettes. */
+body[data-theme='dark'] {
+  --chart-good: #4ade80;
+}
+
+h1, h2, h3 {
+  margin: 0 0 var(--spacing-small);
+  color: var(--text-headings);
+  font-weight: var(--type-font-weight-heading);
+}
+
+h1 { font-size: var(--fontsize-headings-h5); line-height: var(--line-height-heading-h5); }
+h2 { font-size: var(--fontsize-headings-h6); line-height: var(--line-height-heading-h6); }
+h3 { font-size: var(--fontsize-body-large); line-height: var(--line-height-body-large); }
+
+a {
+  color: var(--text-action);
+  text-decoration: none;
+}
+
+a:hover {
+  color: var(--text-action-hover);
+  text-decoration: underline;
+}
+
+/* ── Layout ─────────────────────────────────────────────────────────────── */
+
+.page {
+  max-width: 1040px;
+  margin: 0 auto;
+  padding: var(--spacing-large) var(--spacing-medium) var(--spacing-3xl);
+}
+
+.grid { display: grid; gap: var(--spacing-medium); }
+
+@media (min-width: 720px) {
+  .grid-2 { grid-template-columns: repeat(2, 1fr); }
+  .grid-3 { grid-template-columns: repeat(3, 1fr); }
+}
+
+.stack { display: flex; flex-direction: column; gap: var(--spacing-small); }
+.row { display: flex; gap: var(--spacing-small); align-items: center; flex-wrap: wrap; }
+.row-between { display: flex; gap: var(--spacing-small); align-items: center; justify-content: space-between; flex-wrap: wrap; }
+
+.muted { color: var(--text-body); }
+.small { font-size: var(--fontsize-body-small); line-height: var(--line-height-body-small); }
+.right { text-align: right; }
+
+/* A plain container for views not yet rebuilt on the design system's Card. */
+.card {
+  background: var(--surface-primary);
+  border: var(--border-width-small) solid var(--border-primary);
+  border-radius: var(--border-radius-medium);
+  padding: var(--spacing-medium);
+}
+
+/* ── Forms ──────────────────────────────────────────────────────────────── */
+
+label {
+  display: block;
+  font-size: var(--fontsize-body-small);
+  font-weight: var(--type-font-weight-semi-bold);
+  margin-bottom: var(--spacing-3xs);
+  color: var(--text-body);
+}
+
+input, select, textarea {
+  width: 100%;
+  padding: var(--spacing-2xs) var(--spacing-small);
+  font: inherit;
+  font-size: var(--fontsize-body-medium);
+  color: var(--text-headings);
+  background: var(--surface-primary);
+  border: var(--border-width-small) solid var(--border-primary);
+  /* Rule 5: an input sits inside a card, so it takes the smaller radius. */
+  border-radius: var(--border-radius-small);
+}
+
+input:focus, select:focus, textarea:focus {
+  outline: var(--border-width-small) solid var(--border-focus);
+  outline-offset: var(--border-width-small);
+  border-color: var(--border-action);
+}
+
+input[aria-invalid='true'] { border-color: var(--border-error); }
+
+.field-error {
+  color: var(--text-error);
+  font-size: var(--fontsize-body-small);
+  margin-top: var(--spacing-3xs);
+}
+
+/*
+ * Buttons in views not yet rebuilt on the design system's Button.
+ *
+ * Shape and metrics apply to every button, but the colours deliberately do not:
+ * they are scoped to buttons that bring no class of their own. A component that
+ * styles its own buttons - the settings picker, the tab strip - must win, and a
+ * blanket `button:hover` here would out-specify a single scoped class and
+ * repaint it on hover.
+ */
+button {
+  font: inherit;
+  font-weight: var(--type-font-weight-semi-bold);
+  padding: var(--spacing-2xs) var(--spacing-medium);
+  border-radius: var(--border-radius-round);
+  border: var(--border-width-medium) solid transparent;
+  cursor: pointer;
+}
+
+button:not([class]),
+button.primary {
+  background: var(--surface-action);
+  color: var(--text-on-action);
+}
+
+button:not([class]):hover:not(:disabled),
+button.primary:hover:not(:disabled) {
+  background: var(--surface-action-hover-dark);
+}
+
+button:disabled { opacity: var(--opacity-disabled); cursor: not-allowed; }
+
+button.secondary {
+  background: transparent;
+  color: var(--text-action);
+  border-color: var(--border-action);
+}
+
+button.secondary:hover:not(:disabled) {
+  background: var(--surface-action-hover);
+  color: var(--text-action-hover);
+}
+
+button.ghost {
+  background: transparent;
+  color: var(--text-body);
+  border-color: transparent;
+  padding: var(--spacing-3xs) var(--spacing-2xs);
+}
+
+button.ghost:hover { color: var(--text-error); }
+
+/* ── Feedback ───────────────────────────────────────────────────────────── */
+
+.alert {
+  padding: var(--spacing-small) var(--spacing-medium);
+  border-radius: var(--border-radius-small);
+  font-size: var(--fontsize-body-medium);
+  border: var(--border-width-small) solid transparent;
+}
+
+.alert-error { background: var(--surface-error); color: var(--text-error); border-color: var(--border-error); }
+.alert-success { background: var(--surface-success); color: var(--text-success); border-color: var(--border-success); }
+.alert-info { background: var(--surface-information); color: var(--text-information); border-color: var(--border-information); }
+
+/* ── Tables ─────────────────────────────────────────────────────────────── */
+
+table { width: 100%; border-collapse: collapse; font-size: var(--fontsize-body-medium); }
+
+th, td {
+  padding: var(--spacing-2xs);
+  text-align: left;
+  border-bottom: var(--border-width-small) solid var(--border-primary);
+}
+
+th {
+  font-size: var(--fontsize-body-small);
+  color: var(--text-body);
+  font-weight: var(--type-font-weight-semi-bold);
+}
+
+tbody tr:last-child td { border-bottom: none; }
+td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+
+/* ── Bits ───────────────────────────────────────────────────────────────── */
+
+.badge {
+  display: inline-block;
+  padding: var(--spacing-3xs) var(--spacing-2xs);
+  border-radius: var(--border-radius-round);
+  font-size: var(--fontsize-body-small);
+  font-weight: var(--type-font-weight-semi-bold);
+  background: var(--surface-subtle);
+  color: var(--text-body);
+}
+
+.badge-good { background: var(--surface-success); color: var(--text-success); }
+.badge-over { background: var(--surface-error); color: var(--text-error); }
+
+.stat-value {
+  font-size: var(--fontsize-headings-h4);
+  line-height: var(--line-height-heading-h4);
+  font-weight: var(--type-font-weight-display);
+  font-variant-numeric: tabular-nums;
+  color: var(--text-headings);
+}
+
+.stat-label { font-size: var(--fontsize-body-small); color: var(--text-body); }
+
+.empty {
+  padding: var(--spacing-large) var(--spacing-medium);
+  text-align: center;
+  color: var(--text-body);
+  font-size: var(--fontsize-body-medium);
+}

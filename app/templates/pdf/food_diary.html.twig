@@ -1,0 +1,255 @@
+{#
+  The printed food diary.
+
+  Rendered by mPDF, which supports a useful but not complete subset of CSS - so
+  the layout leans on tables and plain blocks rather than flexbox or grid, and
+  every colour is written out rather than taken from a custom property. That is
+  a constraint of the renderer, not a style choice; this file is deliberately
+  not sharing the application's stylesheet.
+
+  Numbers are formatted here rather than in PHP so that the decimal comma
+  follows the language the document is written in.
+#}
+{% apply spaceless %}
+<style>
+    body {
+        font-family: sans-serif;
+        font-size: 9.5pt;
+        color: #1f2328;
+    }
+
+    h1 {
+        font-size: 20pt;
+        margin: 0 0 2mm;
+        color: #14181d;
+    }
+
+    .subtitle {
+        font-size: 9pt;
+        color: #6b7280;
+        margin: 0 0 6mm;
+    }
+
+    /* The summary card at the top: the averages over the whole period. */
+    .summary {
+        border: 0.3mm solid #e5e7eb;
+        border-radius: 2mm;
+        padding: 3mm 4mm;
+        margin-bottom: 7mm;
+        background-color: #fbfbfc;
+    }
+
+    .summary-name {
+        font-size: 9pt;
+        font-weight: bold;
+        color: #be123c;
+        margin: 0 0 2mm;
+    }
+
+    .summary-label {
+        font-size: 7.5pt;
+        color: #6b7280;
+    }
+
+    .summary-value {
+        font-size: 12pt;
+        font-weight: bold;
+        color: #14181d;
+    }
+
+    /* Each day is kept on one page where it fits, so a table is not split
+       between its heading and its total. */
+    .day {
+        border: 0.3mm solid #e5e7eb;
+        border-radius: 2mm;
+        padding: 4mm;
+        margin-bottom: 5mm;
+        page-break-inside: avoid;
+    }
+
+    .day-date {
+        font-size: 13pt;
+        font-weight: bold;
+        margin: 0;
+    }
+
+    .badge {
+        font-size: 7.5pt;
+        font-weight: bold;
+        color: #ffffff;
+        background-color: #ea580c;
+        border-radius: 4mm;
+        padding: 1mm 3mm;
+    }
+
+    table.items {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 3mm;
+    }
+
+    table.items th {
+        font-size: 7.5pt;
+        text-align: left;
+        color: #4b5563;
+        background-color: #f3f4f6;
+        padding: 1.6mm 2mm;
+        border-bottom: 0.3mm solid #e5e7eb;
+    }
+
+    table.items td {
+        padding: 1.6mm 2mm;
+        border-bottom: 0.2mm solid #f0f1f3;
+        vertical-align: top;
+    }
+
+    table.items .num {
+        text-align: right;
+        white-space: nowrap;
+    }
+
+    /* The two or three items that carried the day. */
+    tr.major td {
+        background-color: #fdece0;
+        font-weight: bold;
+        color: #9a3412;
+    }
+
+    .totals {
+        margin-top: 2.5mm;
+        font-size: 8.5pt;
+        color: #6b7280;
+    }
+
+    .totals strong { color: #be123c; }
+    .totals .burned { color: #ea580c; }
+
+    .footer {
+        margin-top: 4mm;
+        font-size: 7.5pt;
+        color: #9ca3af;
+    }
+</style>
+
+{# German writes 1.640,3 and English 1,640.3. #}
+{% set dec = locale == 'de' ? ',' : '.' %}
+{% set thou = locale == 'de' ? '.' : ',' %}
+
+{# Drops a trailing zero decimal: 175 rather than 175,0, the way the printed
+   original writes it. #}
+{% macro num(value, dec, thou) %}
+    {{- value|number_format(value|round(1) == value|round(0) ? 0 : 1, dec, thou) -}}
+{% endmacro %}
+{% import _self as f %}
+
+<h1>{{ 'diary.title'|trans({}, 'pdf', locale) }}</h1>
+
+<p class="subtitle">
+    {% if report.days is empty %}
+        {{ 'diary.subtitle_empty'|trans({'%name%': user.displayName}, 'pdf', locale) }}
+    {% else %}
+        {{ 'diary.subtitle'|trans({
+            '%name%': user.displayName,
+            '%from%': report.from|date(locale == 'de' ? 'd.m.Y' : 'd M Y'),
+            '%to%': report.to|date(locale == 'de' ? 'd.m.Y' : 'd M Y'),
+            '%days%': report.dayCount,
+        }, 'pdf', locale) }}
+    {% endif %}
+</p>
+
+{% if report.days is empty %}
+    <p>{{ 'diary.empty'|trans({}, 'pdf', locale) }}</p>
+{% else %}
+    <div class="summary">
+        <p class="summary-name">
+            {{ 'diary.average_heading'|trans({'%name%': user.displayName}, 'pdf', locale) }}
+        </p>
+        <table width="100%">
+            <tr>
+                {% for key, label in {
+                    'kcal': 'diary.calories',
+                    'fat': 'diary.fat',
+                    'protein': 'diary.protein',
+                    'burned': 'diary.burned',
+                    'net': 'diary.net',
+                } %}
+                    <td width="20%">
+                        <span class="summary-label">{{ label|trans({}, 'pdf', locale) }}</span><br>
+                        <span class="summary-value">
+                            {%- if report.averages[key] is null -%}
+                                –
+                            {%- else -%}
+                                {{ f.num(report.averages[key], dec, thou) }}
+                                {{- key in ['fat', 'protein'] ? ' g' : ' kcal' -}}
+                            {%- endif -%}
+                        </span>
+                    </td>
+                {% endfor %}
+            </tr>
+        </table>
+    </div>
+
+    {% for day in report.days %}
+        <div class="day">
+            <table width="100%">
+                <tr>
+                    <td><p class="day-date">{{ day.date|date(locale == 'de' ? 'd.m.Y' : 'd M Y') }}</p></td>
+                    <td align="right">
+                        {% if day.badge %}
+                            <span class="badge">
+                                {{- ('diary.badge_' ~ (day.badge == 'training' ? 'training' : 'active'))|trans({}, 'pdf', locale) -}}
+                            </span>
+                        {% endif %}
+                    </td>
+                </tr>
+            </table>
+
+            {% if day.lines is not empty %}
+                <table class="items">
+                    <thead>
+                        <tr>
+                            <th>{{ 'diary.food'|trans({}, 'pdf', locale) }}</th>
+                            <th class="num" width="12%">{{ 'diary.kcal'|trans({}, 'pdf', locale) }}</th>
+                            <th class="num" width="12%">{{ 'diary.fat_g'|trans({}, 'pdf', locale) }}</th>
+                            <th class="num" width="12%">{{ 'diary.protein_g'|trans({}, 'pdf', locale) }}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for line in day.lines %}
+                            <tr{{ line.major ? ' class="major"'|raw : '' }}>
+                                <td>{{ line.label }}</td>
+                                <td class="num">{{ f.num(line.kcal, dec, thou) }}</td>
+                                <td class="num">{{ f.num(line.fat, dec, thou) }}</td>
+                                <td class="num">{{ f.num(line.protein, dec, thou) }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+
+                <p class="totals">
+                    {{ 'diary.sum'|trans({}, 'pdf', locale) }}
+                    <strong>{{ f.num(day.kcal, dec, thou) }} kcal</strong> ·
+                    <strong>{{ f.num(day.fat, dec, thou) }} g</strong> {{ 'diary.fat'|trans({}, 'pdf', locale) }} ·
+                    <strong>{{ f.num(day.protein, dec, thou) }} g</strong> {{ 'diary.protein'|trans({}, 'pdf', locale) }}
+                </p>
+            {% endif %}
+
+            {% if day.activities is not empty %}
+                <p class="totals">
+                    {{ 'diary.consumption'|trans({}, 'pdf', locale) }}
+                    <span class="burned"><strong>{{ f.num(day.burned, dec, thou) }} kcal</strong></span>
+                    ({% for activity in day.activities %}{{ activity.description }}{{ not loop.last ? ', ' }}{% endfor %})
+                    {% if day.lines is not empty %}
+                        · {{ 'diary.net_label'|trans({}, 'pdf', locale) }}
+                        <strong>{{ f.num(day.net, dec, thou) }} kcal</strong>
+                    {% endif %}
+                </p>
+            {% endif %}
+        </div>
+    {% endfor %}
+{% endif %}
+
+<p class="footer">
+    {{ 'diary.generated'|trans({'%date%': 'now'|date(locale == 'de' ? 'd.m.Y' : 'd M Y')}, 'pdf', locale) }}
+</p>
+{% endapply %}

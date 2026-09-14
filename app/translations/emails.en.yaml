@@ -1,0 +1,13 @@
+# Text of the transactional e-mails, English.
+#
+# The mails are rendered with the recipient's own language, which is why these
+# are translation keys rather than text in the template. Keep the keys in step
+# with emails.de.yaml - a missing key falls back to the key itself, which is
+# how "verify.subject" ends up in somebody's inbox as a subject line.
+verify:
+    subject: 'Confirm your Fitnessapp account'
+    greeting: 'Welcome, %name%'
+    intro: 'Confirm your e-mail address to activate your Fitnessapp account.'
+    button: 'Confirm my address'
+    fallback_intro: 'The link is valid for %hours% hours. If the button does not work, copy this address into your browser:'
+    ignore: 'If you did not create an account, you can ignore this message - without confirmation the address will not be used.'

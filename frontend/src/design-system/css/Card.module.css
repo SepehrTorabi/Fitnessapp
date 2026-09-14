@@ -1,0 +1,142 @@
+.card {
+  --card-image-aspect-ratio: 224 / 135;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  padding: 0;
+  background: var(--surface-primary);
+  border: var(--border-width-small) solid var(--border-primary);
+  border-radius: var(--border-radius-medium);
+  width: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
+  transition: border-color var(--duration-fast) var(--easing-standard), transform var(--duration-fast) var(--easing-standard);
+}
+
+/* Image wrapper — sits flush at the top, card overflow:hidden clips corners */
+.card__imageWrapper {
+  position: relative;
+  width: 100%;
+  flex-shrink: 0;
+}
+
+.card__image {
+  width: 100%;
+  aspect-ratio: var(--card-image-aspect-ratio);
+  object-fit: cover;
+  display: block;
+}
+
+.card__imagePlaceholder {
+  width: 100%;
+  aspect-ratio: var(--card-image-aspect-ratio);
+  background: var(--surface-disabled);
+}
+
+/* Body wraps all non-image structured content */
+.card__body {
+  padding: var(--spacing-large);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-medium);
+}
+
+/* Overlay slot (badges, live indicator, etc.) */
+.card__imageOverlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: var(--spacing-small);
+}
+
+/* Selected state */
+.card--selected {
+  border-color: var(--border-focus);
+}
+
+.card--selectable {
+  cursor: pointer;
+}
+
+.card--selectable:hover {
+  border-color: var(--border-action-hover);
+  transform: translateY(-2px);
+}
+
+.card__selectedMark {
+  position: absolute;
+  top: var(--spacing-small);
+  right: var(--spacing-small);
+  width: var(--scale-600);
+  height: var(--scale-600);
+  border-radius: var(--border-radius-round);
+  background: var(--text-information);
+  color: var(--text-on-action);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+/* Text block */
+.card__text {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.card__title {
+  font-size: var(--fontsize-headings-h5);
+  line-height: var(--line-height-heading-h5);
+  font-weight: var(--type-font-weight-bold);
+  color: var(--text-headings);
+  margin: 0;
+}
+
+.card__description {
+  font-size: var(--fontsize-body-medium);
+  line-height: var(--line-height-body-medium);
+  color: var(--text-body);
+  margin: 0;
+}
+
+/* Badges row */
+.card__badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-xs);
+}
+
+/* Meta / info row */
+.card__meta {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-small);
+  font-size: var(--fontsize-body-small);
+  line-height: var(--line-height-body-small);
+  color: var(--text-body);
+}
+
+.card__metaIcon {
+  width: var(--scale-600);
+  height: var(--scale-600);
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--icons-primary);
+}
+
+/* Modifiers — noPadding is a no-op now but kept for backward compat */
+.card--noPadding {
+  padding: 0;
+}
+
+/* Action button full-width layout */
+.card__action {
+  width: 100%;
+}

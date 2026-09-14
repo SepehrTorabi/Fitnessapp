@@ -1,0 +1,556 @@
+/* Design Tokens - Single :root block */
+:root {
+    --font-sans: 'Inclusive Sans', sans-serif;
+    --font-display: 'Bitcount Single', sans-serif;
+  /* Responsive - Desktop */
+  --fontsize-headings-h1: 60px;
+  --fontsize-headings-h2: 48px;
+  --fontsize-headings-h3: 40px;
+  --fontsize-headings-h4: 32px;
+  --fontsize-headings-h5: 24px;
+  --fontsize-headings-h6: 20px;
+  --fontsize-body-small: 12px;
+  --fontsize-body-medium: 16px;
+  --fontsize-body-large: 20px;
+  --fontsize-heading-small: var(--fontsize-headings-h6);
+  --fontsize-label-small: 10px;
+  --fontsize-label-xsmall: 10px;
+  --fontsize-label-xxsmall: 9px;
+  --line-height-label-small: 14px;
+  --line-height-label-xsmall: 12px;
+  --line-height-heading-h1: 72px;
+  --line-height-heading-h2: 56px;
+  --line-height-heading-h3: 48px;
+  --line-height-heading-h4: 40px;
+  --line-height-heading-h5: 28px;
+  --line-height-heading-h6: 24px;
+  --line-height-heading-small: var(--line-height-heading-h6);
+  --line-height-body-small: 20px;
+  --line-height-body-medium: 24px;
+  --line-height-body-large: 32px;
+  --paragraph-spacing-heading-h1: 72px;
+  --paragraph-spacing-heading-h2: 56px;
+  --paragraph-spacing-heading-h3: 48px;
+  --paragraph-spacing-heading-h4: 40px;
+  --paragraph-spacing-heading-h5: 28px;
+  --paragraph-spacing-heading-h6: 24px;
+  --paragraph-spacing-body-small: 20px;
+  --paragraph-spacing-body-medium: 24px;
+  --paragraph-spacing-body-large: 32px;
+  --spacing-3xs: var(--scale-50);
+  --spacing-2xs: var(--scale-100);
+  --spacing-xs: var(--scale-200);
+  --spacing-small: var(--scale-300);
+  --spacing-medium: var(--scale-400);
+  --spacing-layout: var(--scale-500);
+  --spacing-large: var(--scale-600);
+  --spacing-xl: var(--scale-800);
+  --spacing-2xl: var(--scale-1200);
+  --spacing-3xl: var(--scale-1600);
+
+  /* ── Spacing aliases (short names) ──────────────────────────────────────── */
+  --spacing-sm:  var(--spacing-small);   /* 12px alias */
+  --spacing-md:  var(--spacing-medium);  /* 16px alias */
+  --spacing-lg:  var(--spacing-large);   /* 24px alias */
+
+  /* Mapped - Mode 1 */
+  --text-headings: var(--neutral-dark-400);
+  --text-body: var(--neutral-dark-300);
+  --text-action: var(--primary-600);
+  --text-action-hover: var(--primary-700);
+  --text-disabled: var(--neutral-dark-200);
+  --text-information: var(--info-400);
+  --text-success: var(--success-400);
+  --text-warning: var(--warning-400);
+  --text-error: var(--error-400);
+  --text-warning-dim: var(--warning-300);
+  --text-error-dim: var(--error-300);
+  --text-brand: var(--secondary-400);
+  --text-on-action: var(--neutral-bright-100);
+  --text-on-disabled: var(--neutral-dark-400);
+  --surface-page: var(--color-white-pure);
+  --surface-primary: var(--color-white-pure);
+  --surface-success: var(--success-100);
+  --surface-warning: var(--warning-100);
+  --surface-error: var(--error-100);
+  --surface-information: var(--info-100);
+  --surface-disabled: var(--neutral-dark-100);
+  --surface-action: var(--primary-500);
+  --surface-action-hover: var(--primary-100);
+  --surface-action-hover-dark: var(--primary-600);
+  --surface-disabled-selected: var(--neutral-dark-300);
+  --surface-success-hover: var(--success-200);
+  --surface-warning-hover: var(--warning-200);
+  --surface-success-solid: var(--success-400);
+  --surface-warning-solid: var(--warning-400);
+  --surface-subtle:       var(--neutral-bright-200);
+  --surface-subtle-hover: var(--neutral-bright-300);
+  --icons-primary: var(--neutral-dark-400);
+  --icons-information: var(--info-400);
+  --icons-success: var(--success-400);
+  --icons-warning: var(--warning-400);
+  --icons-error: var(--error-400);
+  --icons-disabled: var(--neutral-dark-200);
+  --icons-action: var(--primary-600);
+  --icons-action-hover: var(--primary-700);
+  --icons-on-disabled: var(--neutral-dark-400);
+  --icons-on-action: var(--neutral-bright-100);
+  --border-primary: var(--neutral-dark-200);
+  --border-action: var(--primary-600);
+  --border-action-hover: var(--primary-700);
+  --border-focus: var(--primary-600);
+  --border-disabled: var(--neutral-dark-200);
+  --border-error: var(--error-400);
+  --border-success: var(--success-400);
+  --border-warning: var(--warning-400);
+  --border-information: var(--info-400);
+
+  /* ── Code block ──────────────────────────────────────────────────────────── */
+  --surface-code:             var(--color-code-bg);
+  --border-code:              var(--color-code-border);
+  --text-code:                var(--color-code-text);
+  --text-code-muted:          var(--color-code-text-muted);
+  --text-code-action:         var(--color-code-text-action);
+  --text-code-action-hover:   var(--color-code-text-action-hover);
+
+  /* Alias - Mode 1 */
+  --primary-700: var(--color-gold-700);
+  --primary-600: var(--color-gold-600);
+  --primary-500: var(--color-gold-500);
+  --primary-400: var(--color-gold-400);
+  --primary-300: var(--color-gold-300);
+  --primary-200: var(--color-gold-200);
+  --primary-100: var(--color-gold-100);
+  --secondary-700: var(--color-yellow-700);
+  --secondary-600: var(--color-yellow-600);
+  --secondary-500: var(--color-yellow-500);
+  --secondary-400: var(--color-yellow-400);
+  --secondary-300: var(--color-yellow-300);
+  --secondary-200: var(--color-yellow-200);
+  --secondary-100: var(--color-yellow-100);
+  --tertiary-700: var(--color-turquoise-700);
+  --tertiary-600: var(--color-turquoise-600);
+  --tertiary-500: var(--color-turquoise-500);
+  --tertiary-400: var(--color-turquoise-400);
+  --tertiary-300: var(--color-turquoise-300);
+  --tertiary-200: var(--color-turquoise-200);
+  --tertiary-100: var(--color-turquoise-100);
+  --success-700: var(--color-green-700);
+  --success-600: var(--color-green-600);
+  --success-500: var(--color-green-500);
+  --success-400: var(--color-green-400);
+  --success-300: var(--color-green-300);
+  --success-200: var(--color-green-200);
+  --success-100: var(--color-green-100);
+  --warning-700: var(--color-orange-700);
+  --warning-600: var(--color-orange-600);
+  --warning-500: var(--color-orange-500);
+  --warning-400: var(--color-orange-400);
+  --warning-300: var(--color-orange-300);
+  --warning-200: var(--color-orange-200);
+  --warning-100: var(--color-orange-100);
+  --error-700: var(--color-red-700);
+  --error-600: var(--color-red-600);
+  --error-500: var(--color-red-500);
+  --error-400: var(--color-red-400);
+  --error-300: var(--color-red-300);
+  --error-200: var(--color-red-200);
+  --error-100: var(--color-red-100);
+  --info-700: var(--color-blue-700);
+  --info-600: var(--color-blue-600);
+  --info-500: var(--color-blue-500);
+  --info-400: var(--color-blue-400);
+  --info-300: var(--color-blue-300);
+  --info-200: var(--color-blue-200);
+  --info-100: var(--color-blue-100);
+  --neutral-bright-400: var(--color-white-400);
+  --neutral-bright-300: var(--color-white-300);
+  --neutral-bright-200: var(--color-white-200);
+  --neutral-bright-100: var(--color-white-100);
+  --neutral-dark-400: var(--color-black-400);
+  --neutral-dark-300: var(--color-black-300);
+  --neutral-dark-200: var(--color-black-200);
+  --neutral-dark-100: var(--color-black-100);
+  --border-width-none: var(--scale-0);
+  --border-width-small: var(--scale-25);
+  --border-width-medium: var(--scale-50);
+  --border-width-large: var(--scale-100);
+  /* Only two box radii app-wide: small for compact/nested controls (inputs, buttons,
+     chips, list rows), medium for standalone containers (cards, modals, panels,
+     dropdowns). --border-radius-none (sharp corners) and --border-radius-round
+     (circles/pills) remain as deliberate, documented exceptions — see CLAUDE.md
+     Rule 4. When nesting a box inside another rounded box, the outer box uses
+     medium and the inner one uses small (CLAUDE.md Rule 5's outer/inner pair). */
+  --border-radius-none: var(--scale-0);
+  --border-radius-small: var(--scale-100);
+  --border-radius-medium: var(--scale-200);
+  --border-radius-round: var(--scale-1600);
+  --color-gold-700: #2B220AFF;
+  --color-gold-600: #564415FF;
+  --color-gold-500: #81661FFF;
+  --color-gold-400: #AD882AFF;
+  --color-gold-300: #C1A55FFF;
+  --color-gold-200: #D6C394FF;
+  --color-gold-100: #EAE1CAFF;
+  --color-yellow-700: #402A12FF;
+  --color-yellow-600: #805323FF;
+  --color-yellow-500: #BF7D35FF;
+  --color-yellow-400: #FFA646FF;
+  --color-yellow-300: #FFBC74FF;
+  --color-yellow-200: #FFD3A2FF;
+  --color-yellow-100: #FFE9D1FF;
+  --color-turquoise-700: #0D2A2BFF;
+  --color-turquoise-600: #1A5556FF;
+  --color-turquoise-500: #267F81FF;
+  --color-turquoise-400: #33A9ACFF;
+  --color-turquoise-300: #66BFC1FF;
+  --color-turquoise-200: #99D4D5FF;
+  --color-turquoise-100: #CCE9E1FF;
+  --color-red-700: #310C04FF;
+  --color-red-600: #621809FF;
+  --color-red-500: #94230DFF;
+  --color-red-400: #C52F11FF;
+  --color-red-300: #D3634DFF;
+  --color-red-200: #E29788FF;
+  --color-red-100: #F0CBC4FF;
+  --color-green-700: #132B03FF;
+  --color-green-600: #265706FF;
+  --color-green-500: #3A8209FF;
+  --color-green-400: #4DAD0DFF;
+  --color-green-300: #79C249FF;
+  --color-green-200: #A6D686FF;
+  --color-green-100: #D2EBC2FF;
+  --color-blue-700: #03152BFF;
+  --color-blue-600: #062957FF;
+  --color-blue-500: #093E82FF;
+  --color-blue-400: #0D52ADFF;
+  --color-blue-300: #497DC2FF;
+  --color-blue-200: #86A9D6FF;
+  --color-blue-100: #C2D4EBFF;
+  --color-black-400: #050628FF;
+  --color-black-300: #44445EFF;
+  --color-black-200: #828294FF;
+  --color-black-100: #C1C1C9FF;
+  --color-white-400: #E2E2E2FF;
+  --color-white-300: #EAEAEAFF;
+  --color-white-200: #F1F1F1FF;
+  --color-white-100: #F8F8F8FF;
+  --color-orange-700: #391B05FF;
+  --color-orange-600: #72360BFF;
+  --color-orange-500: #AC5110FF;
+  --color-orange-400: #E56C15FF;
+  --color-orange-300: #EB9150FF;
+  --color-orange-200: #F2B58AFF;
+  --color-orange-100: #F8DAC5FF;
+  /* Dark navy elevation scale (dark = page, light = elevated) */
+  --color-navy-900: #0B0C2A;
+  --color-navy-800: #0D0E30;
+  --color-navy-700: #12143A;
+  --color-navy-600: #1A1C40;
+  --color-navy-500: #222558;
+
+  /* ── Dark mode primitive palette ───────────────────────────────────────── */
+  /* Action hover surfaces (dark gold) */
+  --color-gold-dark-900: #160E02;
+  --color-gold-dark-800: #2B220A;
+
+  /* Neutral lavender scale — text/border/surface on dark backgrounds */
+  --color-lavender-100: #EEEEF8;
+  --color-lavender-200: #9898B4;
+  --color-lavender-300: #6B6B8A;
+  --color-lavender-400: #44445E;
+  --color-lavender-500: #2C2D50;
+  --color-lavender-600: #2A2B46;
+  --color-lavender-700: #1E1F3C;
+
+  /* Pure white (for on-action text in dark mode) */
+  --color-white-pure: #FFFFFF;
+
+  /* Code block palette (theme-invariant — code blocks always render dark) */
+  --color-code-bg:                #16161e;
+  --color-code-border:            rgba(255, 255, 255, 0.08);
+  --color-code-text:              #c9d1d9;
+  --color-code-text-muted:        rgba(255, 255, 255, 0.35);
+  --color-code-text-action:       rgba(255, 255, 255, 0.5);
+  --color-code-text-action-hover: rgba(255, 255, 255, 0.85);
+
+  /* Semantic surface tints for dark mode */
+  --color-red-dark-surface:    #2B0E09;
+  --color-orange-dark-surface: #261508;
+  --color-green-dark-surface:  #0D2103;
+  --color-blue-dark-surface:   #081630;
+
+  /* Semantic surface hover tints for dark mode */
+  --color-green-dark-surface-hover:  #172E06;
+  --color-orange-dark-surface-hover: #2E1B05;
+
+  /* Scrim / video overlay primitives */
+  --color-black-scrim:      rgba(0, 0, 0, 0.30);
+  --color-black-scrim-dark: rgba(0, 0, 0, 0.45);
+  --color-black-scrim-strong: rgba(0, 0, 0, 0.65); /* ImageList caption gradient overlay */
+
+  /* White-scrim primitives (video player controls on dark backgrounds) */
+  --color-white-scrim-10: rgba(255, 255, 255, 0.10);
+  --color-white-scrim-20: rgba(255, 255, 255, 0.20);
+  --color-white-scrim-40: rgba(255, 255, 255, 0.40);
+  --color-white-scrim-70: rgba(255, 255, 255, 0.70);
+  --color-white-scrim-80: rgba(255, 255, 255, 0.80); /* ImageList caption subtitle text on dark overlay */
+  --type-font-weight-regular: 400;
+  --type-font-family-primary: var(--font-sans);
+  --type-font-family-secondary: 'Indie Flower', cursive;
+  --type-font-weight-semi-bold: 600;
+  --type-font-weight-bold: 700;
+  --type-font-weight-medium: 500;
+  --scale-0: 0px;
+  --scale-25: 1px;
+  --scale-50: 2px;
+  --scale-100: 4px;
+  --scale-150: 6px;
+  --scale-200: 8px;
+  --scale-300: 12px;
+  --scale-400: 16px;
+  --scale-500: 20px;
+  --scale-600: 24px;
+  --scale-700: 28px;
+  --scale-800: 32px;
+  --scale-900: 36px;
+  --scale-1000: 40px;
+  --scale-1100: 44px;
+  --scale-1200: 48px;
+  --scale-1400: 56px;
+  --scale-1600: 64px;
+  --scale-1800: 72px;   /* carousel slide image placeholder height */
+  --scale-2000: 80px;
+  --scale-2400: 96px;
+  --scale-3200: 128px;
+  --scale-3500: 140px;
+
+  --overlay-backdrop: rgba(5, 6, 40, 0.48);
+
+  /* ── Opacity ─────────────────────────────────────────────────────────────── */
+  --opacity-disabled: 0.48;
+  --opacity-subdued: 0.4;
+  --opacity-empty: 0.3;
+  --opacity-secondary: 0.72;
+  --opacity-pulse-dim: 0.5;
+
+  /* ─── State layers ──────────────────────────────────────────────────────────── */
+  --state-hover-opacity:  0.08;
+  --state-press-opacity:  0.12;
+  --state-focus-opacity:  0.16;
+  --state-drag-opacity:   0.16;
+
+  /* ── Line-height (unitless) ──────────────────────────────────────────────── */
+  --line-height-tight: 1;
+  --line-height-display: 1.2;
+
+  /* ── Letter-spacing ──────────────────────────────────────────────────────── */
+  --letter-spacing-none: 0;
+  --letter-spacing-xs:   0.01em;
+  --letter-spacing-sm:   0.02em;
+  --letter-spacing-md:   0.04em;
+  --letter-spacing-caps: 0.05em;
+  --letter-spacing-lg:   0.06em;
+
+  /* ── Semantic surface additions ──────────────────────────────────────────── */
+  --surface-overlay:       var(--neutral-dark-400);
+  --surface-table-header:  var(--neutral-dark-100);
+  --surface-skeleton:      var(--neutral-bright-400);
+  --surface-field:         var(--surface-primary);
+  --surface-video-scrim:   var(--color-black-scrim);
+
+  /* ── Semantic text additions ─────────────────────────────────────────────── */
+  --text-muted: var(--neutral-dark-300);
+
+  /* ── Semantic icon additions ─────────────────────────────────────────────── */
+  /* Fixed amber, independent of --secondary-400 and its per-brand overrides —
+     used only by Rating's filled stars, which must stay recognizable as
+     "rating" across every brand theme rather than shifting with the brand's
+     accent color. */
+  --icons-accent: var(--color-yellow-400);
+
+  /* ── Motion ──────────────────────────────────────────────────────────────── */
+  --duration-instant:  0ms;
+  --duration-50:       50ms;
+  --duration-fast:     100ms;
+  --duration-normal:   200ms;
+  --duration-slow:     300ms;
+  --duration-slower:   400ms;
+  --duration-spin:       600ms;
+  --duration-shimmer:    1400ms;
+  --duration-live-pulse: 1500ms;
+  --easing-standard:     cubic-bezier(0.4, 0, 0.2, 1);
+  --easing-decelerate:   cubic-bezier(0, 0, 0.2, 1);
+  --easing-accelerate:   cubic-bezier(0.4, 0, 1, 1);
+  --easing-spring:       cubic-bezier(0.34, 1.56, 0.64, 1);
+  --easing-linear:       linear;
+  --easing-ease:         ease;
+  --easing-ease-in-out:  ease-in-out;
+
+  /* ── Z-index scale ───────────────────────────────────────────────────────── */
+  --z-base:     0;
+  --z-raised:   10;
+  --z-dropdown: 100;
+  --z-sticky:   200;
+  --z-overlay:  500;
+  --z-modal:    1000;
+  --z-toast:    1200;
+  --z-tooltip:  1400;
+
+  /* ── Component size tokens ─────────────────────────────────────────────────── */
+  --size-dialog-sm:    400px;
+  --size-modal-sm:     480px;
+  --size-form-sm:      320px;   /* Single-column sign-in / auth form */
+  --size-card-profile: 264px;   /* Profile / stats content card width */
+  --size-panel-aside:  260px;   /* Fixed-width aside panel (e.g. review submit form) */
+  --size-panel-list-min: 300px; /* Min width for flex-1 list / content panel */
+  --size-record-label-col: 88px; /* Label column in record detail header grids */
+  --size-description-label-col: 120px; /* Descriptions horizontal-item label column min-width */
+  --size-record-detail-label-col: 140px; /* RecordDetailHeader pattern label column width */
+  --size-modal-md:     600px;
+  --size-modal-lg:     800px;
+  --size-drawer-sm:    320px;
+  --size-drawer-md:    480px;
+  --size-popover-min:  200px;
+  --size-popover-max:  320px;
+  --size-select-min:   7rem;
+  --size-color-picker-popup:  260px;
+  --size-color-picker-canvas: 180px;
+  --size-empty-state-copy:    360px;
+  --size-result-copy:          480px; /* Result description paragraph max-width */
+  --size-toast:                320px; /* Toast fixed panel width */
+  --size-nav-rail-default:     240px; /* NavigationRail expanded/default width */
+  --min-width-field:           220px;
+  --min-width-form:            240px;
+  --min-width-form-item:       180px; /* Form inline layout item min-width */
+  --min-width-badge-count:     18px;  /* Sidebar group item-count pill min-width */
+  --size-stat-min:             140px;
+  --size-grid-stat-min:        160px;
+  --size-grid-card-min:        260px;
+  --size-checkbox-check-w:     11px;
+  --size-checkbox-minus-w:     10px;
+  --size-pattern-sm:           420px;
+  --size-pattern-md:           460px;
+  --size-pattern-lg:           500px;
+  --size-pattern-xl:           520px;
+  --size-content-sm:           640px;   /* Small-content / single-column page max-width */
+  --size-content-md:           800px;   /* Mid-width template / settings container */
+  --size-content-lg:           900px;   /* Wide dashboard / data-rich template container */
+  --size-hero-banner:          280px;   /* Full-width hero banner height (artist/film profile templates) */
+  --size-thumb-sm:             var(--scale-1000);  /* 40px — track row thumbnail */
+  --size-thumb-md:             var(--scale-1200);  /* 48px — now-playing album art */
+  --size-thumb-lg:             var(--scale-1800);  /* 72px — spotlight / featured card art */
+
+  /* ── Motion scale tokens (keyframe enter states) ─────────────────────────── */
+  --motion-scale-enter-modal:   0.98;
+  --motion-scale-enter-overlay: 0.96;
+  --motion-scale-enter-tooltip: 0.95;
+  --motion-scale-active:        0.95;  /* alias for press/active states */
+  --motion-scale-hover-sm:      1.08;  /* gentle hover grow for small action buttons */
+
+  /* ── Duration stagger step for sequential animations ────────────────────── */
+  --duration-stagger-step: 40ms;
+
+  /* ── Component size tokens ───────────────────────────────────────────────── */
+  --size-command-list-max: 360px;  /* CommandPalette results list max-height */
+  --size-lyrics-panel-max: 400px;  /* LyricsPanel max-height */
+  --size-podcast-progress-max: 120px; /* PodcastEpisodeRow progress bar max-width */
+  --size-volume-track: 96px;       /* VolumeControl track width */
+  --size-hero-poster-width: 200px; /* MovieDetailHeader poster box width (2:3 aspect ratio) */
+
+  /* ── Breakpoints (for JS / container queries) ────────────────────────────── */
+  --breakpoint-sm:  640px;
+  --breakpoint-md:  768px;
+  --breakpoint-lg:  1024px;
+  --breakpoint-xl:  1280px;
+  --breakpoint-2xl: 1536px;
+
+  /* ── Fictional streaming-service brand colors (StreamingBadge) ───────────── */
+  /* Invented service identities, not design-system semantics — theme-invariant,
+     no dark-mode override (a logo's color doesn't change with the app theme). */
+  --brand-flicker:    #e50914;
+  --brand-vantage:    #5d2d8a;
+  --brand-storybrook: #113ccf;
+  --brand-orbit:      #1d1d1f;
+  --brand-voyage:     #00a8e0;
+}
+
+/* ── Dark mode overrides ─────────────────────────────────────────────────── */
+[data-theme="dark"] {
+  --surface-page:              var(--color-navy-900);
+  --surface-primary:           var(--color-navy-700);
+  --surface-action:            var(--primary-400);
+  --surface-action-hover:      var(--color-gold-dark-900);
+  --surface-action-hover-dark: var(--color-gold-dark-800);
+  --surface-disabled:          var(--color-lavender-700);
+  --surface-disabled-selected: var(--color-lavender-500);
+  --surface-error:             var(--color-red-dark-surface);
+  --surface-warning:           var(--color-orange-dark-surface);
+  --surface-success:           var(--color-green-dark-surface);
+  --surface-information:       var(--color-blue-dark-surface);
+  --text-headings:             var(--color-lavender-100);
+  --text-body:                 var(--color-lavender-200);
+  --text-disabled:             var(--color-lavender-400);
+  --text-on-action:            var(--color-white-pure);
+  --text-on-disabled:          var(--color-lavender-200);
+  --icons-primary:             var(--color-lavender-100);
+  --icons-disabled:            var(--color-lavender-400);
+  --icons-on-disabled:         var(--color-lavender-200);
+  --icons-on-action:           var(--color-white-pure);
+  --border-primary:            var(--color-lavender-600);
+  --border-disabled:           var(--color-lavender-600);
+  --border-action:             var(--primary-400);
+  --border-action-hover:       var(--primary-300);
+  --border-focus:              var(--primary-400);
+
+  /* ── Text — action & semantic ──────────────────────────────────────────── */
+  --text-action:        var(--primary-200);
+  --text-action-hover:  var(--primary-100);
+  --text-information:   var(--info-300);
+  --text-success:       var(--success-300);
+  --text-warning:       var(--warning-300);
+  --text-error:         var(--error-300);
+  --text-warning-dim:   var(--warning-200);
+  --text-error-dim:     var(--error-200);
+  --text-muted:         var(--color-lavender-300);
+  --text-brand:         var(--secondary-300);
+
+  /* ── Surface — missing entries ─────────────────────────────────────────── */
+  --surface-table-header:  var(--color-navy-600);
+  --surface-skeleton:      var(--color-navy-600);
+  --surface-field:         var(--color-navy-600);
+  --surface-overlay:       var(--color-navy-900);
+  --surface-success-hover: var(--color-green-dark-surface-hover);
+  --surface-warning-hover: var(--color-orange-dark-surface-hover);
+  --surface-success-solid: var(--success-500);
+  --surface-warning-solid: var(--warning-500);
+  --surface-subtle:       var(--color-navy-600);
+  --surface-subtle-hover: var(--color-navy-500);
+  --surface-video-scrim:   var(--color-black-scrim-dark);
+
+  /* ── Icons — missing entries ────────────────────────────────────────────── */
+  --icons-action:       var(--primary-200);
+  --icons-action-hover: var(--primary-100);
+  --icons-information:  var(--info-300);
+  --icons-success:      var(--success-300);
+  --icons-warning:      var(--warning-300);
+  --icons-error:        var(--error-300);
+  --icons-accent:       var(--color-yellow-300);
+
+  /* ── Borders — missing entries ──────────────────────────────────────────── */
+  --border-error:       var(--error-500);
+  --border-success:     var(--success-500);
+  --border-warning:     var(--warning-500);
+  --border-information: var(--info-500);
+
+  /* ── Misc ───────────────────────────────────────────────────────────────── */
+  --overlay-backdrop:  rgba(0, 0, 0, 0.64);
+
+  /* ── Code block (theme-invariant — same values as :root, kept explicit) ── */
+  --surface-code:             var(--color-code-bg);
+  --border-code:              var(--color-code-border);
+  --text-code:                var(--color-code-text);
+  --text-code-muted:          var(--color-code-text-muted);
+  --text-code-action:         var(--color-code-text-action);
+  --text-code-action-hover:   var(--color-code-text-action-hover);
+}

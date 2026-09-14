@@ -1,20 +1,29 @@
-/.env.local
-/.idea
+# --- OS / IDE ---
+.DS_Store
+/.idea/
+*.iml
 
-/.env.local.php
-/.env.*.local
-/config/secrets/prod/prod.decrypt.private.php
-/public/bundles/
-/var/
-/vendor/
-###< symfony/framework-bundle ###
+# --- Symfony (app/) ---
+/app/.env.local
+/app/.env.local.php
+/app/.env.*.local
+/app/config/secrets/prod/prod.decrypt.private.php
+/app/public/bundles/
+/app/var/
+/app/vendor/
 
-###> symfony/phpunit-bridge ###
+# --- PHPUnit ---
+/app/phpunit.xml
+/app/.phpunit.cache/
 .phpunit.result.cache
-/phpunit.xml
-###< symfony/phpunit-bridge ###
 
-###> phpunit/phpunit ###
-/phpunit.xml
-.phpunit.result.cache
-###< phpunit/phpunit ###
+# --- Frontend (frontend/) ---
+/frontend/node_modules/
+/frontend/dist/
+/frontend/.vite/
+/frontend/*.local
+/frontend/coverage/
+
+# --- Build output ---
+/build/
+/dist/

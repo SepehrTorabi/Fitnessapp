@@ -1,0 +1,136 @@
+.alert {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: flex-start;
+  gap: var(--spacing-small);
+  padding: var(--spacing-medium);
+  border-radius: var(--border-radius-small);
+  border: var(--border-width-small) solid transparent;
+  background: var(--surface-primary);
+  box-sizing: border-box;
+}
+
+.alert--info    { border-color: var(--icons-information); }
+.alert--success { border-color: var(--icons-success); }
+.alert--warning { border-color: var(--icons-warning); }
+.alert--error   { border-color: var(--icons-error); }
+
+.alert__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--scale-600);
+  height: var(--scale-600);
+  flex-shrink: 0;
+}
+
+.alert__icon :global(.svg-icon) {
+  width: var(--scale-600) !important;
+  height: var(--scale-600) !important;
+}
+.alert__icon :global(.svg-icon svg) {
+  /* Raw <svg width height> attrs aren't constrained by sizing the parent span. */
+  width: 100%;
+  height: 100%;
+}
+
+.alert--info .alert__icon    { color: var(--icons-information); }
+.alert--success .alert__icon { color: var(--icons-success); }
+.alert--warning .alert__icon { color: var(--icons-warning); }
+.alert--error .alert__icon   { color: var(--icons-error); }
+
+.alert__body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-3xs);
+  min-width: 0;
+}
+
+.alert__title {
+  font-family: var(--font-sans);
+  font-size: var(--fontsize-body-medium);
+  font-weight: var(--type-font-weight-semi-bold);
+  line-height: var(--line-height-body-medium);
+}
+
+.alert--info .alert__title    { color: var(--text-information); }
+.alert--success .alert__title { color: var(--text-success); }
+.alert--warning .alert__title { color: var(--text-warning); }
+.alert--error .alert__title   { color: var(--text-error); }
+
+.alert__description {
+  font-family: var(--font-sans);
+  font-size: var(--fontsize-body-small);
+  font-weight: var(--type-font-weight-regular);
+  line-height: var(--line-height-body-small);
+  color: var(--text-body);
+}
+
+.alert__dismiss {
+  /* ButtonIcon (transparent variant) owns all interactive styles — only layout overrides here */
+  width: var(--scale-600);
+  height: var(--scale-600);
+  flex-shrink: 0;
+  color: var(--icons-primary);
+}
+
+/* ─── Banner ────────────────────────────────────────────────────────────────── */
+.banner {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: flex-start;
+  gap: var(--spacing-small);
+  padding: var(--spacing-medium);
+  border-radius: var(--border-radius-small);
+  border-left: var(--scale-100) solid var(--border-primary);
+  background: var(--surface-primary);
+  box-sizing: border-box;
+  width: 100%;
+}
+
+.banner--info    { border-left-color: var(--icons-information); background: var(--surface-information); }
+.banner--success { border-left-color: var(--icons-success);     background: var(--surface-success); }
+.banner--warning { border-left-color: var(--icons-warning);     background: var(--surface-warning); }
+.banner--error   { border-left-color: var(--icons-error);       background: var(--surface-error); }
+
+.banner .alert__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--scale-600);
+  height: var(--scale-600);
+  flex-shrink: 0;
+}
+
+.banner--info .alert__icon    { color: var(--icons-information); }
+.banner--success .alert__icon { color: var(--icons-success); }
+.banner--warning .alert__icon { color: var(--icons-warning); }
+.banner--error .alert__icon   { color: var(--icons-error); }
+
+.bannerAction {
+  appearance: none;
+  -webkit-appearance: none;
+  display: inline-flex;
+  align-items: center;
+  background: transparent;
+  border: var(--border-width-small) solid currentColor;
+  border-radius: var(--border-radius-small);
+  padding: var(--spacing-3xs) var(--spacing-small);
+  margin-top: var(--spacing-xs);
+  font-family: var(--font-sans);
+  font-size: var(--fontsize-body-small);
+  line-height: var(--line-height-body-small);
+  font-weight: var(--type-font-weight-semi-bold);
+  cursor: pointer;
+  color: inherit;
+  transition: background var(--duration-fast) var(--easing-standard);
+}
+
+.bannerAction:hover {
+  background: var(--surface-action-hover);
+}
+
+.bannerAction:focus-visible {
+  outline: var(--border-width-small) solid var(--border-focus);
+  outline-offset: var(--border-width-medium);
+}

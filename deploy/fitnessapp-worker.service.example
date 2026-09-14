@@ -1,0 +1,33 @@
+# Sample systemd unit for the Messenger worker.
+#
+# Confirmation mails are queued rather than sent during the request, so
+# something has to drain that queue. Without this unit running, registration
+# appears to work but no mail ever arrives.
+#
+# Copy to /etc/systemd/system/fitnessapp-worker.service, then:
+#   systemctl daemon-reload && systemctl enable --now fitnessapp-worker
+
+[Unit]
+Description=Fitnessapp Messenger worker
+After=network.target postgresql.service
+
+[Service]
+Type=simple
+User=www-data
+Group=www-data
+WorkingDirectory=/srv/fitnessapp/app
+
+# --time-limit makes the worker exit periodically and systemd restart it, which
+# keeps long-running PHP processes from accumulating memory.
+ExecStart=/usr/bin/php bin/console messenger:consume async --time-limit=3600 --memory-limit=128M --env=prod --no-debug
+
+Restart=always
+RestartSec=5
+
+# The worker needs no network listeners and no write access outside var/.
+PrivateTmp=true
+ProtectSystem=full
+NoNewPrivileges=true
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,23 @@
+includes:
+    # Teaches PHPStan that assertInstanceOf() and friends narrow types, so the
+    # tests do not need casts or inline @var to type-check.
+    - vendor/phpstan/phpstan-phpunit/extension.neon
+    - vendor/phpstan/phpstan-phpunit/rules.neon
+    - vendor/phpstan/phpstan-symfony/extension.neon
+    - vendor/phpstan/phpstan-symfony/rules.neon
+    - vendor/phpstan/phpstan-doctrine/extension.neon
+    - vendor/phpstan/phpstan-doctrine/rules.neon
+
+parameters:
+    level: 6
+    paths:
+        - src
+        - tests
+
+    symfony:
+        # Lets PHPStan read the compiled container, so $container->get('id')
+        # and autowired services resolve to their real types instead of object.
+        containerXmlPath: var/cache/dev/App_KernelDevDebugContainer.xml
+
+    doctrine:
+        objectManagerLoader: tests/object-manager.php
