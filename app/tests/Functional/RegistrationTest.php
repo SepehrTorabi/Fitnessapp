@@ -8,6 +8,7 @@ use App\Entity\EmailVerificationToken;
 use App\Repository\UserRepository;
 use PHPUnit\Framework\Attributes\CoversNothing;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Mime\Email;
 
 /**
  * The registration and confirmation flow, end to end over HTTP.
@@ -27,8 +28,10 @@ final class RegistrationTest extends ApiTestCase
         self::assertFalse($this->responseData()['user']['verified']);
         self::assertEmailCount(1);
 
+        // The assertions hand back a RawMessage; narrowing to Email is also a
+        // real check that what went out was a proper templated mail.
         $email = self::getMailerMessage();
-        self::assertNotNull($email);
+        self::assertInstanceOf(Email::class, $email);
         self::assertStringContainsString('Confirm your Fitnessapp account', $email->getSubject() ?? '');
     }
 
@@ -264,7 +267,10 @@ final class RegistrationTest extends ApiTestCase
         $messages = self::getMailerMessages();
         self::assertNotEmpty($messages, 'No mail was sent.');
 
+        // Narrowing to Email is also a real check that what went out was a
+        // proper templated mail rather than a bare message.
         $email = end($messages);
+        self::assertInstanceOf(Email::class, $email);
 
         $body = $email->getHtmlBody();
         self::assertIsString($body);

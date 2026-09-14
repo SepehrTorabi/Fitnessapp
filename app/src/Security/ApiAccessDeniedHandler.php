@@ -15,7 +15,7 @@ use Symfony\Component\Security\Http\Authorization\AccessDeniedHandlerInterface;
  */
 final class ApiAccessDeniedHandler implements AccessDeniedHandlerInterface
 {
-    public function handle(Request $request, AccessDeniedException $accessDeniedException): ?Response
+    public function handle(Request $request, AccessDeniedException $accessDeniedException): Response
     {
         return new JsonResponse([
             'error' => 'access_denied',

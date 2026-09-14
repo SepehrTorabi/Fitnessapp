@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Controller\Api;
 
 use App\Api\Dto\CreateFoodRequest;
-use App\Api\Dto\FoodPortionRequest;
 use App\Api\Presenter\FoodPresenter;
 use App\Entity\Food;
 use App\Entity\FoodPortion;
@@ -141,9 +140,7 @@ final class FoodController extends ApiController
         $food->setCreatedBy($user);
 
         foreach ($payload->portions as $portion) {
-            if ($portion instanceof FoodPortionRequest) {
-                $food->addPortion(new FoodPortion($food, trim($portion->label), $portion->grams));
-            }
+            $food->addPortion(new FoodPortion($food, trim($portion->label), $portion->grams));
         }
 
         $this->foods->save($food);

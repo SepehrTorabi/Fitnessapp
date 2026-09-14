@@ -3,7 +3,18 @@ import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 
 // https://vite.dev/config/
-export default defineConfig({
+export default defineConfig(({ command }) => ({
+  /*
+   * In development Vite serves the app at the root of its own dev server. A
+   * production build is served from /app/ inside the Symfony public directory -
+   * one web server for both halves, so the session cookie stays same-origin -
+   * and the built asset URLs have to match that path or every script 404s.
+   *
+   * Vite exposes this as import.meta.env.BASE_URL, which is what the router
+   * uses for its own base, so the two can never drift apart.
+   */
+  base: command === 'build' ? '/app/' : '/',
+
   plugins: [vue()],
   resolve: {
     alias: {
@@ -24,4 +35,4 @@ export default defineConfig({
       },
     },
   },
-})
+}))

@@ -1,0 +1,67 @@
+# Sample nginx server block for a Fitnessapp release.
+#
+# One server serves both halves: the JSON API through PHP-FPM, and the built
+# Vue app as static files under /app/. That is deliberate - sharing an origin is
+# what lets the session cookie work without CORS and without SameSite=None.
+#
+# Copy to /etc/nginx/sites-available/fitnessapp, edit the two paths and the
+# server name, then enable it and reload nginx.
+
+server {
+    listen 80;
+    server_name fitnessapp.example.com;
+
+    # The Symfony public directory of the unpacked release.
+    root /srv/fitnessapp/app/public;
+
+    # --- The API ------------------------------------------------------------
+    # Every request that is not a real file goes to Symfony's front controller.
+    location /api {
+        try_files $uri /index.php$is_args$args;
+    }
+
+    # --- The single-page app ------------------------------------------------
+    # Any path under /app/ that is not a real file has to return index.html:
+    # /app/diary is a route inside the SPA, not a file on disk, and without this
+    # a reload or a shared link answers 404.
+    location /app/ {
+        try_files $uri $uri/ /app/index.html;
+    }
+
+    # Built assets carry a content hash in their filename, so they can be
+    # cached indefinitely - a change produces a different name.
+    location /app/assets/ {
+        access_log off;
+        expires 1y;
+        add_header Cache-Control "public, immutable";
+        try_files $uri =404;
+    }
+
+    location = / {
+        return 302 /app/;
+    }
+
+    # --- PHP ----------------------------------------------------------------
+    location ~ ^/index\.php(/|$) {
+        fastcgi_pass unix:/run/php/php8.4-fpm.sock;
+        fastcgi_split_path_info ^(.+\.php)(/.*)$;
+        include fastcgi_params;
+
+        fastcgi_param SCRIPT_FILENAME $realpath_root$fastcgi_script_name;
+        fastcgi_param DOCUMENT_ROOT $realpath_root;
+
+        # Only the front controller may be executed. Without this, any other
+        # .php file that ends up under public/ becomes directly reachable.
+        internal;
+    }
+
+    # Refuse every other .php path rather than serving it as source.
+    location ~ \.php$ {
+        return 404;
+    }
+
+    client_max_body_size 4m;
+
+    error_log /var/log/nginx/fitnessapp_error.log;
+    access_log /var/log/nginx/fitnessapp_access.log;
+}

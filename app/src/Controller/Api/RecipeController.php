@@ -131,10 +131,6 @@ final class RecipeController extends ApiController
     private function applyIngredients(Recipe $recipe, array $ingredients, User $user): ?JsonResponse
     {
         foreach ($ingredients as $ingredient) {
-            if (!$ingredient instanceof RecipeIngredientRequest) {
-                continue;
-            }
-
             $food = $this->foods->find($ingredient->foodId);
 
             if (null === $food || (null !== $food->getCreatedBy() && $food->getCreatedBy() !== $user)) {

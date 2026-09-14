@@ -9,6 +9,7 @@ use App\Entity\User;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 use Symfony\Component\Security\Core\Exception\AccountStatusException;
 use Symfony\Component\Security\Core\Exception\AuthenticationException;
 use Symfony\Component\Security\Core\Exception\CustomUserMessageAuthenticationException;
@@ -36,7 +37,7 @@ final class ApiAuthenticationHandler implements
     /**
      * Credentials accepted: hand back the profile the SPA needs to render.
      */
-    public function onAuthenticationSuccess(Request $request, $token): Response
+    public function onAuthenticationSuccess(Request $request, TokenInterface $token): Response
     {
         $user = $token->getUser();
 

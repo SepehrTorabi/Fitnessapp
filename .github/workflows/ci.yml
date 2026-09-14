@@ -1,0 +1,264 @@
+name: CI
+
+on:
+  push:
+    branches: ['**']
+    tags: ['v*']
+  pull_request:
+  # Lets you run the pipeline by hand from the Actions tab, which is handy while
+  # you are still learning what each step does.
+  workflow_dispatch:
+
+concurrency:
+  # A new push to the same branch cancels the run still in progress - no point
+  # finishing a build of code that has already been replaced.
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  PHP_VERSION: '8.4'
+  NODE_VERSION: '22'
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # Cheap checks first: if the YAML is malformed or the container cannot be
+  # compiled, there is no point spending time on the test suite.
+  # ---------------------------------------------------------------------------
+  backend-lint:
+    name: Backend lint
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ env.PHP_VERSION }}
+          extensions: ctype, iconv, intl, pdo_pgsql, zip
+          coverage: none
+          tools: composer:v2
+
+      - name: Install dependencies
+        working-directory: app
+        run: composer install --prefer-dist --no-progress --no-interaction
+
+      - name: Validate composer.json and the lock file
+        working-directory: app
+        run: composer validate --strict
+
+      - name: Lint YAML, Twig and the service container
+        working-directory: app
+        env:
+          APP_ENV: dev
+        run: |
+          php bin/console lint:yaml config --parse-tags
+          php bin/console lint:twig templates
+          php bin/console lint:container
+
+      - name: Check the Doctrine mapping
+        working-directory: app
+        env:
+          APP_ENV: dev
+        run: php bin/console doctrine:schema:validate --skip-sync
+
+      - name: Static analysis
+        working-directory: app
+        run: vendor/bin/phpstan analyse --no-progress --memory-limit=1G
+
+  # ---------------------------------------------------------------------------
+  # The test suite, against a real Postgres rather than SQLite: the app runs on
+  # Postgres in production, and a different engine in tests is how dialect bugs
+  # reach a server.
+  # ---------------------------------------------------------------------------
+  backend-tests:
+    name: Backend tests
+    runs-on: ubuntu-latest
+
+    services:
+      database:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: app
+          POSTGRES_USER: app
+          POSTGRES_PASSWORD: '!ChangeMe!'
+        ports:
+          - 5432:5432
+        # The job must not start querying before the server is accepting
+        # connections, which takes a second or two after the container starts.
+        options: >-
+          --health-cmd "pg_isready -U app -d app"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ env.PHP_VERSION }}
+          extensions: ctype, iconv, intl, pdo_pgsql, zip
+          coverage: none
+          tools: composer:v2
+
+      - name: Install dependencies
+        working-directory: app
+        run: composer install --prefer-dist --no-progress --no-interaction
+
+      - name: Run the test suite
+        working-directory: app
+        env:
+          APP_ENV: test
+          DATABASE_URL: 'postgresql://app:!ChangeMe!@127.0.0.1:5432/app?serverVersion=16&charset=utf8'
+        run: vendor/bin/phpunit --no-coverage
+
+      # Proves the migrations can build the schema from nothing. The suite
+      # itself creates the schema from the mapping, so without this step a
+      # forgotten migration would never be noticed until a deployment.
+      - name: Replay the migrations on an empty database
+        working-directory: app
+        env:
+          APP_ENV: dev
+          DATABASE_URL: 'postgresql://app:!ChangeMe!@127.0.0.1:5432/migrations_check?serverVersion=16&charset=utf8'
+        run: |
+          php bin/console doctrine:database:create --if-not-exists
+          php bin/console doctrine:migrations:migrate --no-interaction --allow-no-migration
+          php bin/console doctrine:schema:validate
+
+  # ---------------------------------------------------------------------------
+  frontend:
+    name: Frontend
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        working-directory: frontend
+        run: npm ci
+
+      # `npm run build` runs vue-tsc first, so this covers type checking too.
+      - name: Type-check and build
+        working-directory: frontend
+        run: npm run build
+
+      - name: Upload the built frontend
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-dist
+          path: frontend/dist
+          retention-days: 7
+
+  # ---------------------------------------------------------------------------
+  # Produces the installable package: the backend with production dependencies
+  # only, the compiled frontend inside its public/ directory, and a short
+  # install script. Runs only once everything above is green.
+  # ---------------------------------------------------------------------------
+  package:
+    name: Package
+    runs-on: ubuntu-latest
+    needs: [backend-lint, backend-tests, frontend]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ env.PHP_VERSION }}
+          extensions: ctype, iconv, intl, pdo_pgsql, zip
+          coverage: none
+          tools: composer:v2
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Build the frontend
+        working-directory: frontend
+        run: |
+          npm ci
+          npm run build
+
+      # --no-dev drops PHPUnit, PHPStan and the maker bundle; the optimised
+      # autoloader replaces filesystem lookups with a generated class map.
+      - name: Install production dependencies
+        working-directory: app
+        env:
+          APP_ENV: prod
+          # composer needs a value here to compile the container; the real
+          # secret comes from the environment at deploy time.
+          APP_SECRET: placeholder-replaced-at-deploy-time
+        run: |
+          composer install --no-dev --prefer-dist --no-progress --no-interaction --optimize-autoloader
+          composer dump-autoload --no-dev --classmap-authoritative
+
+      - name: Determine the version
+        id: version
+        run: |
+          if [ "${GITHUB_REF_TYPE}" = "tag" ]; then
+            echo "version=${GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
+          else
+            echo "version=0.0.0-${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Assemble the package
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          set -euo pipefail
+          STAGE="build/fitnessapp-${VERSION}"
+          mkdir -p "$STAGE"
+
+          # The application itself, minus everything only needed to develop it.
+          rsync -a --exclude 'var/cache' --exclude 'var/log' --exclude 'tests' \
+                --exclude '.env.local*' --exclude 'phpunit.dist.xml' \
+                --exclude 'phpstan.dist.neon' \
+                app/ "$STAGE/app/"
+
+          # The SPA is served as static files from the Symfony public directory,
+          # so one web server serves both and they share an origin.
+          mkdir -p "$STAGE/app/public/app"
+          cp -R frontend/dist/. "$STAGE/app/public/app/"
+
+          cp README.md "$STAGE/" 2>/dev/null || true
+          cp deploy/install.sh "$STAGE/install.sh"
+          chmod +x "$STAGE/install.sh"
+
+          printf '%s\n' "$VERSION" > "$STAGE/VERSION"
+          printf '%s\n' "$GITHUB_SHA" > "$STAGE/COMMIT"
+
+          tar -czf "build/fitnessapp-${VERSION}.tar.gz" -C build "fitnessapp-${VERSION}"
+          sha256sum "build/fitnessapp-${VERSION}.tar.gz" > "build/fitnessapp-${VERSION}.tar.gz.sha256"
+          ls -lh build/
+
+      - name: Upload the package
+        uses: actions/upload-artifact@v4
+        with:
+          name: fitnessapp-${{ steps.version.outputs.version }}
+          path: |
+            build/*.tar.gz
+            build/*.sha256
+          retention-days: 30
+
+      # Tagging a commit v1.2.3 publishes the same archive as a GitHub release.
+      - name: Attach the package to the release
+        if: github.ref_type == 'tag'
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            build/*.tar.gz
+            build/*.sha256
+          generate_release_notes: true

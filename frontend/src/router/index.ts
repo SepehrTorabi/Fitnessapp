@@ -6,7 +6,9 @@ import { useAuthStore } from '@/stores/auth'
  * chart code to a visitor who has not signed in yet.
  */
 const router = createRouter({
-  history: createWebHistory(),
+  // Matches the Vite base: "/" while developing, "/app/" once built and served
+  // from the Symfony public directory.
+  history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
     {
       path: '/',
