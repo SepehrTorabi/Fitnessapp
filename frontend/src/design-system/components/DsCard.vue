@@ -24,6 +24,11 @@ withDefaults(
 
 <template>
   <div :class="[styles.card, noPadding && styles['card--noPadding']]">
-    <slot />
+    <!-- .card itself is padding: 0 by design; the padding and the vertical
+         rhythm between blocks live in .card__body, which the React original
+         always renders around its content. Skipping it left content sitting
+         against the border. -->
+    <div v-if="!noPadding" :class="styles.card__body"><slot /></div>
+    <slot v-else />
   </div>
 </template>
