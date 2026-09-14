@@ -5,10 +5,12 @@ declare(strict_types=1);
 namespace App\Controller\Api;
 
 use App\Api\Dto\MeasurementRequest;
+use App\Api\Dto\PreferencesRequest;
 use App\Api\Dto\ProfileRequest;
 use App\Api\Presenter\UserPresenter;
 use App\Entity\BodyMeasurement;
 use App\Entity\User;
+use App\Entity\UserPreferences;
 use App\Entity\UserProfile;
 use App\Repository\BodyMeasurementRepository;
 use Doctrine\ORM\EntityManagerInterface;
@@ -107,6 +109,37 @@ final class AccountController extends ApiController
             'measurement' => $this->userPresenter->presentMeasurement($measurement),
             'user' => $this->userPresenter->present($user),
         ]);
+    }
+
+    /**
+     * Change the language, the colour scheme, or both.
+     *
+     * Fields left out are left alone, so the settings screen can send one
+     * change at a time without having to resend the whole object.
+     */
+    public function updatePreferences(
+        #[CurrentUser] User $user,
+        #[MapRequestPayload] PreferencesRequest $payload,
+    ): JsonResponse {
+        $preferences = $user->getPreferences();
+
+        if (null === $preferences) {
+            $preferences = new UserPreferences($user);
+            $user->setPreferences($preferences);
+            $this->entityManager->persist($preferences);
+        }
+
+        if (null !== $payload->locale) {
+            $preferences->setLocale($payload->locale);
+        }
+
+        if (null !== $payload->theme) {
+            $preferences->setTheme($payload->theme);
+        }
+
+        $this->entityManager->flush();
+
+        return $this->json(['user' => $this->userPresenter->present($user)]);
     }
 
     /**

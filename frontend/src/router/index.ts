@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import { i18n } from '@/i18n'
 
 /**
  * Views are loaded lazily so the login screen does not ship the dashboard's
@@ -14,37 +15,43 @@ const router = createRouter({
       path: '/',
       name: 'dashboard',
       component: () => import('@/views/DashboardView.vue'),
-      meta: { requiresAuth: true, title: 'Dashboard' },
+      meta: { requiresAuth: true, titleKey: 'titles.dashboard' },
     },
     {
       path: '/diary',
       name: 'diary',
       component: () => import('@/views/DiaryView.vue'),
-      meta: { requiresAuth: true, title: 'Log food' },
+      meta: { requiresAuth: true, titleKey: 'titles.diary' },
     },
     {
       path: '/foods',
       name: 'foods',
       component: () => import('@/views/FoodsView.vue'),
-      meta: { requiresAuth: true, title: 'Foods & recipes' },
+      meta: { requiresAuth: true, titleKey: 'titles.foods' },
     },
     {
       path: '/profile',
       name: 'profile',
       component: () => import('@/views/ProfileView.vue'),
-      meta: { requiresAuth: true, title: 'Your body data' },
+      meta: { requiresAuth: true, titleKey: 'titles.profile' },
+    },
+    {
+      path: '/settings',
+      name: 'settings',
+      component: () => import('@/views/SettingsView.vue'),
+      meta: { requiresAuth: true, titleKey: 'titles.settings' },
     },
     {
       path: '/login',
       name: 'login',
       component: () => import('@/views/LoginView.vue'),
-      meta: { guestOnly: true, title: 'Sign in' },
+      meta: { guestOnly: true, titleKey: 'titles.login' },
     },
     {
       path: '/register',
       name: 'register',
       component: () => import('@/views/RegisterView.vue'),
-      meta: { guestOnly: true, title: 'Create an account' },
+      meta: { guestOnly: true, titleKey: 'titles.register' },
     },
     {
       // Where the confirmation link in the e-mail lands. The token arrives as a
@@ -52,13 +59,13 @@ const router = createRouter({
       path: '/verify-email',
       name: 'verify-email',
       component: () => import('@/views/VerifyEmailView.vue'),
-      meta: { title: 'Confirming your address' },
+      meta: { titleKey: 'titles.verify' },
     },
     {
       path: '/:pathMatch(.*)*',
       name: 'not-found',
       component: () => import('@/views/NotFoundView.vue'),
-      meta: { title: 'Not found' },
+      meta: { titleKey: 'titles.notFound' },
     },
   ],
 })
@@ -85,7 +92,14 @@ router.beforeEach(async (to) => {
 })
 
 router.afterEach((to) => {
-  document.title = to.meta.title ? `${to.meta.title} · Fitnessapp` : 'Fitnessapp'
+  // Titles are translation keys, resolved here rather than stored as text, so
+  // the tab title changes with the language like everything else.
+  const key = to.meta.titleKey
+
+  document.title =
+    typeof key === 'string'
+      ? `${i18n.global.t(key as never)} · Fitnessapp`
+      : 'Fitnessapp'
 })
 
 export default router

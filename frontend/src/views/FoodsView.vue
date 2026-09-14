@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { api, ApiError } from '@/api/client'
+import { useApiMessage } from '@/composables/useApiMessage'
 import type { Food, Recipe } from '@/api/types'
 
 /**
@@ -9,6 +11,9 @@ import type { Food, Recipe } from '@/api/types'
  * Anything created here goes into the catalogue, so it turns up in the search on
  * the logging page from then on.
  */
+
+const { t } = useI18n()
+const apiMessage = useApiMessage()
 
 type Tab = 'food' | 'recipe'
 const tab = ref<Tab>('food')
@@ -86,7 +91,7 @@ async function saveFood(): Promise<void> {
         .map((p) => ({ label: p.label.trim(), grams: p.grams })),
     })
 
-    foodSuccess.value = `"${response.food.label}" is now in your catalogue.`
+    foodSuccess.value = t('foods.foodSaved', { label: response.food.label })
     foodWarnings.value = response.warnings
 
     Object.assign(food, {
@@ -96,12 +101,8 @@ async function saveFood(): Promise<void> {
     })
     portions.value = []
   } catch (e) {
-    if (e instanceof ApiError) {
-      foodError.value = e.message
-      foodViolations.value = e.violations
-    } else {
-      foodError.value = 'Could not save that food.'
-    }
+    foodError.value = apiMessage(e, 'foods.saveFoodFailed')
+    if (e instanceof ApiError) foodViolations.value = e.violations
   } finally {
     savingFood.value = false
   }
@@ -168,7 +169,7 @@ async function saveRecipe(): Promise<void> {
   recipeSuccess.value = ''
 
   if (ingredients.value.length === 0) {
-    recipeError.value = 'Add at least one ingredient.'
+    recipeError.value = t('foods.needIngredient')
     return
   }
 
@@ -181,13 +182,16 @@ async function saveRecipe(): Promise<void> {
       ingredients: ingredients.value.map((i) => ({ foodId: i.food.id, grams: i.grams })),
     })
 
-    recipeSuccess.value = `"${response.recipe.name}" saved — ${Math.round(response.recipe.perServing.kcal)} kcal per serving.`
+    recipeSuccess.value = t('foods.recipeSaved', {
+      name: response.recipe.name,
+      kcal: Math.round(response.recipe.perServing.kcal),
+    })
 
     Object.assign(recipe, { name: '', description: '', servings: 1, public: false })
     ingredients.value = []
     await loadRecipes()
   } catch (e) {
-    recipeError.value = e instanceof ApiError ? e.message : 'Could not save that recipe.'
+    recipeError.value = apiMessage(e, 'foods.saveRecipeFailed')
   }
 }
 
@@ -209,7 +213,7 @@ onMounted(loadRecipes)
 
 <template>
   <div class="page">
-    <h1>Foods &amp; recipes</h1>
+    <h1>{{ t('nav.foods') }}</h1>
 
     <div class="tabs">
       <button
@@ -217,38 +221,37 @@ onMounted(loadRecipes)
         type="button"
         @click="tab = 'food'"
       >
-        New food
+        {{ t('foods.newFood') }}
       </button>
       <button
         :class="tab === 'recipe' ? '' : 'secondary'"
         type="button"
         @click="tab = 'recipe'"
       >
-        New recipe
+        {{ t('foods.newRecipe') }}
       </button>
     </div>
 
     <!-- ---------- New food ---------- -->
     <div v-if="tab === 'food'" class="card">
-      <h2>Define a food</h2>
+      <h2>{{ t('foods.defineFood') }}</h2>
       <p class="muted small note">
-        All values per 100 g (or per 100 ml for liquids). Once saved it appears in
-        your search straight away.
+        {{ t('foods.defineIntro') }}
       </p>
 
       <form class="stack" @submit.prevent="saveFood">
         <div class="grid grid-3">
           <div>
-            <label for="fname">Name</label>
+            <label for="fname">{{ t('foods.name') }}</label>
             <input id="fname" v-model="food.name" type="text" required :aria-invalid="Boolean(foodViolations.name)" />
             <p v-if="foodViolations.name" class="field-error">{{ foodViolations.name }}</p>
           </div>
           <div>
-            <label for="fbrand">Brand (optional)</label>
+            <label for="fbrand">{{ t('foods.brand') }}</label>
             <input id="fbrand" v-model="food.brand" type="text" />
           </div>
           <div>
-            <label for="fbarcode">Barcode (optional)</label>
+            <label for="fbarcode">{{ t('foods.barcode') }}</label>
             <input id="fbarcode" v-model="food.barcode" type="text" inputmode="numeric" />
             <p v-if="foodViolations.barcode" class="field-error">{{ foodViolations.barcode }}</p>
           </div>
@@ -256,60 +259,58 @@ onMounted(loadRecipes)
 
         <div class="grid grid-3">
           <div>
-            <label for="fkcal">Calories (kcal)</label>
+            <label for="fkcal">{{ t('foods.calories') }}</label>
             <input id="fkcal" v-model.number="food.kcal" type="number" min="0" step="any" required />
           </div>
           <div>
-            <label for="fprotein">Protein (g)</label>
+            <label for="fprotein">{{ t('foods.protein') }}</label>
             <input id="fprotein" v-model.number="food.proteinG" type="number" min="0" step="any" required />
           </div>
           <div>
-            <label for="fcarbs">Carbs (g)</label>
+            <label for="fcarbs">{{ t('foods.carbs') }}</label>
             <input id="fcarbs" v-model.number="food.carbsG" type="number" min="0" step="any" required />
           </div>
           <div>
-            <label for="ffat">Fat (g)</label>
+            <label for="ffat">{{ t('foods.fat') }}</label>
             <input id="ffat" v-model.number="food.fatG" type="number" min="0" step="any" required />
           </div>
           <div>
-            <label for="ffiber">Fibre (g, optional)</label>
+            <label for="ffiber">{{ t('foods.fiber') }}</label>
             <input id="ffiber" v-model.number="food.fiberG" type="number" min="0" step="any" />
           </div>
           <div>
-            <label for="fsugar">Sugar (g, optional)</label>
+            <label for="fsugar">{{ t('foods.sugar') }}</label>
             <input id="fsugar" v-model.number="food.sugarG" type="number" min="0" step="any" />
           </div>
         </div>
 
         <!-- Warn while typing rather than only on save. -->
         <p v-if="energyMismatch" class="alert alert-info small">
-          Those macros work out to about {{ Math.round(impliedKcal) }} kcal, but you entered
-          {{ food.kcal }}. Worth a second look — a common cause is a value taken per
-          serving instead of per 100 g.
+          {{ t('foods.energyMismatch', { implied: Math.round(impliedKcal), stated: food.kcal }) }}
         </p>
 
         <div>
-          <label for="fdensity">Density (g per ml)</label>
+          <label for="fdensity">{{ t('foods.density') }}</label>
           <input id="fdensity" v-model.number="food.densityGPerMl" type="number" min="0.1" max="5" step="0.01" />
           <p class="muted small hint">
-            Only matters if you will measure this in spoons or millilitres. Water is 1,
-            oil about 0.92, honey about 1.42.
+            {{ t('foods.densityHint') }}
           </p>
         </div>
 
         <div>
           <div class="row-between">
-            <label>Named portions (optional)</label>
-            <button class="secondary small-btn" type="button" @click="addPortion">Add portion</button>
+            <label>{{ t('foods.portions') }}</label>
+            <button class="secondary small-btn" type="button" @click="addPortion">
+              {{ t('foods.addPortion') }}
+            </button>
           </div>
           <p class="muted small hint">
-            What one slice, piece or scoop of this weighs. Without these you can only
-            log it by weight or volume.
+            {{ t('foods.portionsHint') }}
           </p>
 
           <div v-for="(portion, index) in portions" :key="index" class="row portion-row">
-            <input v-model="portion.label" type="text" placeholder="slice" />
-            <input v-model.number="portion.grams" type="number" min="1" placeholder="grams" />
+            <input v-model="portion.label" type="text" :placeholder="t('foods.portionLabelPlaceholder')" />
+            <input v-model.number="portion.grams" type="number" min="1" :placeholder="t('foods.portionGramsPlaceholder')" />
             <button class="ghost" type="button" @click="removePortion(index)">✕</button>
           </div>
         </div>
@@ -321,7 +322,7 @@ onMounted(loadRecipes)
         </p>
 
         <button type="submit" :disabled="savingFood">
-          {{ savingFood ? 'Saving…' : 'Save food' }}
+          {{ savingFood ? t('common.saving') : t('foods.saveFood') }}
         </button>
       </form>
     </div>
@@ -329,47 +330,50 @@ onMounted(loadRecipes)
     <!-- ---------- New recipe ---------- -->
     <template v-else>
       <div class="card">
-        <h2>Build a recipe</h2>
+        <h2>{{ t('foods.buildRecipe') }}</h2>
         <p class="muted small note">
-          A recipe takes its nutrition from its ingredients, so correcting an
-          ingredient later corrects every recipe that uses it.
+          {{ t('foods.recipeIntro') }}
         </p>
 
         <form class="stack" @submit.prevent="saveRecipe">
           <div class="grid grid-2">
             <div>
-              <label for="rname">Name</label>
+              <label for="rname">{{ t('foods.recipeName') }}</label>
               <input id="rname" v-model="recipe.name" type="text" required />
             </div>
             <div>
-              <label for="rservings">Servings</label>
+              <label for="rservings">{{ t('foods.recipeServings') }}</label>
               <input id="rservings" v-model.number="recipe.servings" type="number" min="1" required />
             </div>
           </div>
 
           <div>
-            <label for="rdesc">Notes (optional)</label>
+            <label for="rdesc">{{ t('foods.recipeNotes') }}</label>
             <textarea id="rdesc" v-model="recipe.description" rows="2"></textarea>
           </div>
 
           <div>
-            <label for="ringredient">Add an ingredient</label>
+            <label for="ringredient">{{ t('foods.addIngredient') }}</label>
             <div class="row">
               <input
                 id="ringredient"
                 v-model="ingredientQuery"
                 type="search"
-                placeholder="Search your foods"
+                :placeholder="t('foods.searchYourFoods')"
                 @keydown.enter.prevent="searchIngredient"
               />
-              <button class="secondary" type="button" @click="searchIngredient">Search</button>
+              <button class="secondary" type="button" @click="searchIngredient">
+                {{ t('common.search') }}
+              </button>
             </div>
 
             <ul v-if="ingredientResults.length" class="results">
               <li v-for="item in ingredientResults" :key="item.id">
                 <button class="result" type="button" @click="addIngredient(item)">
                   <span class="result-name">{{ item.label }}</span>
-                  <span class="muted small">{{ Math.round(item.per100.kcal) }} kcal / 100 g</span>
+                  <span class="muted small">
+                    {{ t('diary.perHundred', { kcal: Math.round(item.per100.kcal) }) }}
+                  </span>
                 </button>
               </li>
             </ul>
@@ -378,9 +382,9 @@ onMounted(loadRecipes)
           <table v-if="ingredients.length">
             <thead>
               <tr>
-                <th>Ingredient</th>
-                <th class="num">Grams</th>
-                <th class="num">kcal</th>
+                <th>{{ t('foods.ingredient') }}</th>
+                <th class="num">{{ t('foods.gramsColumn') }}</th>
+                <th class="num">{{ t('common.kcal') }}</th>
                 <th></th>
               </tr>
             </thead>
@@ -399,38 +403,48 @@ onMounted(loadRecipes)
           </table>
 
           <p v-if="ingredients.length" class="preview">
-            <strong>{{ Math.round(recipeTotals.perServing.kcal) }} kcal per serving</strong>
+            <strong>
+              {{ t('diary.kcalPerServing', { kcal: Math.round(recipeTotals.perServing.kcal) }) }}
+            </strong>
             <span class="muted">
-              · {{ Math.round(recipeTotals.perServing.grams) }} g ·
-              {{ Math.round(recipeTotals.perServing.proteinG) }} g protein ·
-              {{ Math.round(recipeTotals.perServing.carbsG) }} g carbs ·
-              {{ Math.round(recipeTotals.perServing.fatG) }} g fat
+              {{
+                t('diary.preview', {
+                  grams: Math.round(recipeTotals.perServing.grams),
+                  protein: Math.round(recipeTotals.perServing.proteinG),
+                  carbs: Math.round(recipeTotals.perServing.carbsG),
+                  fat: Math.round(recipeTotals.perServing.fatG),
+                })
+              }}
               <br />
-              Whole recipe: {{ Math.round(recipeTotals.kcal) }} kcal,
-              {{ Math.round(recipeTotals.grams) }} g
+              {{
+                t('foods.wholeRecipe', {
+                  kcal: Math.round(recipeTotals.kcal),
+                  grams: Math.round(recipeTotals.grams),
+                })
+              }}
             </span>
           </p>
 
           <label class="checkbox">
             <input v-model="recipe.public" type="checkbox" />
-            Share this recipe with other users
+            {{ t('foods.sharePublicly') }}
           </label>
 
           <p v-if="recipeError" class="alert alert-error">{{ recipeError }}</p>
           <p v-if="recipeSuccess" class="alert alert-success">{{ recipeSuccess }}</p>
 
-          <button type="submit">Save recipe</button>
+          <button type="submit">{{ t('foods.saveRecipe') }}</button>
         </form>
       </div>
 
       <div v-if="recipes.length" class="card recipes-card">
-        <h2>Your recipes</h2>
+        <h2>{{ t('foods.yourRecipes') }}</h2>
         <table>
           <thead>
             <tr>
-              <th>Name</th>
-              <th class="num">Servings</th>
-              <th class="num">kcal / serving</th>
+              <th>{{ t('foods.recipeName') }}</th>
+              <th class="num">{{ t('foods.servingsColumn') }}</th>
+              <th class="num">{{ t('foods.kcalPerServingColumn') }}</th>
               <th></th>
             </tr>
           </thead>

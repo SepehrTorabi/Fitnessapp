@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import type { DaySummary } from '@/api/types'
 
 /**
@@ -15,6 +16,8 @@ import type { DaySummary } from '@/api/types'
  * marker do not justify the dependency, and the maths is worth seeing.
  */
 const props = defineProps<{ days: DaySummary[] }>()
+
+const { t, locale } = useI18n()
 
 // A fixed drawing grid. The SVG scales to its container, so these are
 // proportions rather than pixels on screen.
@@ -69,12 +72,17 @@ function niceStep(raw: number): number {
   return step * magnitude
 }
 
+// Formatted with the app's language rather than the browser's, so switching to
+// German turns "Mon" into "Mo" along with everything else on the page.
 function weekday(iso: string): string {
-  return new Date(`${iso}T00:00:00`).toLocaleDateString(undefined, { weekday: 'short' })
+  return new Date(`${iso}T00:00:00`).toLocaleDateString(locale.value, { weekday: 'short' })
 }
 
 function dayNumber(iso: string): string {
-  return new Date(`${iso}T00:00:00`).toLocaleDateString(undefined, { day: 'numeric', month: 'numeric' })
+  return new Date(`${iso}T00:00:00`).toLocaleDateString(locale.value, {
+    day: 'numeric',
+    month: 'numeric',
+  })
 }
 
 function barFill(day: DaySummary): string {
@@ -86,11 +94,11 @@ function barFill(day: DaySummary): string {
 }
 
 function difference(day: DaySummary): string {
-  if (day.remainingKcal === null) return 'no target set'
+  if (day.remainingKcal === null) return t('chart.noTarget')
 
-  const value = Math.round(Math.abs(day.remainingKcal))
+  const kcal = Math.round(Math.abs(day.remainingKcal))
 
-  return day.remainingKcal >= 0 ? `${value} kcal left` : `${value} kcal over`
+  return day.remainingKcal >= 0 ? t('chart.kcalLeft', { kcal }) : t('chart.kcalOver', { kcal })
 }
 
 const anyOverBudget = computed(() => props.days.some((d) => d.withinBudget === false))
@@ -101,24 +109,24 @@ const anyWithinBudget = computed(() => props.days.some((d) => d.withinBudget ===
   <figure class="chart">
     <figcaption class="row-between">
       <div>
-        <h3>Calories per day</h3>
-        <p class="muted small caption">Bars are what you ate; the line is that day's budget.</p>
+        <h3>{{ t('chart.title') }}</h3>
+        <p class="muted small caption">{{ t('chart.caption') }}</p>
       </div>
 
       <button class="secondary small-btn" type="button" @click="showTable = !showTable">
-        {{ showTable ? 'Show chart' : 'Show table' }}
+        {{ showTable ? t('chart.showChart') : t('chart.showTable') }}
       </button>
     </figcaption>
 
     <!-- Identity is never colour alone: a legend names each state in words. -->
     <div class="legend" aria-hidden="true">
       <span v-if="anyWithinBudget" class="legend-item">
-        <span class="swatch swatch-good"></span>Within budget
+        <span class="swatch swatch-good"></span>{{ t('chart.withinBudget') }}
       </span>
       <span v-if="anyOverBudget" class="legend-item">
-        <span class="swatch swatch-over"></span>Over budget
+        <span class="swatch swatch-over"></span>{{ t('chart.overBudget') }}
       </span>
-      <span class="legend-item"><span class="swatch swatch-target"></span>Budget</span>
+      <span class="legend-item"><span class="swatch swatch-target"></span>{{ t('chart.budgetLine') }}</span>
     </div>
 
     <div v-if="!showTable" class="plot-wrap">
@@ -126,7 +134,7 @@ const anyWithinBudget = computed(() => props.days.some((d) => d.withinBudget ===
         :viewBox="`0 0 ${W} ${H}`"
         class="plot"
         role="img"
-        aria-label="Calories eaten per day compared with the daily budget"
+        :aria-label="t('chart.ariaLabel')"
       >
         <!-- Gridlines sit behind the data and stay recessive. -->
         <g class="grid">
@@ -188,9 +196,9 @@ const anyWithinBudget = computed(() => props.days.some((d) => d.withinBudget ===
       <div class="readout" :class="{ 'readout-idle': hovered === null }">
         <template v-if="hovered !== null && days[hovered]">
           <strong>{{ weekday(days[hovered].date) }} {{ dayNumber(days[hovered].date) }}</strong>
-          <span>{{ Math.round(days[hovered].consumed.kcal) }} kcal eaten</span>
+          <span>{{ t('chart.eaten', { kcal: Math.round(days[hovered].consumed.kcal) }) }}</span>
           <span v-if="days[hovered].budgetKcal !== null">
-            of {{ Math.round(days[hovered].budgetKcal!) }} budget
+            {{ t('chart.ofBudget', { kcal: Math.round(days[hovered].budgetKcal!) }) }}
           </span>
           <span
             class="badge"
@@ -199,7 +207,7 @@ const anyWithinBudget = computed(() => props.days.some((d) => d.withinBudget ===
             {{ difference(days[hovered]) }}
           </span>
         </template>
-        <span v-else class="muted small">Hover a day for details.</span>
+        <span v-else class="muted small">{{ t('chart.hoverHint') }}</span>
       </div>
     </div>
 
@@ -208,10 +216,10 @@ const anyWithinBudget = computed(() => props.days.some((d) => d.withinBudget ===
     <table v-else>
       <thead>
         <tr>
-          <th>Day</th>
-          <th class="num">Eaten</th>
-          <th class="num">Budget</th>
-          <th class="num">Difference</th>
+          <th>{{ t('chart.tableDay') }}</th>
+          <th class="num">{{ t('chart.tableEaten') }}</th>
+          <th class="num">{{ t('chart.tableBudget') }}</th>
+          <th class="num">{{ t('chart.tableDifference') }}</th>
         </tr>
       </thead>
       <tbody>

@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { computed, defineAsyncComponent, onMounted, ref, watch } from 'vue'
-import { api, ApiError } from '@/api/client'
+import { useI18n } from 'vue-i18n'
+import { api } from '@/api/client'
+import { useApiMessage } from '@/composables/useApiMessage'
 import type { DayView, ExternalFood, Food, MealType, Recipe } from '@/api/types'
 import MacroBars from '@/components/MacroBars.vue'
 
@@ -18,6 +20,9 @@ const BarcodeScanner = defineAsyncComponent(() => import('@/components/BarcodeSc
  * Three ways in, because a single one never covers every case: search the
  * catalogue, scan a barcode, or pick one of your own recipes.
  */
+
+const { t } = useI18n()
+const apiMessage = useApiMessage()
 
 const today = new Date().toISOString().slice(0, 10)
 const date = ref(today)
@@ -91,7 +96,7 @@ async function loadDay(): Promise<void> {
   try {
     day.value = await api.day(date.value)
   } catch (e) {
-    error.value = e instanceof ApiError ? e.message : 'Could not load that day.'
+    error.value = apiMessage(e, 'diary.loadDayFailed')
   } finally {
     loading.value = false
   }
@@ -109,7 +114,7 @@ async function loadRecipes(): Promise<void> {
 
 async function search(): Promise<void> {
   if (query.value.trim().length < 2) {
-    searchNote.value = 'Type at least two characters.'
+    searchNote.value = t('diary.queryTooShort')
     return
   }
 
@@ -122,10 +127,10 @@ async function search(): Promise<void> {
     externalResults.value = results.external
 
     if (results.local.length === 0 && results.external.length === 0) {
-      searchNote.value = 'Nothing found. You can define this food yourself under Foods & recipes.'
+      searchNote.value = t('diary.nothingFound')
     }
   } catch (e) {
-    searchNote.value = e instanceof ApiError ? e.message : 'Search failed.'
+    searchNote.value = apiMessage(e, 'diary.searchFailed')
   } finally {
     searching.value = false
   }
@@ -145,7 +150,7 @@ async function importAndSelect(external: ExternalFood): Promise<void> {
   try {
     selectFood((await api.importFood(external.externalId)).food)
   } catch (e) {
-    searchNote.value = e instanceof ApiError ? e.message : 'Could not import that product.'
+    searchNote.value = apiMessage(e, 'diary.importFailed')
   }
 }
 
@@ -155,10 +160,7 @@ async function onBarcode(barcode: string): Promise<void> {
   try {
     selectFood((await api.foodByBarcode(barcode)).food)
   } catch (e) {
-    searchNote.value =
-      e instanceof ApiError
-        ? e.message
-        : 'Could not look that barcode up.'
+    searchNote.value = apiMessage(e, 'diary.barcodeFailed')
   }
 }
 
@@ -188,7 +190,7 @@ async function logFood(): Promise<void> {
     externalResults.value = []
     await loadDay()
   } catch (e) {
-    saveError.value = e instanceof ApiError ? e.message : 'Could not save that entry.'
+    saveError.value = apiMessage(e, 'diary.saveFailed')
   } finally {
     saving.value = false
   }
@@ -207,7 +209,7 @@ async function logRecipe(recipe: Recipe): Promise<void> {
     })
     await loadDay()
   } catch (e) {
-    saveError.value = e instanceof ApiError ? e.message : 'Could not log that recipe.'
+    saveError.value = apiMessage(e, 'diary.recipeFailed')
   }
 }
 
@@ -215,7 +217,7 @@ async function logActivity(): Promise<void> {
   activityError.value = ''
 
   if (!activityDescription.value || activityKcal.value === null) {
-    activityError.value = 'Describe the activity and say how many calories it burned.'
+    activityError.value = t('diary.activityIncomplete')
     return
   }
 
@@ -232,7 +234,7 @@ async function logActivity(): Promise<void> {
     activityMinutes.value = null
     await loadDay()
   } catch (e) {
-    activityError.value = e instanceof ApiError ? e.message : 'Could not save that activity.'
+    activityError.value = apiMessage(e, 'diary.activityFailed')
   }
 }
 
@@ -256,9 +258,9 @@ onMounted(async () => {
 <template>
   <div class="page">
     <div class="row-between">
-      <h1>Log food</h1>
+      <h1>{{ t('titles.diary') }}</h1>
       <div class="date-picker">
-        <label for="date">Day</label>
+        <label for="date">{{ t('common.day') }}</label>
         <input id="date" v-model="date" type="date" :max="today" />
       </div>
     </div>
@@ -269,12 +271,12 @@ onMounted(async () => {
       <!-- ---------- Adding something ---------- -->
       <div class="stack">
         <div class="card">
-          <h3>Find a food</h3>
+          <h3>{{ t('diary.findFood') }}</h3>
 
           <form class="row" @submit.prevent="search">
-            <input v-model="query" type="search" placeholder="e.g. oats, chicken, banana" />
+            <input v-model="query" type="search" :placeholder="t('diary.searchPlaceholder')" />
             <button type="submit" :disabled="searching">
-              {{ searching ? 'Searching…' : 'Search' }}
+              {{ searching ? t('common.searching') : t('common.search') }}
             </button>
           </form>
 
@@ -284,7 +286,9 @@ onMounted(async () => {
             <li v-for="food in localResults" :key="food.id">
               <button class="result" type="button" @click="selectFood(food)">
                 <span class="result-name">{{ food.label }}</span>
-                <span class="muted small">{{ Math.round(food.per100.kcal) }} kcal / 100 g</span>
+                <span class="muted small">
+                  {{ t('diary.perHundred', { kcal: Math.round(food.per100.kcal) }) }}
+                </span>
               </button>
             </li>
           </ul>
@@ -292,12 +296,14 @@ onMounted(async () => {
           <!-- Kept visually separate: these are not in our database yet, so
                picking one imports it first. -->
           <template v-if="externalResults.length">
-            <p class="muted small section-label">From Open Food Facts</p>
+            <p class="muted small section-label">{{ t('diary.externalHeading') }}</p>
             <ul class="results">
               <li v-for="food in externalResults" :key="food.externalId">
                 <button class="result" type="button" @click="importAndSelect(food)">
                   <span class="result-name">{{ food.label }}</span>
-                  <span class="muted small">{{ Math.round(food.per100.kcal) }} kcal / 100 g</span>
+                  <span class="muted small">
+                  {{ t('diary.perHundred', { kcal: Math.round(food.per100.kcal) }) }}
+                </span>
                 </button>
               </li>
             </ul>
@@ -305,25 +311,25 @@ onMounted(async () => {
         </div>
 
         <div class="card">
-          <h3>Scan a product</h3>
+          <h3>{{ t('diary.scanTitle') }}</h3>
 
           <template v-if="showScanner">
             <BarcodeScanner @detected="onBarcode" />
           </template>
           <template v-else>
             <p class="muted small note">
-              Read the barcode off a package with your camera, or type the number in.
+              {{ t('diary.scanIntro') }}
             </p>
             <button class="secondary" type="button" @click="showScanner = true">
-              Open the scanner
+              {{ t('diary.openScanner') }}
             </button>
           </template>
         </div>
 
         <div v-if="recipes.length" class="card">
-          <h3>Your recipes</h3>
+          <h3>{{ t('diary.yourRecipes') }}</h3>
           <div class="row servings-row">
-            <label for="servings">Servings</label>
+            <label for="servings">{{ t('diary.servings') }}</label>
             <input id="servings" v-model.number="recipeServings" type="number" min="0.25" step="0.25" />
           </div>
           <ul class="results">
@@ -331,7 +337,7 @@ onMounted(async () => {
               <button class="result" type="button" @click="logRecipe(recipe)">
                 <span class="result-name">{{ recipe.name }}</span>
                 <span class="muted small">
-                  {{ Math.round(recipe.perServing.kcal) }} kcal per serving
+                  {{ t('diary.kcalPerServing', { kcal: Math.round(recipe.perServing.kcal) }) }}
                 </span>
               </button>
             </li>
@@ -346,12 +352,12 @@ onMounted(async () => {
 
           <div class="row amount-row">
             <div class="amount-field">
-              <label for="quantity">Amount</label>
+              <label for="quantity">{{ t('diary.amount') }}</label>
               <input id="quantity" v-model.number="quantity" type="number" min="0.1" step="any" />
             </div>
 
             <div class="amount-field">
-              <label for="unit">Unit</label>
+              <label for="unit">{{ t('diary.unit') }}</label>
               <select id="unit" v-model="unit">
                 <option v-for="option in unitOptions" :key="option.label" :value="option.label">
                   {{ option.label }}
@@ -360,18 +366,26 @@ onMounted(async () => {
             </div>
 
             <div class="amount-field">
-              <label for="meal">Meal</label>
+              <label for="meal">{{ t('diary.meal') }}</label>
               <select id="meal" v-model="mealType">
-                <option v-for="type in mealTypes" :key="type" :value="type">{{ type }}</option>
+                <option v-for="type in mealTypes" :key="type" :value="type">
+                  {{ t(`meal.${type}`) }}
+                </option>
               </select>
             </div>
           </div>
 
           <p v-if="preview" class="preview">
-            <strong>{{ Math.round(preview.kcal) }} kcal</strong>
+            <strong>{{ Math.round(preview.kcal) }} {{ t('common.kcal') }}</strong>
             <span class="muted">
-              · {{ Math.round(preview.grams) }} g · {{ Math.round(preview.proteinG) }} g protein ·
-              {{ Math.round(preview.carbsG) }} g carbs · {{ Math.round(preview.fatG) }} g fat
+              {{
+                t('diary.preview', {
+                  grams: Math.round(preview.grams),
+                  protein: Math.round(preview.proteinG),
+                  carbs: Math.round(preview.carbsG),
+                  fat: Math.round(preview.fatG),
+                })
+              }}
             </span>
           </p>
 
@@ -379,16 +393,18 @@ onMounted(async () => {
 
           <div class="row">
             <button type="button" :disabled="saving" @click="logFood">
-              {{ saving ? 'Adding…' : 'Add to diary' }}
+              {{ saving ? t('diary.adding') : t('diary.addToDiary') }}
             </button>
-            <button class="secondary" type="button" @click="selected = null">Cancel</button>
+            <button class="secondary" type="button" @click="selected = null">
+              {{ t('common.cancel') }}
+            </button>
           </div>
         </div>
 
         <div v-if="day" class="card">
-          <h3>Totals for this day</h3>
+          <h3>{{ t('diary.totals') }}</h3>
           <p class="stat-value">
-            {{ Math.round(day.summary.consumed.kcal) }}<span class="unit">kcal</span>
+            {{ Math.round(day.summary.consumed.kcal) }}<span class="unit">{{ t('common.kcal') }}</span>
             <span
               v-if="day.summary.withinBudget !== null"
               class="badge"
@@ -396,8 +412,8 @@ onMounted(async () => {
             >
               {{
                 day.summary.withinBudget
-                  ? `${Math.round(day.summary.remainingKcal ?? 0)} left`
-                  : `${Math.abs(Math.round(day.summary.remainingKcal ?? 0))} over`
+                  ? t('diary.left', { kcal: Math.round(day.summary.remainingKcal ?? 0) })
+                  : t('diary.over', { kcal: Math.abs(Math.round(day.summary.remainingKcal ?? 0)) })
               }}
             </span>
           </p>
@@ -409,10 +425,10 @@ onMounted(async () => {
         </div>
 
         <div v-if="day" class="card">
-          <h3>Entries</h3>
+          <h3>{{ t('diary.entries') }}</h3>
 
-          <p v-if="loading" class="muted">Loading…</p>
-          <p v-else-if="day.entries.length === 0" class="empty">Nothing logged for this day.</p>
+          <p v-if="loading" class="muted">{{ t('common.loading') }}</p>
+          <p v-else-if="day.entries.length === 0" class="empty">{{ t('diary.nothingLogged') }}</p>
 
           <table v-else>
             <tbody>
@@ -421,12 +437,12 @@ onMounted(async () => {
                   {{ entry.label }}
                   <span class="muted small block">
                     {{ entry.quantity }} {{ entry.portionLabel ?? entry.unit }} ·
-                    {{ entry.mealType }}
+                    {{ t(`meal.${entry.mealType}`) }}
                   </span>
                 </td>
-                <td class="num">{{ Math.round(entry.nutrients.kcal) }} kcal</td>
+                <td class="num">{{ Math.round(entry.nutrients.kcal) }} {{ t('common.kcal') }}</td>
                 <td class="num shrink">
-                  <button class="ghost" type="button" title="Remove" @click="removeEntry(entry.id)">
+                  <button class="ghost" type="button" :title="t('common.remove')" @click="removeEntry(entry.id)">
                     ✕
                   </button>
                 </td>
@@ -436,31 +452,31 @@ onMounted(async () => {
         </div>
 
         <div class="card">
-          <h3>Activity</h3>
+          <h3>{{ t('diary.activity') }}</h3>
           <p class="muted small note">
-            Calories you burned. These are added to the day's budget.
+            {{ t('diary.activityIntro') }}
           </p>
 
           <form class="stack" @submit.prevent="logActivity">
             <div>
-              <label for="activity">What did you do?</label>
-              <input id="activity" v-model="activityDescription" type="text" placeholder="Running 5 km" />
+              <label for="activity">{{ t('diary.activityWhat') }}</label>
+              <input id="activity" v-model="activityDescription" type="text" :placeholder="t('diary.activityPlaceholder')" />
             </div>
 
             <div class="row">
               <div class="amount-field">
-                <label for="kcal">Calories burned</label>
+                <label for="kcal">{{ t('diary.activityKcal') }}</label>
                 <input id="kcal" v-model.number="activityKcal" type="number" min="0" />
               </div>
               <div class="amount-field">
-                <label for="minutes">Minutes (optional)</label>
+                <label for="minutes">{{ t('diary.activityMinutes') }}</label>
                 <input id="minutes" v-model.number="activityMinutes" type="number" min="1" />
               </div>
             </div>
 
             <p v-if="activityError" class="alert alert-error small">{{ activityError }}</p>
 
-            <button class="secondary" type="submit">Add activity</button>
+            <button class="secondary" type="submit">{{ t('diary.addActivity') }}</button>
           </form>
 
           <table v-if="day && day.activities.length" class="activity-table">
@@ -469,10 +485,12 @@ onMounted(async () => {
                 <td>
                   {{ activity.description }}
                   <span v-if="activity.durationMinutes" class="muted small">
-                    · {{ activity.durationMinutes }} min
+                    · {{ activity.durationMinutes }} {{ t('diary.minutesShort') }}
                   </span>
                 </td>
-                <td class="num">{{ Math.round(activity.caloriesBurned) }} kcal</td>
+                <td class="num">
+                  {{ Math.round(activity.caloriesBurned) }} {{ t('common.kcal') }}
+                </td>
                 <td class="num shrink">
                   <button class="ghost" type="button" @click="removeActivity(activity.id)">✕</button>
                 </td>

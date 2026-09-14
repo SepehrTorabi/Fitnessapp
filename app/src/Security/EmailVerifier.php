@@ -11,6 +11,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bridge\Twig\Mime\TemplatedEmail;
 use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\Mime\Address;
+use Symfony\Contracts\Translation\TranslatorInterface;
 
 /**
  * Issues and redeems the account-confirmation links.
@@ -28,6 +29,7 @@ final class EmailVerifier
         private readonly EntityManagerInterface $entityManager,
         private readonly EmailVerificationTokenRepository $tokens,
         private readonly MailerInterface $mailer,
+        private readonly TranslatorInterface $translator,
         private readonly string $frontendVerifyUrl,
         private readonly string $senderAddress,
         private readonly string $senderName,
@@ -55,12 +57,19 @@ final class EmailVerifier
         $this->entityManager->persist($token);
         $this->entityManager->flush();
 
+        // Write to people in the language they chose. New accounts have no
+        // choice on record yet, so registration seeds it from the browser's
+        // Accept-Language header before this runs.
+        $locale = $user->getLocale()->value;
+
         $email = (new TemplatedEmail())
             ->from(new Address($this->senderAddress, $this->senderName))
             ->to(new Address($user->getEmail(), $user->getDisplayName()))
-            ->subject('Confirm your Fitnessapp account')
+            // The subject is not part of the template, so it has to be
+            // translated here rather than by the renderer.
+            ->subject($this->translator->trans('verify.subject', [], 'emails', $locale))
             ->htmlTemplate('email/verify_account.html.twig')
-            ->locale('en')
+            ->locale($locale)
             ->context([
                 'displayName' => $user->getDisplayName(),
                 'verifyUrl' => $this->buildVerifyUrl($plainToken),

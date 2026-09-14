@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import type { Nutrients } from '@/api/types'
+
+const { t } = useI18n()
 
 /**
  * Protein, carbohydrate and fat against their targets.
@@ -25,21 +28,21 @@ interface Row {
 const rows = computed<Row[]>(() => [
   {
     key: 'protein',
-    label: 'Protein',
+    label: t('macros.protein'),
     color: 'var(--protein)',
     consumed: props.consumed.proteinG,
     target: props.target?.proteinG ?? null,
   },
   {
     key: 'carbs',
-    label: 'Carbs',
+    label: t('macros.carbs'),
     color: 'var(--carbs)',
     consumed: props.consumed.carbsG,
     target: props.target?.carbsG ?? null,
   },
   {
     key: 'fat',
-    label: 'Fat',
+    label: t('macros.fat'),
     color: 'var(--fat)',
     consumed: props.consumed.fatG,
     target: props.target?.fatG ?? null,
@@ -82,7 +85,7 @@ function isOver(row: Row): boolean {
       </div>
 
       <p v-if="isOver(row)" class="small over-note">
-        {{ Math.round(row.consumed - (row.target ?? 0)) }} g over target
+        {{ t('macros.overTarget', { grams: Math.round(row.consumed - (row.target ?? 0)) }) }}
       </p>
     </div>
   </div>

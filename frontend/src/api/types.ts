@@ -29,6 +29,20 @@ export type Goal = 'lose_weight' | 'maintain_weight' | 'gain_muscle'
 
 export type MealType = 'breakfast' | 'lunch' | 'dinner' | 'snack'
 
+export type AppLocale = 'en' | 'de'
+
+export type ThemePreference = 'system' | 'light' | 'dark'
+
+/**
+ * Interface settings. Unlike `profile` this is never null - a user who has
+ * never opened the settings screen still has an effective language and theme,
+ * and the client should not have to know the defaults itself.
+ */
+export interface UserPreferences {
+  locale: AppLocale
+  theme: ThemePreference
+}
+
 export interface UserProfile {
   birthDate: string
   age: number
@@ -66,6 +80,7 @@ export interface User {
   latestMeasurement: BodyMeasurement | null
   /** Null while there is no profile or no weigh-in to compute it from. */
   dailyTarget: CalorieTarget | null
+  preferences: UserPreferences
 }
 
 export interface AvailableUnit {

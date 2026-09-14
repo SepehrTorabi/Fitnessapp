@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import { RouterLink, useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '@/stores/auth'
 
 const auth = useAuthStore()
 const router = useRouter()
+const { t } = useI18n()
 
 async function signOut(): Promise<void> {
   await auth.logout()
@@ -14,18 +16,19 @@ async function signOut(): Promise<void> {
 <template>
   <header class="nav">
     <div class="nav-inner">
-      <RouterLink to="/" class="brand">Fitnessapp</RouterLink>
+      <RouterLink to="/" class="brand">{{ t('nav.brand') }}</RouterLink>
 
       <nav class="links">
-        <RouterLink to="/">Dashboard</RouterLink>
-        <RouterLink to="/diary">Log food</RouterLink>
-        <RouterLink to="/foods">Foods &amp; recipes</RouterLink>
-        <RouterLink to="/profile">Body data</RouterLink>
+        <RouterLink to="/">{{ t('nav.dashboard') }}</RouterLink>
+        <RouterLink to="/diary">{{ t('nav.diary') }}</RouterLink>
+        <RouterLink to="/foods">{{ t('nav.foods') }}</RouterLink>
+        <RouterLink to="/profile">{{ t('nav.profile') }}</RouterLink>
+        <RouterLink to="/settings">{{ t('nav.settings') }}</RouterLink>
       </nav>
 
       <div class="account">
         <span class="muted small">{{ auth.user?.displayName }}</span>
-        <button class="secondary" type="button" @click="signOut">Sign out</button>
+        <button class="secondary" type="button" @click="signOut">{{ t('nav.signOut') }}</button>
       </div>
     </div>
   </header>

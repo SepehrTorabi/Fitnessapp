@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { onBeforeUnmount, ref, useTemplateRef } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { BrowserMultiFormatReader, type IScannerControls } from '@zxing/browser'
 import { BarcodeFormat, DecodeHintType } from '@zxing/library'
 
@@ -15,6 +16,8 @@ import { BarcodeFormat, DecodeHintType } from '@zxing/library'
  * in development.
  */
 const emit = defineEmits<{ detected: [barcode: string] }>()
+
+const { t } = useI18n()
 
 const video = useTemplateRef<HTMLVideoElement>('video')
 
@@ -45,7 +48,7 @@ async function start(): Promise<void> {
   error.value = ''
 
   if (!navigator.mediaDevices?.getUserMedia) {
-    error.value = 'This browser cannot use the camera. Type the number in instead.'
+    error.value = t('scanner.unsupported')
     return
   }
 
@@ -74,8 +77,8 @@ async function start(): Promise<void> {
     scanning.value = false
     error.value =
       e instanceof DOMException && e.name === 'NotAllowedError'
-        ? 'Camera access was denied. Type the number in instead.'
-        : 'Could not start the camera. Type the number in instead.'
+        ? t('scanner.denied')
+        : t('scanner.failed')
   }
 }
 
@@ -89,7 +92,7 @@ function submitManual(): void {
   const code = manualCode.value.replace(/\D+/g, '')
 
   if (code.length < 8) {
-    error.value = 'A barcode is at least 8 digits.'
+    error.value = t('scanner.tooShort')
     return
   }
 
@@ -112,11 +115,11 @@ onBeforeUnmount(stop)
 
     <div class="row">
       <button v-if="!scanning" class="secondary" type="button" @click="start">
-        Scan a barcode
+        {{ t('scanner.scan') }}
       </button>
-      <button v-else class="secondary" type="button" @click="stop">Stop scanning</button>
+      <button v-else class="secondary" type="button" @click="stop">{{ t('scanner.stop') }}</button>
 
-      <span v-if="scanning" class="muted small">Hold the barcode inside the frame.</span>
+      <span v-if="scanning" class="muted small">{{ t('scanner.holdSteady') }}</span>
     </div>
 
     <form class="row manual" @submit.prevent="submitManual">
@@ -124,10 +127,10 @@ onBeforeUnmount(stop)
         v-model="manualCode"
         type="text"
         inputmode="numeric"
-        placeholder="…or type the barcode number"
-        aria-label="Barcode number"
+        :placeholder="t('scanner.manualPlaceholder')"
+        :aria-label="t('scanner.manualLabel')"
       />
-      <button class="secondary" type="submit">Look up</button>
+      <button class="secondary" type="submit">{{ t('scanner.lookUp') }}</button>
     </form>
 
     <p v-if="error" class="alert alert-error small">{{ error }}</p>

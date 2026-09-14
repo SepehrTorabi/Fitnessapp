@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Api\Dto;
 
+use App\Enum\AppLocale;
 use Symfony\Component\Validator\Constraints as Assert;
 
 /**
@@ -37,6 +38,12 @@ final readonly class RegistrationRequest
         #[Assert\NotBlank(message: 'Please enter a display name.')]
         #[Assert\Length(min: 2, max: 80)]
         public string $displayName = '',
+
+        /**
+         * The language the sign-up form was displayed in. Optional: when the
+         * client does not say, the controller falls back to Accept-Language.
+         */
+        public ?AppLocale $locale = null,
     ) {
     }
 }

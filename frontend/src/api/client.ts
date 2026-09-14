@@ -1,11 +1,13 @@
 import type {
   ActivityEntry,
+  AppLocale,
   DashboardData,
   DayView,
   DiaryEntry,
   Food,
   FoodSearchResult,
   Recipe,
+  ThemePreference,
   User,
 } from './types'
 
@@ -138,8 +140,14 @@ const json = (payload: unknown): RequestInit => ({
 
 export const api = {
   // --- Authentication ---
-  register: (payload: { email: string; password: string; displayName: string }) =>
-    request<{ message: string; user: User }>('/api/auth/register', json(payload)),
+  // The locale is sent so the confirmation mail - written before the user has
+  // signed in even once - arrives in the language the sign-up form was in.
+  register: (payload: {
+    email: string
+    password: string
+    displayName: string
+    locale?: AppLocale
+  }) => request<{ message: string; user: User }>('/api/auth/register', json(payload)),
 
   verifyEmail: (token: string) =>
     request<{ message: string; user: User }>('/api/auth/verify-email', json({ token })),
@@ -171,6 +179,11 @@ export const api = {
   }) => request<{ user: User }>('/api/me/measurements', json(payload)),
 
   measurements: () => request<{ measurements: unknown[] }>('/api/me/measurements'),
+
+  // Fields left out are left alone, so the settings screen can change the
+  // language without also resending the theme.
+  updatePreferences: (payload: { locale?: AppLocale; theme?: ThemePreference }) =>
+    request<{ user: User }>('/api/me/preferences', { ...json(payload), method: 'PUT' }),
 
   // --- Dashboard ---
   dashboard: (date?: string, days = 7) =>

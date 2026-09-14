@@ -9,6 +9,8 @@ use App\Api\Dto\ResendVerificationRequest;
 use App\Api\Dto\VerifyEmailRequest;
 use App\Api\Presenter\UserPresenter;
 use App\Entity\User;
+use App\Entity\UserPreferences;
+use App\Enum\AppLocale;
 use App\Repository\UserRepository;
 use App\Security\EmailVerifier;
 use App\Security\InvalidVerificationTokenException;
@@ -101,7 +103,20 @@ final class AuthController extends ApiController
         $user = new User($email, trim($payload->displayName));
         $user->setPassword($this->passwordHasher->hashPassword($user, $payload->password));
 
+        // Settle the language now rather than after the first sign-in: the
+        // confirmation mail goes out in the next few lines, and it is the first
+        // thing the user ever reads from us. What the sign-up form was shown in
+        // beats the browser header, which beats English.
+        $preferences = new UserPreferences(
+            $user,
+            $payload->locale
+                ?? AppLocale::fromAcceptLanguage($request->headers->get('Accept-Language'))
+                ?? AppLocale::default(),
+        );
+        $user->setPreferences($preferences);
+
         $this->entityManager->persist($user);
+        $this->entityManager->persist($preferences);
         $this->entityManager->flush();
 
         $this->emailVerifier->sendVerificationEmail($user);

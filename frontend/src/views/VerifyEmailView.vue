@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
-import { api, ApiError } from '@/api/client'
+import { useI18n } from 'vue-i18n'
+import { api } from '@/api/client'
+import { useApiMessage } from '@/composables/useApiMessage'
 
 /**
  * Where the link in the confirmation mail lands.
@@ -11,6 +13,8 @@ import { api, ApiError } from '@/api/client'
  * user sees a page instead of a JSON document.
  */
 const route = useRoute()
+const { t } = useI18n()
+const apiMessage = useApiMessage()
 
 const state = ref<'working' | 'confirmed' | 'failed'>('working')
 const message = ref('')
@@ -20,7 +24,7 @@ onMounted(async () => {
 
   if (typeof token !== 'string' || token === '') {
     state.value = 'failed'
-    message.value = 'This link is missing its confirmation token.'
+    message.value = t('auth.linkMissingToken')
     return
   }
 
@@ -29,8 +33,7 @@ onMounted(async () => {
     state.value = 'confirmed'
   } catch (e) {
     state.value = 'failed'
-    message.value =
-      e instanceof ApiError ? e.message : 'Could not reach the server to confirm your address.'
+    message.value = apiMessage(e, 'auth.verifyUnreachable')
   }
 })
 </script>
@@ -39,24 +42,21 @@ onMounted(async () => {
   <div class="page narrow">
     <div class="card">
       <template v-if="state === 'working'">
-        <h1>Confirming…</h1>
-        <p class="muted">One moment.</p>
+        <h1>{{ t('auth.confirming') }}</h1>
+        <p class="muted">{{ t('auth.oneMoment') }}</p>
       </template>
 
       <template v-else-if="state === 'confirmed'">
-        <h1>You're all set</h1>
+        <h1>{{ t('auth.allSet') }}</h1>
         <p class="alert alert-success">{{ message }}</p>
-        <RouterLink to="/login">Sign in</RouterLink>
+        <RouterLink to="/login">{{ t('auth.signIn') }}</RouterLink>
       </template>
 
       <template v-else>
-        <h1>That link did not work</h1>
+        <h1>{{ t('auth.linkFailed') }}</h1>
         <p class="alert alert-error">{{ message }}</p>
-        <p class="muted small">
-          Confirmation links expire after 24 hours and can only be used once. Try
-          signing in - if the account is still unconfirmed you can ask for a new link there.
-        </p>
-        <RouterLink to="/login">Back to sign in</RouterLink>
+        <p class="muted small">{{ t('auth.linkExpiredHint') }}</p>
+        <RouterLink to="/login">{{ t('auth.backToSignIn') }}</RouterLink>
       </template>
     </div>
   </div>

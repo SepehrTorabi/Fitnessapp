@@ -1,12 +1,31 @@
 /*
  * One set of design tokens, used by every component.
  *
- * Colours are defined once on :root and redefined for dark mode, so no
- * component ever hard-codes a hex value and the whole app follows the system
- * theme without any of them knowing about it.
+ * ---------------------------------------------------------------------------
+ * The three-state theme
+ * ---------------------------------------------------------------------------
+ * The user can pick light, dark, or "follow my device". That is three states,
+ * and it needs three rules:
+ *
+ *   :root                                   the light palette, always defined
+ *   @media (prefers-color-scheme: dark)     dark, but only when the user has
+ *     :root:not([data-theme="light"])       not explicitly asked for light
+ *   :root[data-theme="dark"]                dark, because they asked for it
+ *
+ * The :not() guard is what makes "light" stick on a machine set to dark mode.
+ * Without it the media query would win and the explicit choice would be
+ * ignored on exactly the devices where it matters most.
+ *
+ * "Follow my device" sets no attribute at all, so the browser keeps the page in
+ * step with the OS by itself - no JavaScript listening, no lag.
+ *
+ * Every colour value appears exactly once, as a --dark-* definition below, and
+ * the two dark rules only map those onto the real token names. The two rules
+ * therefore cannot drift apart in their values.
  */
 
 :root {
+  /* --- The light palette (also the default) --- */
   --bg: #f6f7f9;
   --surface: #ffffff;
   --surface-2: #f0f2f5;
@@ -23,10 +42,10 @@
    * 4.5:1 against the background. --chart-good/--chart-over are fills, chosen
    * for the one thing that matters on a red/green chart - that a red-green
    * colourblind reader can still tell the bars apart. The obvious #16a34a and
-   * #dc2626 are only ΔE 5 apart under deuteranopia, which is indistinguishable;
-   * this pair separates on lightness as well as hue and measures ΔE 26.8.
-   * Colour is still never the only signal: every bar carries a target marker
-   * and a hover readout, and the chart has a table view. */
+   * #dc2626 are only dE 5 apart under deuteranopia, which is
+   * indistinguishable; this pair separates on lightness as well as hue and
+   * measures dE 26.8. Colour is still never the only signal: every bar carries
+   * a target marker and a hover readout, and the chart has a table view. */
   --good: #15803d;
   --good-soft: #dcfce7;
   --over: #b91c1c;
@@ -40,35 +59,76 @@
   --carbs: #f59e0b;
   --fat: #0ea5e9;
 
+  /* --- The dark palette, defined once and mapped by the two rules below ---
+   *
+   * Stepped for a dark surface rather than flipped from the light values: a
+   * light-mode colour on a dark ground either glares or disappears. The chart
+   * pair is chosen separately too, and measures dE 15.9 under deuteranopia
+   * against this background. */
+  --dark-bg: #14161a;
+  --dark-surface: #1c1f25;
+  --dark-surface-2: #23272e;
+  --dark-border: #2f343c;
+  --dark-text: #e8eaed;
+  --dark-text-muted: #9aa3af;
+  --dark-accent: #60a5fa;
+  --dark-accent-contrast: #0b1220;
+  --dark-good: #4ade80;
+  --dark-good-soft: #14341f;
+  --dark-over: #f87171;
+  --dark-over-soft: #3b1717;
+  --dark-chart-good: #4ade80;
+  --dark-chart-over: #e05252;
+
   --radius: 12px;
   --radius-sm: 8px;
   --shadow: 0 1px 2px rgb(16 24 40 / 6%), 0 1px 3px rgb(16 24 40 / 10%);
 
   --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+
+  /* Paints scrollbars and default form controls to match. Overridden from
+     JavaScript in theme.ts when an explicit choice is made. */
+  color-scheme: light dark;
 }
 
+/* Dark, because the device asks for it - unless the user chose light. */
 @media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #14161a;
-    --surface: #1c1f25;
-    --surface-2: #23272e;
-    --border: #2f343c;
-    --text: #e8eaed;
-    --text-muted: #9aa3af;
-
-    --accent: #60a5fa;
-    --accent-contrast: #0b1220;
-
-    /* Dark mode is stepped separately rather than flipped: the light pair
-     * loses its contrast against a dark surface. This pair measures ΔE 15.9
-     * under deuteranopia and clears 3:1 on both marks. */
-    --good: #4ade80;
-    --good-soft: #14341f;
-    --over: #f87171;
-    --over-soft: #3b1717;
-    --chart-good: #4ade80;
-    --chart-over: #e05252;
+  :root:not([data-theme='light']) {
+    --bg: var(--dark-bg);
+    --surface: var(--dark-surface);
+    --surface-2: var(--dark-surface-2);
+    --border: var(--dark-border);
+    --text: var(--dark-text);
+    --text-muted: var(--dark-text-muted);
+    --accent: var(--dark-accent);
+    --accent-contrast: var(--dark-accent-contrast);
+    --good: var(--dark-good);
+    --good-soft: var(--dark-good-soft);
+    --over: var(--dark-over);
+    --over-soft: var(--dark-over-soft);
+    --chart-good: var(--dark-chart-good);
+    --chart-over: var(--dark-chart-over);
+    --shadow: 0 1px 2px rgb(0 0 0 / 40%), 0 1px 3px rgb(0 0 0 / 30%);
   }
+}
+
+/* Dark, because the user asked for it - on any device. */
+:root[data-theme='dark'] {
+  --bg: var(--dark-bg);
+  --surface: var(--dark-surface);
+  --surface-2: var(--dark-surface-2);
+  --border: var(--dark-border);
+  --text: var(--dark-text);
+  --text-muted: var(--dark-text-muted);
+  --accent: var(--dark-accent);
+  --accent-contrast: var(--dark-accent-contrast);
+  --good: var(--dark-good);
+  --good-soft: var(--dark-good-soft);
+  --over: var(--dark-over);
+  --over-soft: var(--dark-over-soft);
+  --chart-good: var(--dark-chart-good);
+  --chart-over: var(--dark-chart-over);
+  --shadow: 0 1px 2px rgb(0 0 0 / 40%), 0 1px 3px rgb(0 0 0 / 30%);
 }
 
 * {

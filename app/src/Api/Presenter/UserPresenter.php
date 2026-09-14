@@ -6,6 +6,8 @@ namespace App\Api\Presenter;
 
 use App\Entity\BodyMeasurement;
 use App\Entity\User;
+use App\Enum\AppLocale;
+use App\Enum\Theme;
 use App\Nutrition\DailyTargetResolver;
 use App\Repository\BodyMeasurementRepository;
 
@@ -50,6 +52,13 @@ final class UserPresenter
             ],
             'latestMeasurement' => null === $latest ? null : $this->presentMeasurement($latest),
             'dailyTarget' => $this->targetResolver->resolve($user)?->toArray(),
+            // Never null, unlike profile: a user who has never opened the
+            // settings screen still has an effective language and theme, and
+            // the client should not have to know the defaults itself.
+            'preferences' => [
+                'locale' => ($user->getPreferences()?->getLocale() ?? AppLocale::default())->value,
+                'theme' => ($user->getPreferences()?->getTheme() ?? Theme::default())->value,
+            ],
         ];
     }
 

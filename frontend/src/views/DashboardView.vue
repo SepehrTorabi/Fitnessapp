@@ -1,13 +1,17 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import { RouterLink } from 'vue-router'
-import { api, ApiError } from '@/api/client'
+import { useI18n } from 'vue-i18n'
+import { api } from '@/api/client'
+import { useApiMessage } from '@/composables/useApiMessage'
 import { useAuthStore } from '@/stores/auth'
 import type { DashboardData } from '@/api/types'
 import WeeklyChart from '@/components/WeeklyChart.vue'
 import MacroBars from '@/components/MacroBars.vue'
 
 const auth = useAuthStore()
+const { t } = useI18n()
+const apiMessage = useApiMessage()
 
 const data = ref<DashboardData | null>(null)
 const error = ref('')
@@ -25,7 +29,7 @@ onMounted(async () => {
   try {
     data.value = await api.dashboard(undefined, 7)
   } catch (e) {
-    error.value = e instanceof ApiError ? e.message : 'Could not load your dashboard.'
+    error.value = apiMessage(e, 'dashboard.loadFailed')
   } finally {
     loading.value = false
   }
@@ -34,49 +38,52 @@ onMounted(async () => {
 
 <template>
   <div class="page">
-    <h1>Hello, {{ auth.user?.displayName }}</h1>
+    <h1>{{ t('dashboard.greeting', { name: auth.user?.displayName ?? '' }) }}</h1>
 
     <!-- Without body data there is no target, and the whole dashboard is empty
          numbers. Say what is missing instead of showing zeroes. -->
     <div v-if="auth.needsProfile || auth.needsWeight" class="card onboarding">
-      <h2>One more step</h2>
+      <h2>{{ t('dashboard.onboardingTitle') }}</h2>
       <p class="muted">
-        {{
-          auth.needsProfile
-            ? 'Tell us your age, height and activity level so we can work out how much you need.'
-            : 'Add your current weight so we can work out your daily calories.'
-        }}
+        {{ auth.needsProfile ? t('dashboard.onboardingProfile') : t('dashboard.onboardingWeight') }}
       </p>
-      <RouterLink to="/profile"><button type="button">Fill in your body data</button></RouterLink>
+      <RouterLink to="/profile">
+        <button type="button">{{ t('dashboard.onboardingButton') }}</button>
+      </RouterLink>
     </div>
 
-    <p v-if="loading" class="muted">Loading…</p>
+    <p v-if="loading" class="muted">{{ t('common.loading') }}</p>
     <p v-else-if="error" class="alert alert-error">{{ error }}</p>
 
     <template v-else-if="data && today">
       <div class="grid grid-3 stats">
         <div class="card">
-          <p class="stat-label">Eaten today</p>
-          <p class="stat-value">{{ Math.round(today.consumed.kcal) }}<span class="unit">kcal</span></p>
+          <p class="stat-label">{{ t('dashboard.eatenToday') }}</p>
+          <p class="stat-value">
+            {{ Math.round(today.consumed.kcal) }}<span class="unit">{{ t('common.kcal') }}</span>
+          </p>
         </div>
 
         <div class="card">
-          <p class="stat-label">Burned through activity</p>
-          <p class="stat-value">{{ Math.round(today.caloriesBurned) }}<span class="unit">kcal</span></p>
+          <p class="stat-label">{{ t('dashboard.burned') }}</p>
+          <p class="stat-value">
+            {{ Math.round(today.caloriesBurned) }}<span class="unit">{{ t('common.kcal') }}</span>
+          </p>
         </div>
 
         <div class="card">
           <p class="stat-label">
-            {{ remaining !== null && remaining < 0 ? 'Over budget' : 'Left today' }}
+            {{ remaining !== null && remaining < 0 ? t('dashboard.overBudget') : t('dashboard.leftToday') }}
           </p>
           <p
             class="stat-value"
             :class="remaining === null ? '' : remaining < 0 ? 'value-over' : 'value-good'"
           >
-            {{ remaining === null ? '—' : Math.abs(remaining) }}<span class="unit">kcal</span>
+            {{ remaining === null ? t('common.none') : Math.abs(remaining)
+            }}<span class="unit">{{ t('common.kcal') }}</span>
           </p>
           <p v-if="today.target" class="small muted">
-            Budget {{ Math.round(today.budgetKcal ?? 0) }} kcal
+            {{ t('dashboard.budget', { kcal: Math.round(today.budgetKcal ?? 0) }) }}
           </p>
         </div>
       </div>
@@ -88,42 +95,47 @@ onMounted(async () => {
       </div>
 
       <div class="card main">
-        <h3>Macros today</h3>
+        <h3>{{ t('dashboard.macrosToday') }}</h3>
         <MacroBars :consumed="today.consumed" :target="today.target?.macros ?? null" />
 
         <div v-if="today.target" class="target-detail">
           <p class="small muted">
-            Target {{ today.target.targetKcal }} kcal — basal rate
-            {{ today.target.bmr }}, daily expenditure {{ today.target.tdee }}, calculated with
-            {{ today.target.formula === 'katch-mcardle' ? 'Katch-McArdle' : 'Mifflin-St Jeor' }}.
+            {{
+              t('dashboard.targetExplain', {
+                target: today.target.targetKcal,
+                bmr: today.target.bmr,
+                tdee: today.target.tdee,
+                formula: t(`formula.${today.target.formula}`),
+              })
+            }}
           </p>
         </div>
       </div>
 
       <div class="card">
         <div class="row-between">
-          <h3>Today's entries</h3>
-          <RouterLink to="/diary" class="small">Add something</RouterLink>
+          <h3>{{ t('dashboard.todaysEntries') }}</h3>
+          <RouterLink to="/diary" class="small">{{ t('dashboard.addSomething') }}</RouterLink>
         </div>
 
         <p v-if="data.recentEntries.length === 0" class="empty">
-          Nothing logged today yet.
+          {{ t('dashboard.nothingToday') }}
         </p>
 
         <table v-else>
           <thead>
             <tr>
-              <th>Food</th>
-              <th>Meal</th>
-              <th class="num">Amount</th>
-              <th class="num">kcal</th>
-              <th class="num">P / C / F</th>
+              <th>{{ t('dashboard.tableFood') }}</th>
+              <th>{{ t('dashboard.tableMeal') }}</th>
+              <th class="num">{{ t('dashboard.tableAmount') }}</th>
+              <th class="num">{{ t('common.kcal') }}</th>
+              <th class="num">{{ t('dashboard.tableMacros') }}</th>
             </tr>
           </thead>
           <tbody>
             <tr v-for="entry in data.recentEntries" :key="entry.id">
               <td>{{ entry.label }}</td>
-              <td class="muted">{{ entry.mealType }}</td>
+              <td class="muted">{{ t(`meal.${entry.mealType}`) }}</td>
               <td class="num">{{ entry.quantity }} {{ entry.portionLabel ?? entry.unit }}</td>
               <td class="num">{{ Math.round(entry.nutrients.kcal) }}</td>
               <td class="num muted">
@@ -136,10 +148,21 @@ onMounted(async () => {
         </table>
       </div>
 
+      <!-- Pluralised by vue-i18n: German and English do not split the singular
+           and plural in the same place, so the whole sentence is one message
+           with two forms rather than a word stitched on at runtime. -->
       <p v-if="data.averages.daysLogged > 0" class="muted small averages">
-        Over the {{ data.averages.daysLogged }}
-        {{ data.averages.daysLogged === 1 ? 'day' : 'days' }} you logged this week you averaged
-        {{ data.averages.kcal }} kcal, {{ data.averages.proteinG }} g protein.
+        {{
+          t(
+            'dashboard.averages',
+            {
+              count: data.averages.daysLogged,
+              kcal: data.averages.kcal,
+              protein: data.averages.proteinG,
+            },
+            data.averages.daysLogged,
+          )
+        }}
       </p>
     </template>
   </div>

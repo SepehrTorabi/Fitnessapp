@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Entity;
 
+use App\Enum\AppLocale;
 use App\Repository\UserRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
@@ -55,6 +56,13 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     #[ORM\OneToOne(mappedBy: 'user', targetEntity: UserProfile::class, cascade: ['persist', 'remove'])]
     private ?UserProfile $profile = null;
+
+    /**
+     * Interface settings - language, colour scheme. Null until the user first
+     * changes something; the API answers with the defaults in the meantime.
+     */
+    #[ORM\OneToOne(mappedBy: 'user', targetEntity: UserPreferences::class, cascade: ['persist', 'remove'])]
+    private ?UserPreferences $preferences = null;
 
     /** @var Collection<int, BodyMeasurement> */
     #[ORM\OneToMany(mappedBy: 'user', targetEntity: BodyMeasurement::class, cascade: ['persist', 'remove'], orphanRemoval: true)]
@@ -155,6 +163,29 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         if ($profile->getUser() !== $this) {
             $profile->setUser($this);
         }
+    }
+
+    public function getPreferences(): ?UserPreferences
+    {
+        return $this->preferences;
+    }
+
+    public function setPreferences(UserPreferences $preferences): void
+    {
+        $this->preferences = $preferences;
+
+        if ($preferences->getUser() !== $this) {
+            $preferences->setUser($this);
+        }
+    }
+
+    /**
+     * The language to write to this user in - their choice, or English until
+     * they make one. Used by the transactional mails.
+     */
+    public function getLocale(): AppLocale
+    {
+        return $this->preferences?->getLocale() ?? AppLocale::default();
     }
 
     /**

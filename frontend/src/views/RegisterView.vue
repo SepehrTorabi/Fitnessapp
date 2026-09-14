@@ -1,7 +1,14 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { RouterLink } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { api, ApiError } from '@/api/client'
+import { useApiMessage } from '@/composables/useApiMessage'
+import { usePreferencesStore } from '@/stores/preferences'
+
+const { t } = useI18n()
+const apiMessage = useApiMessage()
+const preferences = usePreferencesStore()
 
 const displayName = ref('')
 const email = ref('')
@@ -22,16 +29,18 @@ async function submit(): Promise<void> {
       email: email.value,
       password: password.value,
       displayName: displayName.value,
+      // The account does not exist yet, so there is no stored preference - but
+      // the confirmation mail goes out immediately. Sending what this form was
+      // displayed in means the first thing the user reads from us is already
+      // in their language.
+      locale: preferences.locale,
     })
     done.value = true
   } catch (e) {
-    if (e instanceof ApiError) {
-      error.value = e.message
-      // Field-level messages from the API's validator, keyed by property name.
-      violations.value = e.violations
-    } else {
-      error.value = 'Could not reach the server. Is the API running?'
-    }
+    error.value = apiMessage(e, 'auth.unreachable')
+
+    // Field-level messages from the API's validator, keyed by property name.
+    if (e instanceof ApiError) violations.value = e.violations
   } finally {
     busy.value = false
   }
@@ -43,24 +52,24 @@ async function submit(): Promise<void> {
     <!-- The account exists but cannot sign in yet, so the only useful next step
          is the inbox. -->
     <div v-if="done" class="card">
-      <h1>Check your inbox</h1>
-      <p>
-        We sent a confirmation link to <strong>{{ email }}</strong>. Open it to
-        activate your account, then sign in.
-      </p>
-      <p class="muted small">
-        Running locally? The mail is waiting in Mailpit at
-        <a href="http://localhost:8025" target="_blank" rel="noopener">localhost:8025</a>.
-      </p>
-      <RouterLink to="/login">Back to sign in</RouterLink>
+      <h1>{{ t('auth.checkInbox') }}</h1>
+      <i18n-t keypath="auth.confirmationSent" tag="p" scope="global">
+        <template #email><strong>{{ email }}</strong></template>
+      </i18n-t>
+      <i18n-t keypath="auth.mailpitHint" tag="p" class="muted small" scope="global">
+        <template #link>
+          <a href="http://localhost:8025" target="_blank" rel="noopener">localhost:8025</a>
+        </template>
+      </i18n-t>
+      <RouterLink to="/login">{{ t('auth.backToSignIn') }}</RouterLink>
     </div>
 
     <div v-else class="card">
-      <h1>Create an account</h1>
+      <h1>{{ t('auth.createAccount') }}</h1>
 
       <form class="stack" @submit.prevent="submit">
         <div>
-          <label for="displayName">Your name</label>
+          <label for="displayName">{{ t('auth.nameLabel') }}</label>
           <input
             id="displayName"
             v-model="displayName"
@@ -73,7 +82,7 @@ async function submit(): Promise<void> {
         </div>
 
         <div>
-          <label for="email">E-mail address</label>
+          <label for="email">{{ t('auth.emailLabel') }}</label>
           <input
             id="email"
             v-model="email"
@@ -86,7 +95,7 @@ async function submit(): Promise<void> {
         </div>
 
         <div>
-          <label for="password">Password</label>
+          <label for="password">{{ t('auth.passwordLabel') }}</label>
           <input
             id="password"
             v-model="password"
@@ -96,18 +105,18 @@ async function submit(): Promise<void> {
             :aria-invalid="Boolean(violations.password)"
           />
           <p v-if="violations.password" class="field-error">{{ violations.password }}</p>
-          <p v-else class="muted small hint">At least 10 characters.</p>
+          <p v-else class="muted small hint">{{ t('auth.passwordHint') }}</p>
         </div>
 
         <p v-if="error" class="alert alert-error">{{ error }}</p>
 
         <button type="submit" :disabled="busy">
-          {{ busy ? 'Creating…' : 'Create account' }}
+          {{ busy ? t('auth.creating') : t('auth.createAccount') }}
         </button>
       </form>
 
       <p class="muted small footer">
-        Already have an account? <RouterLink to="/login">Sign in</RouterLink>
+        {{ t('auth.haveAccount') }} <RouterLink to="/login">{{ t('auth.signIn') }}</RouterLink>
       </p>
     </div>
   </div>

@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { api, ApiError } from '@/api/client'
+import { useApiMessage } from '@/composables/useApiMessage'
 import { useAuthStore } from '@/stores/auth'
 import type { ActivityLevel, Goal, Sex } from '@/api/types'
 
@@ -11,6 +13,8 @@ import type { ActivityLevel, Goal, Sex } from '@/api/types'
  * a series. That is also what lets a past day keep the target that applied then.
  */
 const auth = useAuthStore()
+const { t } = useI18n()
+const apiMessage = useApiMessage()
 
 const profile = reactive({
   birthDate: '',
@@ -32,24 +36,28 @@ const profileSaved = ref(false)
 const measurementError = ref('')
 const measurementSaved = ref(false)
 
-const activityLevels: { value: ActivityLevel; label: string }[] = [
-  { value: 'sedentary', label: 'Sedentary — little or no exercise, desk job' },
-  { value: 'lightly_active', label: 'Lightly active — exercise 1–3 days a week' },
-  { value: 'moderately_active', label: 'Moderately active — exercise 3–5 days a week' },
-  { value: 'very_active', label: 'Very active — hard exercise 6–7 days a week' },
-  { value: 'extra_active', label: 'Extra active — physical job or training twice a day' },
+// Computed rather than constant: the labels have to be re-read when the
+// language changes, and a plain array would keep whatever it was built with.
+const ACTIVITY_LEVELS: ActivityLevel[] = [
+  'sedentary',
+  'lightly_active',
+  'moderately_active',
+  'very_active',
+  'extra_active',
 ]
 
-const goals: { value: Goal; label: string }[] = [
-  { value: 'lose_weight', label: 'Lose weight — 20% below maintenance' },
-  { value: 'maintain_weight', label: 'Maintain weight' },
-  { value: 'gain_muscle', label: 'Gain muscle — 10% above maintenance' },
-]
+const GOALS: Goal[] = ['lose_weight', 'maintain_weight', 'gain_muscle']
+
+const activityLevels = computed(() =>
+  ACTIVITY_LEVELS.map((value) => ({ value, label: t(`activityLevel.${value}`) })),
+)
+
+const goals = computed(() => GOALS.map((value) => ({ value, label: t(`goal.${value}`) })))
 
 const target = computed(() => auth.user?.dailyTarget ?? null)
 
 const formulaName = computed(() =>
-  target.value?.formula === 'katch-mcardle' ? 'Katch-McArdle' : 'Mifflin-St Jeor',
+  target.value ? t(`formula.${target.value.formula}`) : '',
 )
 
 async function saveProfile(): Promise<void> {
@@ -68,12 +76,8 @@ async function saveProfile(): Promise<void> {
     await auth.refresh()
     profileSaved.value = true
   } catch (e) {
-    if (e instanceof ApiError) {
-      profileError.value = e.message
-      profileViolations.value = e.violations
-    } else {
-      profileError.value = 'Could not save your profile.'
-    }
+    profileError.value = apiMessage(e, 'profile.saveFailed')
+    if (e instanceof ApiError) profileViolations.value = e.violations
   }
 }
 
@@ -82,7 +86,7 @@ async function saveMeasurement(): Promise<void> {
   measurementSaved.value = false
 
   if (measurement.weightKg === null) {
-    measurementError.value = 'Enter your weight.'
+    measurementError.value = t('profile.weightRequired')
     return
   }
 
@@ -95,7 +99,7 @@ async function saveMeasurement(): Promise<void> {
     await auth.refresh()
     measurementSaved.value = true
   } catch (e) {
-    measurementError.value = e instanceof ApiError ? e.message : 'Could not save that weigh-in.'
+    measurementError.value = apiMessage(e, 'profile.weighInFailed')
   }
 }
 
@@ -122,16 +126,16 @@ onMounted(() => {
 
 <template>
   <div class="page">
-    <h1>Your body data</h1>
+    <h1>{{ t('titles.profile') }}</h1>
 
     <div class="grid grid-2">
       <div class="card">
-        <h2>About you</h2>
-        <p class="muted small note">These rarely change, so you only fill them in once.</p>
+        <h2>{{ t('profile.aboutYou') }}</h2>
+        <p class="muted small note">{{ t('profile.aboutIntro') }}</p>
 
         <form class="stack" @submit.prevent="saveProfile">
           <div>
-            <label for="birthDate">Date of birth</label>
+            <label for="birthDate">{{ t('profile.birthDate') }}</label>
             <input id="birthDate" v-model="profile.birthDate" type="date" required />
             <p v-if="profileViolations.birthDate" class="field-error">
               {{ profileViolations.birthDate }}
@@ -139,19 +143,18 @@ onMounted(() => {
           </div>
 
           <div>
-            <label for="sex">Sex</label>
+            <label for="sex">{{ t('profile.sex') }}</label>
             <select id="sex" v-model="profile.sex">
-              <option value="male">Male</option>
-              <option value="female">Female</option>
+              <option value="male">{{ t('sex.male') }}</option>
+              <option value="female">{{ t('sex.female') }}</option>
             </select>
             <p class="muted small hint">
-              The calorie formulas use a different constant per sex, which is the
-              only reason this is asked.
+              {{ t('profile.sexHint') }}
             </p>
           </div>
 
           <div>
-            <label for="height">Height (cm)</label>
+            <label for="height">{{ t('profile.height') }}</label>
             <input id="height" v-model.number="profile.heightCm" type="number" min="80" max="250" required />
             <p v-if="profileViolations.heightCm" class="field-error">
               {{ profileViolations.heightCm }}
@@ -159,7 +162,7 @@ onMounted(() => {
           </div>
 
           <div>
-            <label for="activity">How active are you?</label>
+            <label for="activity">{{ t('profile.activityQuestion') }}</label>
             <select id="activity" v-model="profile.activityLevel">
               <option v-for="level in activityLevels" :key="level.value" :value="level.value">
                 {{ level.label }}
@@ -168,7 +171,7 @@ onMounted(() => {
           </div>
 
           <div>
-            <label for="goal">What are you aiming for?</label>
+            <label for="goal">{{ t('profile.goalQuestion') }}</label>
             <select id="goal" v-model="profile.goal">
               <option v-for="option in goals" :key="option.value" :value="option.value">
                 {{ option.label }}
@@ -177,88 +180,85 @@ onMounted(() => {
           </div>
 
           <p v-if="profileError" class="alert alert-error">{{ profileError }}</p>
-          <p v-if="profileSaved" class="alert alert-success">Saved.</p>
+          <p v-if="profileSaved" class="alert alert-success">{{ t('common.saved') }}</p>
 
-          <button type="submit">Save</button>
+          <button type="submit">{{ t('common.save') }}</button>
         </form>
       </div>
 
       <div class="stack">
         <div class="card">
-          <h2>Today's weigh-in</h2>
+          <h2>{{ t('profile.weighIn') }}</h2>
           <p class="muted small note">
-            Weighing yourself twice in one day replaces the earlier entry rather
-            than adding a second one.
+            {{ t('profile.weighInIntro') }}
           </p>
 
           <form class="stack" @submit.prevent="saveMeasurement">
             <div>
-              <label for="weight">Weight (kg)</label>
+              <label for="weight">{{ t('profile.weight') }}</label>
               <input id="weight" v-model.number="measurement.weightKg" type="number" min="20" max="500" step="0.1" required />
             </div>
 
             <div class="grid grid-2">
               <div>
-                <label for="muscle">Muscle mass (kg, optional)</label>
+                <label for="muscle">{{ t('profile.muscleMass') }}</label>
                 <input id="muscle" v-model.number="measurement.muscleMassKg" type="number" min="0" step="0.1" />
               </div>
               <div>
-                <label for="fat">Fat mass (kg, optional)</label>
+                <label for="fat">{{ t('profile.fatMass') }}</label>
                 <input id="fat" v-model.number="measurement.fatMassKg" type="number" min="0" step="0.1" />
               </div>
             </div>
 
             <p class="muted small hint">
-              If you know your fat mass, the calculation switches to a formula
-              based on lean mass, which is more accurate than one based on total
-              weight.
+              {{ t('profile.fatMassHint') }}
             </p>
 
             <p v-if="measurementError" class="alert alert-error">{{ measurementError }}</p>
-            <p v-if="measurementSaved" class="alert alert-success">Saved.</p>
+            <p v-if="measurementSaved" class="alert alert-success">{{ t('common.saved') }}</p>
 
-            <button type="submit">Save weigh-in</button>
+            <button type="submit">{{ t('profile.saveWeighIn') }}</button>
           </form>
         </div>
 
         <div v-if="target" class="card target-card">
-          <h2>Your daily target</h2>
+          <h2>{{ t('profile.dailyTarget') }}</h2>
 
-          <p class="stat-value">{{ target.targetKcal }}<span class="unit">kcal</span></p>
+          <p class="stat-value">
+            {{ target.targetKcal }}<span class="unit">{{ t('common.kcal') }}</span>
+          </p>
 
           <table class="breakdown">
             <tbody>
               <tr>
-                <td>Basal metabolic rate</td>
-                <td class="num">{{ target.bmr }} kcal</td>
+                <td>{{ t('profile.bmr') }}</td>
+                <td class="num">{{ target.bmr }} {{ t('common.kcal') }}</td>
               </tr>
               <tr>
-                <td>Total daily expenditure</td>
-                <td class="num">{{ target.tdee }} kcal</td>
+                <td>{{ t('profile.tdee') }}</td>
+                <td class="num">{{ target.tdee }} {{ t('common.kcal') }}</td>
               </tr>
               <tr>
-                <td>Protein</td>
+                <td>{{ t('profile.proteinRow') }}</td>
                 <td class="num">{{ target.macros.proteinG }} g</td>
               </tr>
               <tr>
-                <td>Carbohydrate</td>
+                <td>{{ t('profile.carbsRow') }}</td>
                 <td class="num">{{ target.macros.carbsG }} g</td>
               </tr>
               <tr>
-                <td>Fat</td>
+                <td>{{ t('profile.fatRow') }}</td>
                 <td class="num">{{ target.macros.fatG }} g</td>
               </tr>
             </tbody>
           </table>
 
-          <p class="muted small hint">Calculated with the {{ formulaName }} formula.</p>
+          <p class="muted small hint">{{ t('profile.calculatedWith', { formula: formulaName }) }}</p>
         </div>
 
         <div v-else class="card">
-          <h2>Your daily target</h2>
-          <p class="muted">
-            Fill in your details and a weigh-in, and your target will appear here.
-          </p>
+          <h2>{{ t('profile.dailyTarget') }}</h2>
+          <p class="muted">{{ t('profile.noTargetYet') }}</p>
         </div>
       </div>
     </div>

@@ -48,6 +48,11 @@ api_me_profile_update:
     controller: App\Controller\Api\AccountController::updateProfile
     methods: [PUT]
 
+api_me_preferences_update:
+    path: /api/me/preferences
+    controller: App\Controller\Api\AccountController::updatePreferences
+    methods: [PUT]
+
 api_me_measurements_list:
     path: /api/me/measurements
     controller: App\Controller\Api\AccountController::listMeasurements

@@ -1,13 +1,16 @@
 <script setup lang="ts">
 import { RouterLink } from 'vue-router'
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 </script>
 
 <template>
   <div class="page">
     <div class="card">
-      <h1>Page not found</h1>
-      <p class="muted">That address does not lead anywhere.</p>
-      <RouterLink to="/">Back to the dashboard</RouterLink>
+      <h1>{{ t('notFound.title') }}</h1>
+      <p class="muted">{{ t('notFound.body') }}</p>
+      <RouterLink to="/">{{ t('notFound.back') }}</RouterLink>
     </div>
   </div>
 </template>
