@@ -64,9 +64,13 @@ when@test:
     services:
         # The test suite must not depend on a third party being reachable, and
         # must not send traffic to Open Food Facts on every run.
-        App\Food\Provider\ExternalFoodProviderInterface: '@App\Food\Provider\NullFoodProvider'
-
-        # Aliased public so functional tests can swap in a stub via the container.
-        test.food_provider:
-            alias: App\Food\Provider\ExternalFoodProviderInterface
+        #
+        # This is a real definition rather than an alias on purpose. The
+        # container resolves aliases at compile time, so services would be
+        # injected with the NullFoodProvider id and a test replacing the
+        # interface id would have no effect. Declared under the interface's own
+        # id, and public, a functional test can swap in a stub with
+        # $container->set(ExternalFoodProviderInterface::class, $stub).
+        App\Food\Provider\ExternalFoodProviderInterface:
+            class: App\Food\Provider\NullFoodProvider
             public: true

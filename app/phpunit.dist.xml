@@ -40,5 +40,9 @@
     </source>
 
     <extensions>
+        <!-- Wraps every test in a database transaction and rolls it back
+             afterwards, so tests neither see each other's rows nor need to
+             rebuild the schema between cases. -->
+        <bootstrap class="DAMA\DoctrineTestBundle\PHPUnit\PHPUnitExtension"/>
     </extensions>
 </phpunit>

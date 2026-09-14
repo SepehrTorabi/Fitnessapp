@@ -31,15 +31,22 @@ class EmailVerificationTokenRepository extends ServiceEntityRepository
      */
     public function consumeAllFor(User $user): void
     {
-        $this->createQueryBuilder('t')
-            ->update()
-            ->set('t.consumedAt', ':now')
+        $outstanding = $this->createQueryBuilder('t')
             ->where('t.user = :user')
             ->andWhere('t.consumedAt IS NULL')
-            ->setParameter('now', new \DateTimeImmutable())
             ->setParameter('user', $user)
             ->getQuery()
-            ->execute();
+            ->getResult();
+
+        // Loading the tokens and mutating them, rather than issuing a bulk DQL
+        // UPDATE. A bulk update writes straight to the database and leaves the
+        // UnitOfWork untouched, so a token object already loaded in this request
+        // would go on reporting itself as unconsumed - and could still be
+        // redeemed. The caller flushes, so the retirements and the replacement
+        // token are written together.
+        foreach ($outstanding as $token) {
+            $token->consume();
+        }
     }
 
     /**
