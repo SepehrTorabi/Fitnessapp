@@ -5,6 +5,14 @@ nelmio_cors:
         allow_methods: ['GET', 'OPTIONS', 'POST', 'PUT', 'PATCH', 'DELETE']
         allow_headers: ['Content-Type', 'Authorization']
         expose_headers: ['Link']
+        # Authentication is a session cookie, and a browser will not send one on
+        # a cross-origin request unless the server says credentials are allowed.
+        # This is what lets the Vue dev server on :5173 talk to the API on :8000
+        # directly; going through the Vite proxy instead keeps it same-origin and
+        # does not rely on this at all.
+        allow_credentials: true
         max_age: 3600
     paths:
-        '^/': null
+        # Only the API. Nothing else here is meant to be called from a browser
+        # on another origin.
+        '^/api': ~

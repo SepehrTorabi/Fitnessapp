@@ -1,0 +1,166 @@
+# Every API route of the application, declared in one place.
+#
+# The controllers carry no #[Route] attributes on purpose: with the routes
+# gathered here, `php bin/console debug:router` and this file tell the same
+# story, and the whole surface of the API can be reviewed without opening seven
+# controllers. The cost is that adding an endpoint means touching two files.
+
+# --- Authentication -------------------------------------------------------
+# These four are public; everything below requires a signed-in user, enforced
+# by the access_control rules in config/packages/security.yaml.
+
+api_auth_register:
+    path: /api/auth/register
+    controller: App\Controller\Api\AuthController::register
+    methods: [POST]
+
+api_auth_verify_email:
+    path: /api/auth/verify-email
+    controller: App\Controller\Api\AuthController::verifyEmail
+    methods: [POST]
+
+api_auth_resend_verification:
+    path: /api/auth/resend-verification
+    controller: App\Controller\Api\AuthController::resendVerification
+    methods: [POST]
+
+# Intercepted by the firewall before it reaches the controller. The route has
+# to exist all the same, because security.yaml refers to it by path.
+api_auth_login:
+    path: /api/auth/login
+    controller: App\Controller\Api\AuthController::login
+    methods: [POST]
+
+api_auth_logout:
+    path: /api/auth/logout
+    controller: App\Controller\Api\AuthController::logout
+    methods: [POST]
+
+# --- The signed-in user's own account -------------------------------------
+
+api_me:
+    path: /api/me
+    controller: App\Controller\Api\AccountController::me
+    methods: [GET]
+
+api_me_profile_update:
+    path: /api/me/profile
+    controller: App\Controller\Api\AccountController::updateProfile
+    methods: [PUT]
+
+api_me_measurements_list:
+    path: /api/me/measurements
+    controller: App\Controller\Api\AccountController::listMeasurements
+    methods: [GET]
+
+api_me_measurements_create:
+    path: /api/me/measurements
+    controller: App\Controller\Api\AccountController::addMeasurement
+    methods: [POST]
+
+# --- Dashboard ------------------------------------------------------------
+
+api_dashboard:
+    path: /api/dashboard
+    controller: App\Controller\Api\DashboardController::summary
+    methods: [GET]
+
+# --- Food catalogue -------------------------------------------------------
+
+api_foods_search:
+    path: /api/foods
+    controller: App\Controller\Api\FoodController::search
+    methods: [GET]
+
+api_foods_create:
+    path: /api/foods
+    controller: App\Controller\Api\FoodController::create
+    methods: [POST]
+
+# Declared before the /api/foods/{id} route below. The digit requirement on
+# {id} would keep them apart anyway, but relying on the ordering being visible
+# is easier to reason about than relying on a regex further down the file.
+api_foods_by_barcode:
+    path: /api/foods/barcode/{barcode}
+    controller: App\Controller\Api\FoodController::byBarcode
+    methods: [GET]
+    requirements:
+        barcode: '\d{8,14}'
+
+api_foods_import:
+    path: /api/foods/import/{externalId}
+    controller: App\Controller\Api\FoodController::import
+    methods: [POST]
+    requirements:
+        externalId: '[\w\-]{1,64}'
+
+api_foods_show:
+    path: /api/foods/{id}
+    controller: App\Controller\Api\FoodController::show
+    methods: [GET]
+    requirements:
+        id: '\d+'
+
+# --- Diary: what was eaten and what was burned ----------------------------
+
+api_diary_day:
+    path: /api/diary
+    controller: App\Controller\Api\DiaryController::day
+    methods: [GET]
+
+api_diary_entries_create:
+    path: /api/diary/entries
+    controller: App\Controller\Api\DiaryController::createEntry
+    methods: [POST]
+
+api_diary_entries_delete:
+    path: /api/diary/entries/{id}
+    controller: App\Controller\Api\DiaryController::deleteEntry
+    methods: [DELETE]
+    requirements:
+        id: '\d+'
+
+api_diary_activities_create:
+    path: /api/diary/activities
+    controller: App\Controller\Api\DiaryController::createActivity
+    methods: [POST]
+
+api_diary_activities_delete:
+    path: /api/diary/activities/{id}
+    controller: App\Controller\Api\DiaryController::deleteActivity
+    methods: [DELETE]
+    requirements:
+        id: '\d+'
+
+# --- Recipes --------------------------------------------------------------
+
+api_recipes_list:
+    path: /api/recipes
+    controller: App\Controller\Api\RecipeController::list
+    methods: [GET]
+
+api_recipes_create:
+    path: /api/recipes
+    controller: App\Controller\Api\RecipeController::create
+    methods: [POST]
+
+api_recipes_show:
+    path: /api/recipes/{id}
+    controller: App\Controller\Api\RecipeController::show
+    methods: [GET]
+    requirements:
+        id: '\d+'
+
+api_recipes_update:
+    path: /api/recipes/{id}
+    controller: App\Controller\Api\RecipeController::update
+    methods: [PUT]
+    requirements:
+        id: '\d+'
+
+api_recipes_delete:
+    path: /api/recipes/{id}
+    controller: App\Controller\Api\RecipeController::delete
+    methods: [DELETE]
+    requirements:
+        id: '\d+'

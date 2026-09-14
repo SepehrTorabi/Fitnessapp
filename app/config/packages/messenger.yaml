@@ -18,9 +18,21 @@ framework:
             messenger.bus.default: []
 
         routing:
+            # Sending mail is slow and can fail; registration must not wait for
+            # it. The message is queued in the database and a worker delivers it
+            # - run `php bin/console messenger:consume async` alongside the app.
             Symfony\Component\Mailer\Messenger\SendEmailMessage: async
             Symfony\Component\Notifier\Message\ChatMessage: async
             Symfony\Component\Notifier\Message\SmsMessage: async
 
             # Route your messages to the transports
             # 'App\Message\YourMessage': async
+
+when@test:
+    framework:
+        messenger:
+            transports:
+                # Everything runs in-process during tests: no worker to start,
+                # and a mail is already "sent" by the time the request returns,
+                # which is what the mailer assertions inspect.
+                async: 'sync://'

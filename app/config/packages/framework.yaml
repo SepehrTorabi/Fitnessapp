@@ -2,11 +2,42 @@
 framework:
     secret: '%env(APP_SECRET)%'
 
-    # Note that the session will be started ONLY if you read or write from it.
-    session: true
+    # Session-backed authentication needs a session, and a cross-site cookie
+    # would be sent along with requests triggered by other sites. Lax lets the
+    # cookie ride normal top-level navigation but not background POSTs.
+    session:
+        cookie_samesite: lax
+        cookie_secure: auto
+        cookie_httponly: true
 
-    #esi: true
-    #fragments: true
+    http_client:
+        scoped_clients:
+            # Open Food Facts asks every caller to identify itself in the
+            # User-Agent; anonymous traffic gets rate-limited or blocked.
+            open_food_facts.client:
+                base_uri: 'https://world.openfoodfacts.org'
+                headers:
+                    User-Agent: '%env(OPEN_FOOD_FACTS_USER_AGENT)%'
+                # An external lookup is an optional extra. Better to give up
+                # after a few seconds and show local results than to keep a user
+                # waiting on somebody else's server.
+                timeout: 5
+                max_duration: 8
+
+    rate_limiter:
+        # Registration is keyed by client IP: the address being registered is
+        # attacker-chosen, so keying on it would limit nothing.
+        registration:
+            policy: 'sliding_window'
+            limit: 5
+            interval: '1 hour'
+
+        # Resending is keyed by e-mail address instead, to stop one inbox being
+        # flooded from many IPs.
+        verification_resend:
+            policy: 'token_bucket'
+            limit: 3
+            rate: { interval: '15 minutes', amount: 1 }
 
 when@test:
     framework:

@@ -1,23 +1,72 @@
 # yaml-language-server: $schema=../vendor/symfony/dependency-injection/Loader/schema/services.schema.json
 
-# This file is the entry point to configure your own services.
-# Files in the packages/ subdirectory configure your dependencies.
-# See also https://symfony.com/doc/current/service_container/import.html
+# Application services. Anything in packages/ configures a bundle instead.
 
-# Put parameters here that don't need to change on each machine where the app is deployed
-# https://symfony.com/doc/current/best_practices.html#use-parameters-for-application-configuration
 parameters:
+    # Where the confirmation link in the e-mail should send the user. It points
+    # at the Vue app, which reads the token out of the query string and posts it
+    # to /api/auth/verify-email - a link straight to the API would show the user
+    # a page of raw JSON.
+    app.frontend_verify_url: '%env(FRONTEND_VERIFY_URL)%'
+
+    app.mail.sender_address: '%env(MAILER_SENDER_ADDRESS)%'
+    app.mail.sender_name: '%env(MAILER_SENDER_NAME)%'
+
+    # How long a confirmation link stays valid. 24 hours is long enough to
+    # survive a mail that arrives overnight, short enough that an old link in an
+    # archived inbox is not a standing key to the account.
+    app.email_verification_ttl: 86400
 
 services:
-    # default configuration for services in *this* file
     _defaults:
         autowire: true      # Automatically injects dependencies in your services.
         autoconfigure: true # Automatically registers your services as commands, event subscribers, etc.
 
-    # makes classes in src/ available to be used as services
-    # this creates a service per class whose id is the fully-qualified class name
+    # Makes classes in src/ available as services, one per class, keyed by FQCN.
     App\:
         resource: '../src/'
+        exclude:
+            # Entities and DTOs are data, created with `new`, never injected.
+            - '../src/Entity/'
+            - '../src/Api/Dto/'
+            - '../src/Kernel.php'
 
-    # add more service definitions when explicit configuration is needed
-    # please note that last definitions always *replace* previous ones
+    # --- Explicit wiring ---------------------------------------------------
+    # Autowiring stops where a service needs a scalar or has to be picked from
+    # several candidates. Those cases are spelled out below.
+
+    App\Security\EmailVerifier:
+        arguments:
+            $frontendVerifyUrl: '%app.frontend_verify_url%'
+            $senderAddress: '%app.mail.sender_address%'
+            $senderName: '%app.mail.sender_name%'
+            $tokenLifetimeSeconds: '%app.email_verification_ttl%'
+
+    # The scoped HTTP client configured in packages/framework.yaml, which
+    # carries the User-Agent that Open Food Facts asks callers to identify
+    # themselves with, plus a short timeout.
+    App\Food\Provider\OpenFoodFactsProvider:
+        arguments:
+            $client: '@open_food_facts.client'
+
+    # The rest of the app depends on the interface, never on the provider. This
+    # alias is the one line to change to swap in a different data source.
+    App\Food\Provider\ExternalFoodProviderInterface: '@App\Food\Provider\OpenFoodFactsProvider'
+
+    # Rate limiters are generated services with ids of their own, so they have
+    # to be named rather than autowired by type.
+    App\Controller\Api\AuthController:
+        arguments:
+            $registrationLimiter: '@limiter.registration'
+            $verificationResendLimiter: '@limiter.verification_resend'
+
+when@test:
+    services:
+        # The test suite must not depend on a third party being reachable, and
+        # must not send traffic to Open Food Facts on every run.
+        App\Food\Provider\ExternalFoodProviderInterface: '@App\Food\Provider\NullFoodProvider'
+
+        # Aliased public so functional tests can swap in a stub via the container.
+        test.food_provider:
+            alias: App\Food\Provider\ExternalFoodProviderInterface
+            public: true

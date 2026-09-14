@@ -3,35 +3,56 @@ security:
     password_hashers:
         Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface: 'auto'
 
-    # https://symfony.com/doc/current/security.html#loading-the-user-the-user-provider
     providers:
-        users_in_memory: { memory: null }
+        app_users:
+            entity:
+                class: App\Entity\User
+                property: email
 
     firewalls:
         dev:
-            # Ensure dev tools and static assets are always allowed
-            pattern: ^/(_profiler|_wdt|assets|build)/
+            pattern: ^/(_profiler|_wdt)/
             security: false
-        main:
-            lazy: true
-            provider: users_in_memory
 
-            # Activate different ways to authenticate:
-            # https://symfony.com/doc/current/security.html#the-firewall
+        api:
+            pattern: ^/api
+            provider: app_users
+            # Rejects accounts whose e-mail address is still unconfirmed. Sits
+            # on the firewall rather than in the login controller so it applies
+            # to every authenticator, including any added later.
+            user_checker: App\Security\AccountStatusChecker
 
-            # https://symfony.com/doc/current/security/impersonating_user.html
-            # switch_user: true
+            json_login:
+                check_path: api_auth_login
+                username_path: email
+                password_path: password
+                success_handler: App\Security\ApiAuthenticationHandler
+                failure_handler: App\Security\ApiAuthenticationHandler
 
-    # Note: Only the *first* matching rule is applied
+            # Slows down password guessing. Keyed by username and IP by default.
+            login_throttling:
+                max_attempts: 5
+                interval: '15 minutes'
+
+            logout:
+                path: api_auth_logout
+                # The response is set by App\Security\LogoutSubscriber; without
+                # it the firewall would answer a SPA request with a redirect.
+
+            # Answers 401/403 as JSON instead of redirecting to a login page.
+            entry_point: App\Security\ApiAuthenticationHandler
+            access_denied_handler: App\Security\ApiAccessDeniedHandler
+
+    # Only the first matching rule applies, so the public endpoints come first.
     access_control:
-        # - { path: ^/admin, roles: ROLE_ADMIN }
-        # - { path: ^/profile, roles: ROLE_USER }
+        - { path: ^/api/auth/, roles: PUBLIC_ACCESS }
+        - { path: ^/api, roles: ROLE_USER }
 
 when@test:
     security:
         password_hashers:
-            # Password hashers are resource-intensive by design to ensure security.
-            # In tests, it's safe to reduce their cost to improve performance.
+            # Hashing is deliberately slow. In tests that cost buys nothing, and
+            # the lowest legal parameters turn a slow suite into a fast one.
             Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface:
                 algorithm: auto
                 cost: 4 # Lowest possible value for bcrypt
