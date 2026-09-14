@@ -20,6 +20,16 @@ doctrine:
                 dir: '%kernel.project_dir%/src/Entity'
                 prefix: 'App\Entity'
                 alias: App
+            # The Nutrients embeddable lives with the nutrition maths rather
+            # than among the entities, because it is a value object that the
+            # calculators use just as much as the ORM does. Doctrine only scans
+            # the directories listed here, so it needs its own entry.
+            AppNutrition:
+                type: attribute
+                is_bundle: false
+                dir: '%kernel.project_dir%/src/Nutrition'
+                prefix: 'App\Nutrition'
+                alias: AppNutrition
         controller_resolver:
             auto_mapping: false
 

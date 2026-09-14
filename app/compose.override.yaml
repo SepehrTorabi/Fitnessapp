@@ -1,17 +1,22 @@
-
+# Local development only. Ports are pinned rather than left to Docker so that
+# plain `php bin/console` and `vendor/bin/phpunit` reach the containers with the
+# URLs committed in .env - no Symfony CLI wrapper and no per-machine .env.local
+# needed. If one of these ports is already taken on your machine, change it here
+# and in .env.dev / .env.test.
 services:
 ###> doctrine/doctrine-bundle ###
   database:
     ports:
-      - "5432"
+      - "5432:5432"
 ###< doctrine/doctrine-bundle ###
 
 ###> symfony/mailer ###
   mailer:
     image: axllent/mailpit
     ports:
-      - "1025"
-      - "8025"
+      # SMTP, and the web inbox at http://localhost:8025
+      - "1025:1025"
+      - "8025:8025"
     environment:
       MP_SMTP_AUTH_ACCEPT_ANY: 1
       MP_SMTP_AUTH_ALLOW_INSECURE: 1
