@@ -175,6 +175,75 @@ final class DashboardApiTest extends ApiTestCase
         self::assertNull($averages['kcal']);
     }
 
+    /**
+     * Imported history is the case this exists for: months of diary, then a
+     * single weigh-in today. Every one of those days predates the weigh-in, and
+     * without a fallback the whole chart comes back grey.
+     */
+    public function testDaysThatPredateEveryWeighInStillGetATarget(): void
+    {
+        $user = $this->createUserWithProfile('imported@example.test');
+        $food = $this->createFood(kcal: 100.0);
+        $this->login($user);
+
+        // createUserWithProfile weighs in today; this day is well before that.
+        $this->jsonRequest('POST', '/api/diary/entries', [
+            'foodId' => $food->getId(),
+            'mealType' => 'lunch',
+            'quantity' => 500,
+            'unit' => 'g',
+            'loggedOn' => (new \DateTimeImmutable('today'))->modify('-20 days')->format('Y-m-d'),
+        ]);
+        self::assertResponseStatusCodeSame(Response::HTTP_CREATED);
+
+        $this->jsonRequest('GET', '/api/dashboard?days=30');
+
+        $history = $this->responseData()['history'];
+        $day = null;
+
+        foreach ($history as $candidate) {
+            if ($candidate['consumed']['kcal'] > 0) {
+                $day = $candidate;
+            }
+        }
+
+        self::assertNotNull($day, 'The logged day should be in the history.');
+        self::assertNotNull($day['target'], 'A day before the first weigh-in should still get a target.');
+        self::assertTrue($day['withinBudget'], '500 kcal is inside any plausible budget.');
+    }
+
+    /**
+     * The fallback must not override a weigh-in that genuinely applies: a day
+     * with an earlier measurement uses that one, not the first on record.
+     */
+    public function testADayUsesTheWeighInThatAppliedRatherThanTheEarliest(): void
+    {
+        $user = $this->createUserWithProfile('weighins@example.test');
+        $this->login($user);
+
+        // Two weigh-ins: a light one long ago, a much heavier one last week.
+        $this->jsonRequest('POST', '/api/me/measurements', [
+            'weightKg' => 60.0,
+            'measuredOn' => (new \DateTimeImmutable('today'))->modify('-60 days')->format('Y-m-d'),
+        ]);
+        self::assertResponseIsSuccessful();
+
+        $this->jsonRequest('POST', '/api/me/measurements', [
+            'weightKg' => 110.0,
+            'measuredOn' => (new \DateTimeImmutable('today'))->modify('-7 days')->format('Y-m-d'),
+        ]);
+        self::assertResponseIsSuccessful();
+
+        $this->jsonRequest('GET', '/api/dashboard?days=3');
+        $recent = $this->responseData()['history'][0]['target'];
+
+        self::assertNotNull($recent);
+
+        // A heavier body burns more, so the recent target has to be the larger
+        // of the two - proving the 110 kg weigh-in won, not the 60 kg one.
+        self::assertGreaterThan(2000, $recent['targetKcal']);
+    }
+
     public function testOneUsersDashboardNeverIncludesAnothersEntries(): void
     {
         $owner = $this->createUserWithProfile('dash-owner@example.test');

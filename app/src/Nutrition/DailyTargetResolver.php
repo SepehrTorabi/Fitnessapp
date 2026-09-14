@@ -33,8 +33,10 @@ final class DailyTargetResolver
         $on ??= new \DateTimeImmutable('today');
 
         // The weigh-in that was current on that day, so re-opening last Tuesday
-        // shows the target that actually applied then.
-        $measurement = $this->measurements->findLatestForUser($user, $on);
+        // shows the target that actually applied then - falling back to the
+        // earliest one for days that predate every weigh-in, which is what
+        // imported history looks like.
+        $measurement = $this->measurements->findApplicableForUser($user, $on);
 
         if (null === $measurement) {
             return null;
