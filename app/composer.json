@@ -1,4 +1,6 @@
 {
+    "name": "sepehrtorabi/fitnessapp",
+    "description": "Calorie and macro diary: a Symfony JSON API for food logging, nutrition targets and daily summaries.",
     "type": "project",
     "license": "proprietary",
     "minimum-stability": "stable",
