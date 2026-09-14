@@ -52,6 +52,22 @@ class ActivityEntryRepository extends ServiceEntityRepository
             ->getResult();
     }
 
+    /**
+     * Every activity this user has logged, newest day first.
+     *
+     * @return list<ActivityEntry>
+     */
+    public function findAllForUser(User $user): array
+    {
+        return $this->createQueryBuilder('a')
+            ->where('a.user = :user')
+            ->setParameter('user', $user)
+            ->orderBy('a.performedOn', 'DESC')
+            ->addOrderBy('a.id', 'ASC')
+            ->getQuery()
+            ->getResult();
+    }
+
     public function findOneForUser(int $id, User $user): ?ActivityEntry
     {
         return $this->findOneBy(['id' => $id, 'user' => $user]);

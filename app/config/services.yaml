@@ -42,6 +42,11 @@ services:
             $senderName: '%app.mail.sender_name%'
             $tokenLifetimeSeconds: '%app.email_verification_ttl%'
 
+    # mPDF needs a writable scratch directory for font subsets and images.
+    App\Export\DiaryPdfExporter:
+        arguments:
+            $tempDir: '%kernel.project_dir%/var/mpdf'
+
     # The scoped HTTP client configured in packages/framework.yaml, which
     # carries the User-Agent that Open Food Facts asks callers to identify
     # themselves with, plus a short timeout.

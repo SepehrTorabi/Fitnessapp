@@ -92,6 +92,17 @@ onMounted(async () => {
            markers need the room to stay readable. -->
       <div class="card main">
         <WeeklyChart :days="data.history" />
+
+        <!-- A plain link, not a fetch-and-blob: the endpoint is same-origin, so
+             the session cookie rides along, and letting the browser handle the
+             download means it honours the filename the server sends and never
+             holds the file in memory. -->
+        <div class="export row-between">
+          <p class="muted small export-hint">{{ t('dashboard.exportHint') }}</p>
+          <a class="export-button" href="/api/me/export/diary.pdf">
+            <span aria-hidden="true">&#8595;</span> {{ t('dashboard.exportPdf') }}
+          </a>
+        </div>
       </div>
 
       <div class="card main">
@@ -177,4 +188,29 @@ onMounted(async () => {
 .value-over { color: var(--over); }
 .target-detail { margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--border); }
 .averages { margin-top: 16px; }
+
+.export {
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+}
+
+.export-hint { margin: 0; }
+
+.export-button {
+  display: inline-block;
+  padding: 8px 14px;
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.export-button:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  text-decoration: none;
+}
 </style>

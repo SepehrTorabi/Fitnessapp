@@ -63,6 +63,14 @@ api_me_measurements_create:
     controller: App\Controller\Api\AccountController::addMeasurement
     methods: [POST]
 
+# The diary as a printable PDF. Not under /api/me/export/diary to keep the
+# ".pdf" suffix, which is what makes browsers name the download sensibly when a
+# user opens it directly rather than through the button.
+api_me_export_diary_pdf:
+    path: /api/me/export/diary.pdf
+    controller: App\Controller\Api\AccountController::exportDiaryPdf
+    methods: [GET]
+
 # --- Dashboard ------------------------------------------------------------
 
 api_dashboard:

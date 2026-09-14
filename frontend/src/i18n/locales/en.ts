@@ -109,6 +109,8 @@ export default {
     tableMeal: 'Meal',
     tableAmount: 'Amount',
     tableMacros: 'P / C / F',
+    exportPdf: 'Download as PDF',
+    exportHint: 'Every day you have logged, laid out like the printed diary.',
   },
 
   chart: {

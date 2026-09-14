@@ -52,6 +52,27 @@ class DiaryEntryRepository extends ServiceEntityRepository
             ->getResult();
     }
 
+    /**
+     * Everything this user has ever logged, newest day first and within a day in
+     * the order it was entered.
+     *
+     * Used by the PDF export, which walks whole days rather than querying one at
+     * a time - a year of diary is a few hundred rows, and fetching it per day
+     * would be a few hundred queries.
+     *
+     * @return list<DiaryEntry>
+     */
+    public function findAllForUser(User $user): array
+    {
+        return $this->createQueryBuilder('d')
+            ->where('d.user = :user')
+            ->setParameter('user', $user)
+            ->orderBy('d.loggedOn', 'DESC')
+            ->addOrderBy('d.id', 'ASC')
+            ->getQuery()
+            ->getResult();
+    }
+
     public function findOneForUser(int $id, User $user): ?DiaryEntry
     {
         return $this->findOneBy(['id' => $id, 'user' => $user]);

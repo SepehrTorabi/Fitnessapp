@@ -12,9 +12,12 @@ use App\Entity\BodyMeasurement;
 use App\Entity\User;
 use App\Entity\UserPreferences;
 use App\Entity\UserProfile;
+use App\Export\DiaryPdfExporter;
 use App\Repository\BodyMeasurementRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\ResponseHeaderBag;
 use Symfony\Component\HttpKernel\Attribute\MapRequestPayload;
 use Symfony\Component\Security\Http\Attribute\CurrentUser;
 
@@ -28,6 +31,7 @@ final class AccountController extends ApiController
         private readonly EntityManagerInterface $entityManager,
         private readonly BodyMeasurementRepository $measurements,
         private readonly UserPresenter $userPresenter,
+        private readonly DiaryPdfExporter $pdfExporter,
     ) {
     }
 
@@ -140,6 +144,33 @@ final class AccountController extends ApiController
         $this->entityManager->flush();
 
         return $this->json(['user' => $this->userPresenter->present($user)]);
+    }
+
+    /**
+     * The user's own diary as a printable PDF.
+     *
+     * Scoped to #[CurrentUser] and nothing else - there is no id in the route,
+     * so there is no way to ask for somebody else's diary.
+     */
+    public function exportDiaryPdf(#[CurrentUser] User $user): Response
+    {
+        $pdf = $this->pdfExporter->export($user, $user->getLocale()->value);
+
+        $response = new Response($pdf, Response::HTTP_OK, [
+            'Content-Type' => 'application/pdf',
+        ]);
+
+        // Attachment rather than inline: the point of the button is to end up
+        // with a file, not to open a viewer inside the SPA.
+        $response->headers->set(
+            'Content-Disposition',
+            $response->headers->makeDisposition(
+                ResponseHeaderBag::DISPOSITION_ATTACHMENT,
+                $this->pdfExporter->filenameFor($user),
+            ),
+        );
+
+        return $response;
     }
 
     /**

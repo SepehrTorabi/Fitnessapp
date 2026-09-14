@@ -107,6 +107,8 @@ const de: MessageSchema = {
     tableMeal: 'Mahlzeit',
     tableAmount: 'Menge',
     tableMacros: 'E / K / F',
+    exportPdf: 'Als PDF herunterladen',
+    exportHint: 'Alle erfassten Tage, im Layout des gedruckten Tagebuchs.',
   },
 
   chart: {
