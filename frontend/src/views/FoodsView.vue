@@ -4,6 +4,7 @@ import { useI18n } from 'vue-i18n'
 import { api, ApiError } from '@/api/client'
 import { useApiMessage } from '@/composables/useApiMessage'
 import type { Food, Recipe } from '@/api/types'
+import { useNumbers } from '@/composables/useNumbers'
 
 /**
  * Defining new foods and building recipes.
@@ -14,6 +15,7 @@ import type { Food, Recipe } from '@/api/types'
 
 const { t } = useI18n()
 const apiMessage = useApiMessage()
+const { n } = useNumbers()
 
 type Tab = 'food' | 'recipe'
 const tab = ref<Tab>('food')
@@ -184,7 +186,7 @@ async function saveRecipe(): Promise<void> {
 
     recipeSuccess.value = t('foods.recipeSaved', {
       name: response.recipe.name,
-      kcal: Math.round(response.recipe.perServing.kcal),
+      kcal: n(response.recipe.perServing.kcal),
     })
 
     Object.assign(recipe, { name: '', description: '', servings: 1, public: false })
@@ -286,7 +288,7 @@ onMounted(loadRecipes)
 
         <!-- Warn while typing rather than only on save. -->
         <p v-if="energyMismatch" class="alert alert-info small">
-          {{ t('foods.energyMismatch', { implied: Math.round(impliedKcal), stated: food.kcal }) }}
+          {{ t('foods.energyMismatch', { implied: n(impliedKcal), stated: n(food.kcal) }) }}
         </p>
 
         <div>
@@ -372,7 +374,7 @@ onMounted(loadRecipes)
                 <button class="result" type="button" @click="addIngredient(item)">
                   <span class="result-name">{{ item.label }}</span>
                   <span class="muted small">
-                    {{ t('diary.perHundred', { kcal: Math.round(item.per100.kcal) }) }}
+                    {{ t('diary.perHundred', { kcal: n(item.per100.kcal) }) }}
                   </span>
                 </button>
               </li>
@@ -394,7 +396,7 @@ onMounted(loadRecipes)
                 <td class="num">
                   <input v-model.number="item.grams" type="number" min="1" class="grams-input" />
                 </td>
-                <td class="num">{{ Math.round((item.food.per100.kcal * item.grams) / 100) }}</td>
+                <td class="num">{{ n((item.food.per100.kcal * item.grams) / 100) }}</td>
                 <td class="num shrink">
                   <button class="ghost" type="button" @click="ingredients.splice(index, 1)">✕</button>
                 </td>
@@ -404,22 +406,22 @@ onMounted(loadRecipes)
 
           <p v-if="ingredients.length" class="preview">
             <strong>
-              {{ t('diary.kcalPerServing', { kcal: Math.round(recipeTotals.perServing.kcal) }) }}
+              {{ t('diary.kcalPerServing', { kcal: n(recipeTotals.perServing.kcal) }) }}
             </strong>
             <span class="muted">
               {{
                 t('diary.preview', {
-                  grams: Math.round(recipeTotals.perServing.grams),
-                  protein: Math.round(recipeTotals.perServing.proteinG),
-                  carbs: Math.round(recipeTotals.perServing.carbsG),
-                  fat: Math.round(recipeTotals.perServing.fatG),
+                  grams: n(recipeTotals.perServing.grams),
+                  protein: n(recipeTotals.perServing.proteinG),
+                  carbs: n(recipeTotals.perServing.carbsG),
+                  fat: n(recipeTotals.perServing.fatG),
                 })
               }}
               <br />
               {{
                 t('foods.wholeRecipe', {
-                  kcal: Math.round(recipeTotals.kcal),
-                  grams: Math.round(recipeTotals.grams),
+                  kcal: n(recipeTotals.kcal),
+                  grams: n(recipeTotals.grams),
                 })
               }}
             </span>
@@ -452,7 +454,7 @@ onMounted(loadRecipes)
             <tr v-for="item in recipes" :key="item.id">
               <td>{{ item.name }}</td>
               <td class="num">{{ item.servings }}</td>
-              <td class="num">{{ Math.round(item.perServing.kcal) }}</td>
+              <td class="num">{{ n(item.perServing.kcal) }}</td>
               <td class="num shrink">
                 <button class="ghost" type="button" @click="deleteRecipe(item.id)">✕</button>
               </td>
@@ -481,7 +483,7 @@ onMounted(loadRecipes)
   display: flex;
   justify-content: space-between;
   gap: 12px;
-  text-align: left;
+  text-align: start;
   background: var(--surface-2);
   color: var(--text);
   border: 1px solid transparent;
@@ -499,7 +501,7 @@ onMounted(loadRecipes)
   line-height: 1.7;
 }
 
-.grams-input { width: 90px; text-align: right; }
+.grams-input { width: 90px; text-align: end; }
 .shrink { width: 1%; }
 
 .checkbox { display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--text); font-weight: 400; }

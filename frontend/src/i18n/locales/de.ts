@@ -22,6 +22,9 @@ const de: MessageSchema = {
     add: 'Hinzufügen',
     saved: 'Gespeichert.',
     day: 'Tag',
+    today: 'Heute',
+    edit: 'Bearbeiten',
+    close: 'Schließen',
     kcal: 'kcal',
     grams: 'g',
     optional: 'optional',
@@ -36,6 +39,15 @@ const de: MessageSchema = {
     profile: 'Körperdaten',
     settings: 'Einstellungen',
     signOut: 'Abmelden',
+    accountMenu: 'Dein Konto',
+    signedInAs: 'Angemeldet als {email}',
+  },
+
+  datePicker: {
+    choose: 'Datum wählen',
+    previousMonth: 'Voriger Monat',
+    nextMonth: 'Nächster Monat',
+    today: 'Heute',
   },
 
   titles: {
@@ -85,11 +97,27 @@ const de: MessageSchema = {
   dashboard: {
     greeting: 'Hallo, {name}',
     eatenToday: 'Heute gegessen',
+    eatenOnDay: 'Gegessen',
     burned: 'Durch Aktivität verbrannt',
     leftToday: 'Heute noch übrig',
+    leftOnDay: 'An dem Tag übrig',
     overBudget: 'Über dem Budget',
     budget: 'Budget {kcal} kcal',
     macrosToday: 'Nährwerte heute',
+    macrosOnDay: 'Nährwerte',
+
+    weekEnding: 'Woche bis',
+    weekEndingHint: 'Das Diagramm zeigt diesen Tag und die sechs davor.',
+    viewingDay: 'Angezeigt: {date}',
+    backToToday: 'Zurück zu heute',
+    entriesOnDay: 'Einträge',
+    nothingOnDay: 'An diesem Tag wurde nichts erfasst.',
+    dayLoadFailed: 'Dieser Tag konnte nicht geladen werden.',
+
+    editEntry: 'Diesen Eintrag bearbeiten',
+    entryUpdateFailed: 'Der Eintrag konnte nicht geändert werden.',
+    entryRemoveFailed: 'Der Eintrag konnte nicht entfernt werden.',
+    activityOnDay: 'Aktivität',
     targetExplain:
       'Ziel {target} kcal — Grundumsatz {bmr}, Gesamtumsatz {tdee}, berechnet mit {formula}.',
     todaysEntries: 'Einträge von heute',
@@ -119,7 +147,9 @@ const de: MessageSchema = {
     withinBudget: 'Im Budget',
     overBudget: 'Über dem Budget',
     budgetLine: 'Budget',
-    hoverHint: 'Fahr über einen Tag für Details.',
+    hoverHint: 'Fahr über einen Tag für Details, oder wähl einen aus, um die Einträge zu sehen.',
+    selectDay: 'Einträge vom {date} anzeigen',
+    selectedDay: 'Ausgewählter Tag',
     eaten: '{kcal} kcal gegessen',
     ofBudget: 'von {kcal} Budget',
     kcalLeft: '{kcal} kcal übrig',
@@ -146,6 +176,7 @@ const de: MessageSchema = {
     nothingFound:
       'Nichts gefunden. Du kannst dieses Lebensmittel unter „Lebensmittel & Rezepte“ selbst anlegen.',
     searchFailed: 'Die Suche ist fehlgeschlagen.',
+    externalUnavailable: 'Die Produktdatenbank war nicht erreichbar, daher werden nur deine eigenen Lebensmittel angezeigt. Versuch es gleich noch einmal.',
     externalHeading: 'Aus Open Food Facts',
     perHundred: '{kcal} kcal / 100 g',
     importFailed: 'Das Produkt konnte nicht übernommen werden.',
@@ -300,6 +331,16 @@ const de: MessageSchema = {
     themeLight: 'Hell',
     themeDark: 'Dunkel',
     themeSystemHint: 'Folgt deinem Betriebssystem und wechselt mit ihm.',
+
+    calendarTitle: 'Kalender',
+    calendarIntro: 'In welchem Kalender deine Daten angezeigt und ausgewählt werden.',
+    calendarGregorian: 'Gregorianisch',
+    calendarPersian: 'Schamsi (Sonnenhidschra)',
+    calendarHint:
+      'Ändert nur die Anzeige. Nichts, was du schon erfasst hast, wandert auf einen anderen Tag.',
+
+    guestNote: 'Vorerst nur auf diesem Gerät. Deine Auswahl wandert mit, sobald du dich anmeldest.',
+    guestTitle: 'Sprache & Darstellung',
 
     saveFailed: 'Die Einstellung konnte nicht gespeichert werden.',
     offlineNote: 'Nur auf diesem Gerät gespeichert — der Server war nicht erreichbar.',

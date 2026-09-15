@@ -34,6 +34,11 @@ async function submit(): Promise<void> {
       // displayed in means the first thing the user reads from us is already
       // in their language.
       locale: preferences.locale,
+      // These two do not affect the mail. They travel so that the first screen
+      // after signing in looks like the form the user just filled in, rather
+      // than resetting to light and Gregorian and making them choose twice.
+      theme: preferences.theme,
+      calendar: preferences.calendar,
     })
     done.value = true
   } catch (e) {

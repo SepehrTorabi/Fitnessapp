@@ -5,6 +5,9 @@ import { api } from '@/api/client'
 import { useApiMessage } from '@/composables/useApiMessage'
 import type { DayView, ExternalFood, Food, MealType, Recipe } from '@/api/types'
 import MacroBars from '@/components/MacroBars.vue'
+import DateField from '@/components/DateField.vue'
+import { todayIso } from '@/calendar'
+import { useNumbers } from '@/composables/useNumbers'
 
 /**
  * The barcode reader pulls in ZXing, which is around 400 kB - several times the
@@ -23,8 +26,12 @@ const BarcodeScanner = defineAsyncComponent(() => import('@/components/BarcodeSc
 
 const { t } = useI18n()
 const apiMessage = useApiMessage()
+const { n } = useNumbers()
 
-const today = new Date().toISOString().slice(0, 10)
+// Built from the local date rather than from toISOString(), which is UTC: west
+// of Greenwich in the evening the two are different days, and the diary would
+// open on tomorrow.
+const today = todayIso()
 const date = ref(today)
 
 const day = ref<DayView | null>(null)
@@ -126,7 +133,12 @@ async function search(): Promise<void> {
     localResults.value = results.local
     externalResults.value = results.external
 
-    if (results.local.length === 0 && results.external.length === 0) {
+    // "Nothing found" and "could not ask" are different answers and deserve
+    // different words: the first means define the food yourself, the second
+    // means wait a moment and try again.
+    if (!results.externalAvailable) {
+      searchNote.value = t('diary.externalUnavailable')
+    } else if (results.local.length === 0 && results.external.length === 0) {
       searchNote.value = t('diary.nothingFound')
     }
   } catch (e) {
@@ -259,10 +271,9 @@ onMounted(async () => {
   <div class="page">
     <div class="row-between">
       <h1>{{ t('titles.diary') }}</h1>
-      <div class="date-picker">
-        <label for="date">{{ t('common.day') }}</label>
-        <input id="date" v-model="date" type="date" :max="today" />
-      </div>
+      <!-- The same picker as the dashboard, so both honour the chosen calendar.
+           A native date input cannot: it is Gregorian in every browser. -->
+      <DateField id="diary-date" v-model="date" :max="today" :label="t('common.day')" />
     </div>
 
     <p v-if="error" class="alert alert-error">{{ error }}</p>
@@ -287,7 +298,7 @@ onMounted(async () => {
               <button class="result" type="button" @click="selectFood(food)">
                 <span class="result-name">{{ food.label }}</span>
                 <span class="muted small">
-                  {{ t('diary.perHundred', { kcal: Math.round(food.per100.kcal) }) }}
+                  {{ t('diary.perHundred', { kcal: n(food.per100.kcal) }) }}
                 </span>
               </button>
             </li>
@@ -302,7 +313,7 @@ onMounted(async () => {
                 <button class="result" type="button" @click="importAndSelect(food)">
                   <span class="result-name">{{ food.label }}</span>
                   <span class="muted small">
-                  {{ t('diary.perHundred', { kcal: Math.round(food.per100.kcal) }) }}
+                  {{ t('diary.perHundred', { kcal: n(food.per100.kcal) }) }}
                 </span>
                 </button>
               </li>
@@ -337,7 +348,7 @@ onMounted(async () => {
               <button class="result" type="button" @click="logRecipe(recipe)">
                 <span class="result-name">{{ recipe.name }}</span>
                 <span class="muted small">
-                  {{ t('diary.kcalPerServing', { kcal: Math.round(recipe.perServing.kcal) }) }}
+                  {{ t('diary.kcalPerServing', { kcal: n(recipe.perServing.kcal) }) }}
                 </span>
               </button>
             </li>
@@ -376,14 +387,14 @@ onMounted(async () => {
           </div>
 
           <p v-if="preview" class="preview">
-            <strong>{{ Math.round(preview.kcal) }} {{ t('common.kcal') }}</strong>
+            <strong>{{ n(preview.kcal) }} {{ t('common.kcal') }}</strong>
             <span class="muted">
               {{
                 t('diary.preview', {
-                  grams: Math.round(preview.grams),
-                  protein: Math.round(preview.proteinG),
-                  carbs: Math.round(preview.carbsG),
-                  fat: Math.round(preview.fatG),
+                  grams: n(preview.grams),
+                  protein: n(preview.proteinG),
+                  carbs: n(preview.carbsG),
+                  fat: n(preview.fatG),
                 })
               }}
             </span>
@@ -404,7 +415,7 @@ onMounted(async () => {
         <div v-if="day" class="card">
           <h3>{{ t('diary.totals') }}</h3>
           <p class="stat-value">
-            {{ Math.round(day.summary.consumed.kcal) }}<span class="unit">{{ t('common.kcal') }}</span>
+            {{ n(day.summary.consumed.kcal) }}<span class="unit">{{ t('common.kcal') }}</span>
             <span
               v-if="day.summary.withinBudget !== null"
               class="badge"
@@ -412,8 +423,8 @@ onMounted(async () => {
             >
               {{
                 day.summary.withinBudget
-                  ? t('diary.left', { kcal: Math.round(day.summary.remainingKcal ?? 0) })
-                  : t('diary.over', { kcal: Math.abs(Math.round(day.summary.remainingKcal ?? 0)) })
+                  ? t('diary.left', { kcal: n(day.summary.remainingKcal ?? 0) })
+                  : t('diary.over', { kcal: n(Math.abs(day.summary.remainingKcal ?? 0)) })
               }}
             </span>
           </p>
@@ -440,7 +451,7 @@ onMounted(async () => {
                     {{ t(`meal.${entry.mealType}`) }}
                   </span>
                 </td>
-                <td class="num">{{ Math.round(entry.nutrients.kcal) }} {{ t('common.kcal') }}</td>
+                <td class="num">{{ n(entry.nutrients.kcal) }} {{ t('common.kcal') }}</td>
                 <td class="num shrink">
                   <button class="ghost" type="button" :title="t('common.remove')" @click="removeEntry(entry.id)">
                     ✕
@@ -485,11 +496,11 @@ onMounted(async () => {
                 <td>
                   {{ activity.description }}
                   <span v-if="activity.durationMinutes" class="muted small">
-                    · {{ activity.durationMinutes }} {{ t('diary.minutesShort') }}
+                    · {{ n(activity.durationMinutes) }} {{ t('diary.minutesShort') }}
                   </span>
                 </td>
                 <td class="num">
-                  {{ Math.round(activity.caloriesBurned) }} {{ t('common.kcal') }}
+                  {{ n(activity.caloriesBurned) }} {{ t('common.kcal') }}
                 </td>
                 <td class="num shrink">
                   <button class="ghost" type="button" @click="removeActivity(activity.id)">✕</button>
@@ -504,10 +515,6 @@ onMounted(async () => {
 </template>
 
 <style scoped>
-.date-picker { display: flex; align-items: center; gap: 8px; }
-.date-picker label { margin: 0; }
-.date-picker input { width: auto; }
-
 .note { margin: 10px 0 0; }
 .section-label { margin: 16px 0 6px; font-weight: 600; }
 
@@ -519,7 +526,7 @@ onMounted(async () => {
   justify-content: space-between;
   align-items: baseline;
   gap: 12px;
-  text-align: left;
+  text-align: start;
   background: var(--surface-2);
   color: var(--text);
   border: 1px solid transparent;
@@ -530,7 +537,7 @@ onMounted(async () => {
 .result:hover { border-color: var(--accent); }
 .result-name { font-weight: 600; }
 
-.selected-card { border-left: 3px solid var(--accent); }
+.selected-card { border-inline-start: 3px solid var(--accent); }
 
 .amount-row { align-items: flex-end; }
 .amount-field { flex: 1; min-width: 110px; }

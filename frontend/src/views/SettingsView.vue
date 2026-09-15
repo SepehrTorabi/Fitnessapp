@@ -3,6 +3,7 @@ import { useI18n } from 'vue-i18n'
 import { usePreferencesStore } from '@/stores/preferences'
 import { LOCALE_ENDONYMS, SUPPORTED_LOCALES, type SupportedLocale } from '@/i18n'
 import { THEMES, type Theme } from '@/theme'
+import { CALENDARS, formatDate, todayIso, type CalendarSystem } from '@/calendar'
 
 /**
  * Language and appearance.
@@ -11,7 +12,7 @@ import { THEMES, type Theme } from '@/theme'
  * background - there is no Save button, because there is nothing to review. A
  * setting whose effect you can see immediately does not need confirming.
  */
-const { t } = useI18n()
+const { t, locale } = useI18n()
 const preferences = usePreferencesStore()
 
 const themeIcons: Record<Theme, string> = {
@@ -30,6 +31,25 @@ async function chooseLocale(locale: SupportedLocale): Promise<void> {
 
 async function chooseTheme(theme: Theme): Promise<void> {
   await preferences.setTheme(theme)
+}
+
+async function chooseCalendar(calendar: CalendarSystem): Promise<void> {
+  await preferences.setCalendar(calendar)
+}
+
+function calendarLabel(calendar: CalendarSystem): string {
+  return 'persian' === calendar ? t('settings.calendarPersian') : t('settings.calendarGregorian')
+}
+
+/**
+ * Today's date written in each calendar, next to its name.
+ *
+ * Far more useful than the name on its own: "Shamsi (Solar Hijri)" means
+ * nothing to somebody who has never seen one, while "۲۴ شهریور ۱۴۰۵" next to
+ * "15 September 2026" explains the setting completely.
+ */
+function sampleDate(calendar: CalendarSystem): string {
+  return formatDate(todayIso(), locale.value, calendar)
 }
 </script>
 
@@ -90,6 +110,33 @@ async function chooseTheme(theme: Theme): Promise<void> {
           {{ t('settings.themeSystemHint') }}
         </p>
       </section>
+
+      <!-- ---------- Calendar ---------- -->
+      <section class="card">
+        <h2>{{ t('settings.calendarTitle') }}</h2>
+        <p class="muted small note">{{ t('settings.calendarIntro') }}</p>
+
+        <div class="options" role="radiogroup" :aria-label="t('settings.calendarTitle')">
+          <button
+            v-for="option in CALENDARS"
+            :key="option"
+            type="button"
+            role="radio"
+            :aria-checked="preferences.calendar === option"
+            class="option"
+            :class="{ 'option-active': preferences.calendar === option }"
+            @click="chooseCalendar(option)"
+          >
+            <span class="option-label">
+              {{ calendarLabel(option) }}
+              <span class="muted small sample">{{ sampleDate(option) }}</span>
+            </span>
+            <span v-if="preferences.calendar === option" class="tick" aria-hidden="true">✓</span>
+          </button>
+        </div>
+
+        <p class="muted small hint">{{ t('settings.calendarHint') }}</p>
+      </section>
     </div>
 
     <!-- Shown when the change could not be written to the account. It still
@@ -112,7 +159,7 @@ async function chooseTheme(theme: Theme): Promise<void> {
   align-items: center;
   gap: 10px;
   width: 100%;
-  text-align: left;
+  text-align: start;
   padding: 12px 14px;
   background: var(--surface-2);
   color: var(--text);
@@ -130,6 +177,9 @@ async function chooseTheme(theme: Theme): Promise<void> {
 
 .option-icon { font-size: 16px; line-height: 1; }
 .option-label { flex: 1; }
+
+/* The date under the calendar's name, so the setting explains itself. */
+.sample { display: block; margin-top: 2px; }
 .tick { color: var(--accent); font-weight: 700; }
 
 .footer-note { margin-top: 16px; }

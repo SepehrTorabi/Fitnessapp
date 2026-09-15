@@ -1,6 +1,7 @@
 import type {
   ActivityEntry,
   AppLocale,
+  CalendarPreference,
   DashboardData,
   DayView,
   DiaryEntry,
@@ -142,11 +143,15 @@ export const api = {
   // --- Authentication ---
   // The locale is sent so the confirmation mail - written before the user has
   // signed in even once - arrives in the language the sign-up form was in.
+  // The theme and calendar ride along too - not because the mail needs them,
+  // but so the first signed-in screen looks like the sign-up form did.
   register: (payload: {
     email: string
     password: string
     displayName: string
     locale?: AppLocale
+    theme?: ThemePreference
+    calendar?: CalendarPreference
   }) => request<{ message: string; user: User }>('/api/auth/register', json(payload)),
 
   verifyEmail: (token: string) =>
@@ -182,8 +187,11 @@ export const api = {
 
   // Fields left out are left alone, so the settings screen can change the
   // language without also resending the theme.
-  updatePreferences: (payload: { locale?: AppLocale; theme?: ThemePreference }) =>
-    request<{ user: User }>('/api/me/preferences', { ...json(payload), method: 'PUT' }),
+  updatePreferences: (payload: {
+    locale?: AppLocale
+    theme?: ThemePreference
+    calendar?: CalendarPreference
+  }) => request<{ user: User }>('/api/me/preferences', { ...json(payload), method: 'PUT' }),
 
   // --- Dashboard ---
   dashboard: (date?: string, days = 7) =>
@@ -191,6 +199,8 @@ export const api = {
 
   // --- Foods ---
   searchFoods: (q: string) => request<FoodSearchResult>(withQuery('/api/foods', { q })),
+
+  food: (id: number) => request<{ food: Food }>(`/api/foods/${id}`),
 
   foodByBarcode: (barcode: string) => request<{ food: Food }>(`/api/foods/barcode/${barcode}`),
 
@@ -213,6 +223,23 @@ export const api = {
     loggedOn?: string
   }) => request<{ entry: DiaryEntry }>('/api/diary/entries', json(payload)),
 
+  // A PATCH, so the inline editor can send only what the user actually
+  // changed - correcting the amount must not also have to resend the meal.
+  updateEntry: (
+    id: number,
+    payload: {
+      quantity?: number
+      unit?: string
+      portionLabel?: string | null
+      mealType?: string
+      loggedOn?: string
+    },
+  ) =>
+    request<{ entry: DiaryEntry }>(`/api/diary/entries/${id}`, {
+      ...json(payload),
+      method: 'PATCH',
+    }),
+
   deleteEntry: (id: number) => request<void>(`/api/diary/entries/${id}`, { method: 'DELETE' }),
 
   addActivity: (payload: {
@@ -221,6 +248,20 @@ export const api = {
     durationMinutes?: number | null
     performedOn?: string
   }) => request<{ activity: ActivityEntry }>('/api/diary/activities', json(payload)),
+
+  updateActivity: (
+    id: number,
+    payload: {
+      description?: string
+      caloriesBurned?: number
+      durationMinutes?: number | null
+      performedOn?: string
+    },
+  ) =>
+    request<{ activity: ActivityEntry }>(`/api/diary/activities/${id}`, {
+      ...json(payload),
+      method: 'PATCH',
+    }),
 
   deleteActivity: (id: number) =>
     request<void>(`/api/diary/activities/${id}`, { method: 'DELETE' }),

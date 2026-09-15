@@ -1,16 +1,16 @@
 <script setup lang="ts">
-import { RouterLink, useRouter } from 'vue-router'
+import { RouterLink } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import { useAuthStore } from '@/stores/auth'
+import UserMenu from '@/components/UserMenu.vue'
 
-const auth = useAuthStore()
-const router = useRouter()
+/**
+ * The navigation holds the three places the app is actually used, and nothing
+ * else. Body data, settings and signing out have moved under the user's own
+ * name in {@see UserMenu} - they are not destinations you move between while
+ * logging a meal, and having them here made the bar look like five equal
+ * choices when only three of them are.
+ */
 const { t } = useI18n()
-
-async function signOut(): Promise<void> {
-  await auth.logout()
-  await router.push({ name: 'login' })
-}
 </script>
 
 <template>
@@ -22,14 +22,9 @@ async function signOut(): Promise<void> {
         <RouterLink to="/">{{ t('nav.dashboard') }}</RouterLink>
         <RouterLink to="/diary">{{ t('nav.diary') }}</RouterLink>
         <RouterLink to="/foods">{{ t('nav.foods') }}</RouterLink>
-        <RouterLink to="/profile">{{ t('nav.profile') }}</RouterLink>
-        <RouterLink to="/settings">{{ t('nav.settings') }}</RouterLink>
       </nav>
 
-      <div class="account">
-        <span class="muted small">{{ auth.user?.displayName }}</span>
-        <button class="secondary" type="button" @click="signOut">{{ t('nav.signOut') }}</button>
-      </div>
+      <UserMenu />
     </div>
   </header>
 </template>
@@ -88,5 +83,4 @@ async function signOut(): Promise<void> {
   color: var(--accent);
 }
 
-.account { display: flex; align-items: center; gap: 10px; }
 </style>

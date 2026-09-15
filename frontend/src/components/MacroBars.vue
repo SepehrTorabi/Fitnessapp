@@ -2,6 +2,7 @@
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import type { Nutrients } from '@/api/types'
+import { useNumbers } from '@/composables/useNumbers'
 import { DsProgressBar } from '@/design-system/components'
 
 /**
@@ -22,6 +23,7 @@ const props = defineProps<{
 }>()
 
 const { t } = useI18n()
+const { n } = useNumbers()
 
 interface Row {
   key: string
@@ -68,8 +70,11 @@ function isOver(row: Row): boolean {
           <span class="dot" :style="{ background: row.color }"></span>{{ row.label }}
         </span>
         <span class="macro-value">
-          {{ Math.round(row.consumed) }}<span class="muted">
-            / {{ row.target === null ? '—' : Math.round(row.target) }} g</span>
+          <!-- The unit comes from the catalogue rather than being typed as "g":
+               in Farsi it is گرم, and a stray Latin letter in the middle of a
+               right-to-left line is exactly the kind of detail that makes a
+               translated interface feel half-translated. -->
+          {{ n(row.consumed) }}<span class="muted"> / {{ n(row.target) }} {{ t('common.grams') }}</span>
         </span>
       </div>
 
@@ -82,7 +87,7 @@ function isOver(row: Row): boolean {
       />
 
       <p v-if="isOver(row)" class="small over-note">
-        {{ t('macros.overTarget', { grams: Math.round(row.consumed - (row.target ?? 0)) }) }}
+        {{ t('macros.overTarget', { grams: n(row.consumed - (row.target ?? 0)) }) }}
       </p>
     </div>
   </div>

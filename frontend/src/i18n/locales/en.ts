@@ -25,6 +25,9 @@ export default {
     add: 'Add',
     saved: 'Saved.',
     day: 'Day',
+    today: 'Today',
+    edit: 'Edit',
+    close: 'Close',
     kcal: 'kcal',
     grams: 'g',
     optional: 'optional',
@@ -39,6 +42,16 @@ export default {
     profile: 'Body data',
     settings: 'Settings',
     signOut: 'Sign out',
+    accountMenu: 'Your account',
+    signedInAs: 'Signed in as {email}',
+  },
+
+  /** The calendar popover, shared by the dashboard and the diary. */
+  datePicker: {
+    choose: 'Choose a date',
+    previousMonth: 'Previous month',
+    nextMonth: 'Next month',
+    today: 'Today',
   },
 
   titles: {
@@ -87,11 +100,27 @@ export default {
   dashboard: {
     greeting: 'Hello, {name}',
     eatenToday: 'Eaten today',
+    eatenOnDay: 'Eaten',
     burned: 'Burned through activity',
     leftToday: 'Left today',
+    leftOnDay: 'Left that day',
     overBudget: 'Over budget',
     budget: 'Budget {kcal} kcal',
     macrosToday: 'Macros today',
+    macrosOnDay: 'Macros',
+
+    weekEnding: 'Week ending',
+    weekEndingHint: 'The chart shows this day and the six before it.',
+    viewingDay: 'Showing {date}',
+    backToToday: 'Back to today',
+    entriesOnDay: 'Entries',
+    nothingOnDay: 'Nothing logged on this day.',
+    dayLoadFailed: 'Could not load that day.',
+
+    editEntry: 'Edit this entry',
+    entryUpdateFailed: 'Could not update that entry.',
+    entryRemoveFailed: 'Could not remove that entry.',
+    activityOnDay: 'Activity',
     targetExplain:
       'Target {target} kcal — basal rate {bmr}, daily expenditure {tdee}, calculated with {formula}.',
     todaysEntries: "Today's entries",
@@ -121,7 +150,9 @@ export default {
     withinBudget: 'Within budget',
     overBudget: 'Over budget',
     budgetLine: 'Budget',
-    hoverHint: 'Hover a day for details.',
+    hoverHint: 'Hover a day for details, or select one to see what was logged.',
+    selectDay: 'Show what was logged on {date}',
+    selectedDay: 'Selected day',
     eaten: '{kcal} kcal eaten',
     ofBudget: 'of {kcal} budget',
     kcalLeft: '{kcal} kcal left',
@@ -147,6 +178,7 @@ export default {
     queryTooShort: 'Type at least two characters.',
     nothingFound: 'Nothing found. You can define this food yourself under Foods & recipes.',
     searchFailed: 'Search failed.',
+    externalUnavailable: 'The product database could not be reached, so only your own foods are listed. Try again in a moment.',
     externalHeading: 'From Open Food Facts',
     perHundred: '{kcal} kcal / 100 g',
     importFailed: 'Could not import that product.',
@@ -300,6 +332,16 @@ export default {
     themeLight: 'Light',
     themeDark: 'Dark',
     themeSystemHint: 'Follows your operating system and changes with it.',
+
+    calendarTitle: 'Calendar',
+    calendarIntro: 'Which calendar your dates are shown and picked in.',
+    calendarGregorian: 'Gregorian',
+    calendarPersian: 'Shamsi (Solar Hijri)',
+    calendarHint:
+      'Only changes how dates are shown. Nothing you have already logged moves to another day.',
+
+    guestNote: 'Kept on this device for now. Your choices move to your account when you sign in.',
+    guestTitle: 'Language & appearance',
 
     saveFailed: 'Could not save that setting.',
     offlineNote: 'Saved on this device only — we could not reach the server.',

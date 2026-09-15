@@ -29,18 +29,26 @@ export type Goal = 'lose_weight' | 'maintain_weight' | 'gain_muscle'
 
 export type MealType = 'breakfast' | 'lunch' | 'dinner' | 'snack'
 
-export type AppLocale = 'en' | 'de'
+export type AppLocale = 'en' | 'de' | 'fa'
 
 export type ThemePreference = 'system' | 'light' | 'dark'
 
 /**
+ * Which calendar dates are read in. Independent of the language: Persian text
+ * with Gregorian dates and German text with Shamsi dates are both real
+ * requests, and stored dates never move either way.
+ */
+export type CalendarPreference = 'gregorian' | 'persian'
+
+/**
  * Interface settings. Unlike `profile` this is never null - a user who has
- * never opened the settings screen still has an effective language and theme,
- * and the client should not have to know the defaults itself.
+ * never opened the settings screen still has an effective language, theme and
+ * calendar, and the client should not have to know the defaults itself.
  */
 export interface UserPreferences {
   locale: AppLocale
   theme: ThemePreference
+  calendar: CalendarPreference
 }
 
 export interface UserProfile {
@@ -124,6 +132,12 @@ export interface FoodSearchResult {
   query: string
   local: Food[]
   external: ExternalFood[]
+  /**
+   * False when the outside product database could not be reached. Distinct from
+   * `external` being empty, which means it was asked and had nothing - telling
+   * the two apart is what stops an outage reading as "this food does not exist".
+   */
+  externalAvailable: boolean
 }
 
 export interface DiaryEntry {
