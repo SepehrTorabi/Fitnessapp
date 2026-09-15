@@ -57,15 +57,48 @@ final class FoodDiaryImporter
     ];
 
     private const array SNACK_WORDS = [
-        'birne', 'banane', 'trauben', 'dattel', 'walnuss', 'proteinriegel', 'shake',
+        'birne', 'banane', 'trauben', 'dattel', 'walnuss', 'riegel', 'shake',
         'eiweiß', 'cheetos', 'brownie', 'zupfkuchen', 'käsekuchen', 'apfelschorle',
         'truefruits', 'quarkspeise', 'protein-pulver', 'mandelmilch', 'gurke',
+        'schokolade', 'chocolate', 'nektarine', 'feige', 'pfirsich',
     ];
+
+    /**
+     * The dataset being imported, set by {@see self::using()}.
+     *
+     * Held rather than threaded through every method because six private
+     * helpers need it and passing two arrays down each of them buys nothing.
+     *
+     * @var array<string, array<string, mixed>>
+     */
+    private array $days = [];
+
+    /** @var array<string, array{0: string, 1: float}> */
+    private array $unitWeights = [];
 
     public function __construct(
         private readonly EntityManagerInterface $entityManager,
         private readonly FoodRepository $foods,
     ) {
+    }
+
+    /**
+     * Point the importer at a set of days.
+     *
+     * There are two: the transcription of the printed diary, and days entered
+     * by hand afterwards. They share every rule - the same unit handling, the
+     * same check against a stated daily total, the same replace-don't-duplicate
+     * behaviour - so they share the importer and differ only in their data.
+     *
+     * @param array<string, array<string, mixed>>   $days
+     * @param array<string, array{0: string, 1: float}> $unitWeights
+     */
+    public function using(array $days, array $unitWeights): self
+    {
+        $this->days = $days;
+        $this->unitWeights = $unitWeights;
+
+        return $this;
     }
 
     /**
@@ -77,14 +110,14 @@ final class FoodDiaryImporter
     {
         $problems = [];
 
-        foreach (FoodDiaryData::DAYS as $date => $people) {
+        foreach ($this->days as $date => $people) {
             foreach (['cosima', 'sepehr'] as $person) {
                 $day = $people[$person];
 
                 [$kcal, $fat, $protein] = [0.0, 0.0, 0.0];
 
                 foreach ($day['items'] as $item) {
-                    if (!isset(FoodDiaryData::UNIT_WEIGHTS[$item[0]])) {
+                    if (!isset($this->unitWeights[$item[0]])) {
                         $problems[] = \sprintf('%s %s: no unit weight defined for "%s".', $date, $person, $item[0]);
 
                         continue;
@@ -121,7 +154,7 @@ final class FoodDiaryImporter
     public function import(array $users): array
     {
         $catalogue = $this->buildCatalogue();
-        $dates = array_map(static fn (string $d): \DateTimeImmutable => new \DateTimeImmutable($d), array_keys(FoodDiaryData::DAYS));
+        $dates = array_map(static fn (string $d): \DateTimeImmutable => new \DateTimeImmutable($d), array_keys($this->days));
 
         $replaced = 0;
 
@@ -133,7 +166,7 @@ final class FoodDiaryImporter
         $activities = 0;
         $deviations = [];
 
-        foreach (FoodDiaryData::DAYS as $date => $people) {
+        foreach ($this->days as $date => $people) {
             $day = new \DateTimeImmutable($date);
 
             foreach ($users as $person => $user) {
@@ -190,7 +223,7 @@ final class FoodDiaryImporter
         /** @var array<string, array{kcal: float, fat: float, protein: float, grams: float}> $totals */
         $totals = [];
 
-        foreach (FoodDiaryData::DAYS as $people) {
+        foreach ($this->days as $people) {
             foreach (['cosima', 'sepehr'] as $person) {
                 foreach ($people[$person]['items'] as $item) {
                     $name = $item[0];
@@ -220,7 +253,7 @@ final class FoodDiaryImporter
             $food->setPer100($per100);
             $food->setSource(FoodSource::Seed);
 
-            [$unit, $unitGrams] = FoodDiaryData::UNIT_WEIGHTS[$name];
+            [$unit, $unitGrams] = $this->unitWeights[$name];
 
             // Counted foods get a named portion so "2 Scheiben" can be logged as
             // such next time instead of having to be converted to grams by hand.
@@ -247,7 +280,7 @@ final class FoodDiaryImporter
         $food = $catalogue[$name];
         $grams = $this->gramsFor($item);
 
-        [$unit] = FoodDiaryData::UNIT_WEIGHTS[$name];
+        [$unit] = $this->unitWeights[$name];
         $isGrams = 'g' === $unit || 'g' === ($item[5] ?? null);
 
         return DiaryEntry::forFood(
@@ -269,7 +302,7 @@ final class FoodDiaryImporter
      */
     private function gramsFor(array $item): float
     {
-        [$unit, $unitGrams] = FoodDiaryData::UNIT_WEIGHTS[$item[0]];
+        [$unit, $unitGrams] = $this->unitWeights[$item[0]];
 
         // A sixth element 'g' overrides the food's usual unit, for the days that
         // give a normally-counted food by weight instead.
