@@ -7,7 +7,9 @@ the day landed inside the budget your body data implies.
 - **Frontend** — Vue 3 (Composition API), TypeScript, Vite, Pinia
 - **Languages** — English, German and Farsi, with right-to-left layout and an
   optional Shamsi (Solar Hijri) calendar
-- **Tests** — PHPUnit, 227 tests
+- **Roles** — normal user, trainer (curates the exercise catalogue), user
+  administrator (manages accounts)
+- **Tests** — PHPUnit, 276 tests
 - **CI** — GitHub Actions: lint, static analysis, tests, and a packaged release
 
 ---
@@ -48,7 +50,7 @@ link — outside production no mail actually leaves the machine.
 
 ```bash
 cd app
-vendor/bin/phpunit                                  # 227 tests
+vendor/bin/phpunit                                  # 276 tests
 vendor/bin/phpstan analyse --memory-limit=1G        # level 6, clean
 ```
 
@@ -94,6 +96,26 @@ guessed weight would quietly corrupt every total it feeds into.
 
 **Unknown is not zero.** A food with no fibre figure stores `null`, not `0.0`.
 Summing a day keeps the known part rather than collapsing to unknown.
+
+**Roles are two independent grants, not a ladder.** A trainer curates the shared
+exercise catalogue; a user administrator manages accounts and roles. Neither
+implies the other, because defining a squat and reading the account list are
+unrelated powers — an application that ships them together can never give
+somebody only one of them. The one guard that matters is that the last remaining
+administrator cannot be demoted.
+
+**Demonstration clips are served by the web server, not by PHP.** Video needs
+HTTP range requests or the viewer cannot seek, nginx does that correctly for
+free, and streaming through PHP would occupy a worker for every second of
+playback. The trade is that the files sit behind an unguessable URL rather than
+behind the session — fine for instructional clips shared with every user, and
+not a pattern to reuse for anything private. See
+[deployment](docs/deployment.md#uploaded-videos).
+
+**A per-minute rate is reference data, not personal data.** That is the whole
+reason the catalogue is trainer-only: the number lands in other people's calorie
+budgets, and a wrong one is not obviously wrong on screen. It just quietly tells
+somebody they may eat three hundred calories they have not earned.
 
 **Language and calendar are separate settings.** They travel together often
 enough to be tempting to merge, but they answer different questions: the
@@ -151,6 +173,10 @@ Copy anything you need to override into `app/.env.local` — it is gitignored.
 | `FRONTEND_VERIFY_URL` | Where the confirmation link sends people |
 | `MAILER_SENDER_ADDRESS` / `MAILER_SENDER_NAME` | From-address of the mails |
 | `OPEN_FOOD_FACTS_USER_AGENT` | Open Food Facts asks callers to identify themselves |
+
+PHP's upload limits are set by [`app/public/.user.ini`](app/public/.user.ini)
+rather than by the machine's `php.ini`, so video uploads work on a fresh clone
+without anyone being told to go and edit a file in `/opt`.
 
 ## CI and releases
 

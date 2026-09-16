@@ -25,7 +25,33 @@ export type ActivityLevel =
   | 'very_active'
   | 'extra_active'
 
-export type Goal = 'lose_weight' | 'maintain_weight' | 'gain_muscle'
+export type Goal =
+  | 'lose_weight'
+  | 'lose_fat_slowly'
+  | 'maintain_weight'
+  | 'recomposition'
+  | 'gain_muscle'
+  | 'gain_weight'
+  | 'endurance'
+  | 'strength'
+
+/**
+ * What an exercise is good for. A trainer tags each exercise with one or more;
+ * the user's goal decides which of them get suggested.
+ */
+export type ExercisePurpose =
+  | 'build_muscle'
+  | 'fat_burning'
+  | 'endurance'
+  | 'strength'
+  | 'mobility'
+  | 'general_fitness'
+
+/**
+ * Symfony role strings. Everyone has ROLE_USER; the other two are granted by a
+ * user administrator.
+ */
+export type Role = 'ROLE_USER' | 'ROLE_TRAINER' | 'ROLE_USER_ADMIN'
 
 export type MealType = 'breakfast' | 'lunch' | 'dinner' | 'snack'
 
@@ -82,6 +108,11 @@ export interface User {
   email: string
   displayName: string
   verified: boolean
+  /**
+   * Used only to decide what to show. Every restricted endpoint checks the role
+   * itself, so hiding a button is a courtesy rather than the security boundary.
+   */
+  roles: Role[]
   createdAt: string
   /** Null until the user fills in the onboarding form. */
   profile: UserProfile | null
@@ -161,6 +192,49 @@ export interface ActivityEntry {
   description: string
   durationMinutes: number | null
   caloriesBurned: number
+  /** Null for a free-text activity, and null again once an exercise is retired. */
+  exerciseId: number | null
+  createdAt: string
+}
+
+/** One kind of training from the shared catalogue. */
+export interface Exercise {
+  id: number
+  name: string
+  description: string | null
+  purposes: ExercisePurpose[]
+  kcalPerMinute: number
+  /**
+   * Where the demonstration clip is, or null when the exercise has none. Its
+   * presence is what decides whether a play button is offered at all.
+   */
+  videoUrl: string | null
+  videoMimeType: string | null
+  /** The trainer's display name, or null for the seeded catalogue. */
+  createdBy: string | null
+  createdAt: string
+  updatedAt: string
+}
+
+export interface ActivityDay {
+  date: string
+  activities: ActivityEntry[]
+  caloriesBurned: number
+}
+
+export interface ExerciseSuggestions {
+  /** Null when the user has no profile yet, so there is no goal to suggest for. */
+  goal: Goal | null
+  exercises: Exercise[]
+}
+
+/** The administration screen's view of an account: identity and roles only. */
+export interface AdminUser {
+  id: number
+  email: string
+  displayName: string
+  verified: boolean
+  roles: Role[]
   createdAt: string
 }
 
@@ -212,6 +286,11 @@ export interface Recipe {
   gramsPerServing: number
   totalNutrients: Nutrients
   perServing: Nutrients
+  /**
+   * Per 100 g of the finished dish. Available because every ingredient is
+   * entered as a weight, and what makes logging a recipe by weight possible.
+   */
+  per100: Nutrients
   ingredients: RecipeIngredient[]
   createdAt: string
 }

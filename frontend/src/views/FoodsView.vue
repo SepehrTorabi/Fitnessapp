@@ -447,6 +447,10 @@ onMounted(loadRecipes)
               <th>{{ t('foods.recipeName') }}</th>
               <th class="num">{{ t('foods.servingsColumn') }}</th>
               <th class="num">{{ t('foods.kcalPerServingColumn') }}</th>
+              <!-- The figure that falls out of entering every ingredient by
+                   weight, and the one that makes logging a recipe by weight
+                   possible. Worth showing next to the per-serving one. -->
+              <th class="num">{{ t('foods.kcalPerHundredColumn') }}</th>
               <th></th>
             </tr>
           </thead>
@@ -455,6 +459,7 @@ onMounted(loadRecipes)
               <td>{{ item.name }}</td>
               <td class="num">{{ item.servings }}</td>
               <td class="num">{{ n(item.perServing.kcal) }}</td>
+              <td class="num muted">{{ n(item.per100.kcal) }}</td>
               <td class="num shrink">
                 <button class="ghost" type="button" @click="deleteRecipe(item.id)">✕</button>
               </td>

@@ -30,6 +30,21 @@ const router = createRouter({
       meta: { requiresAuth: true, titleKey: 'titles.foods' },
     },
     {
+      path: '/activity',
+      name: 'activity',
+      component: () => import('@/views/ActivityView.vue'),
+      meta: { requiresAuth: true, titleKey: 'titles.activity' },
+    },
+    {
+      path: '/admin/users',
+      name: 'admin-users',
+      component: () => import('@/views/AdminUsersView.vue'),
+      // The guard below turns anybody without the role away. It is a courtesy,
+      // not the security boundary - the endpoints this page calls answer 403 on
+      // their own, and would do so even if this meta were deleted.
+      meta: { requiresAuth: true, requiresRole: 'ROLE_USER_ADMIN', titleKey: 'titles.admin' },
+    },
+    {
       path: '/profile',
       name: 'profile',
       component: () => import('@/views/ProfileView.vue'),
@@ -82,6 +97,15 @@ router.beforeEach(async (to) => {
   if (to.meta.requiresAuth && !auth.isAuthenticated) {
     // Remember where they were heading, so signing in resumes it.
     return { name: 'login', query: to.fullPath === '/' ? {} : { next: to.fullPath } }
+  }
+
+  // Sent to the dashboard rather than shown a "forbidden" page: somebody
+  // following an old bookmark after losing a role has done nothing wrong, and
+  // the dashboard is somewhere useful rather than a dead end.
+  const required = to.meta.requiresRole
+
+  if (typeof required === 'string' && !auth.hasRole(required as never)) {
+    return { name: 'dashboard' }
   }
 
   if (to.meta.guestOnly && auth.isAuthenticated) {

@@ -18,10 +18,14 @@ import { useNumbers } from '@/composables/useNumbers'
 const BarcodeScanner = defineAsyncComponent(() => import('@/components/BarcodeScanner.vue'))
 
 /**
- * Where food and activity get logged.
+ * Where food gets logged.
  *
  * Three ways in, because a single one never covers every case: search the
  * catalogue, scan a barcode, or pick one of your own recipes.
+ *
+ * Activity used to be logged at the bottom of this page. It has a page of its
+ * own now: training is not a kind of eating, and burying the form under the
+ * food form meant only people already logging a meal ever found it.
  */
 
 const { t } = useI18n()
@@ -57,13 +61,32 @@ const showScanner = ref(false)
 
 // --- Recipes ---
 const recipes = ref<Recipe[]>([])
-const recipeServings = ref(1)
 
-// --- Activity ---
-const activityDescription = ref('')
-const activityKcal = ref<number | null>(null)
-const activityMinutes = ref<number | null>(null)
-const activityError = ref('')
+/**
+ * How a recipe is being measured, and how much of it.
+ *
+ * Two ways, because "a serving" is a portion whoever wrote the recipe down
+ * decided on, and what actually ends up on a plate rarely agrees with it. Every
+ * ingredient was entered as a weight, so the finished dish has one too - which
+ * is what makes weighing possible at all.
+ *
+ * The amount is kept per unit rather than shared, so switching from 1 serving
+ * to grams does not ask for 1 gram of lasagne.
+ */
+const recipeUnit = ref<'portion' | 'g'>('portion')
+const recipeServings = ref(1)
+const recipeGrams = ref(200)
+
+const recipeAmount = computed(() =>
+  recipeUnit.value === 'g' ? recipeGrams.value : recipeServings.value,
+)
+
+/** What logging this recipe at the current amount would add. */
+function recipeKcal(recipe: Recipe): number {
+  return recipeUnit.value === 'g'
+    ? (recipe.per100.kcal * recipeGrams.value) / 100
+    : recipe.perServing.kcal * recipeServings.value
+}
 
 const mealTypes: MealType[] = ['breakfast', 'lunch', 'dinner', 'snack']
 
@@ -215,8 +238,8 @@ async function logRecipe(recipe: Recipe): Promise<void> {
     await api.addEntry({
       recipeId: recipe.id,
       mealType: mealType.value,
-      quantity: recipeServings.value,
-      unit: 'portion',
+      quantity: recipeAmount.value,
+      unit: recipeUnit.value,
       loggedOn: date.value,
     })
     await loadDay()
@@ -225,40 +248,12 @@ async function logRecipe(recipe: Recipe): Promise<void> {
   }
 }
 
-async function logActivity(): Promise<void> {
-  activityError.value = ''
-
-  if (!activityDescription.value || activityKcal.value === null) {
-    activityError.value = t('diary.activityIncomplete')
-    return
-  }
-
-  try {
-    await api.addActivity({
-      description: activityDescription.value,
-      caloriesBurned: activityKcal.value,
-      durationMinutes: activityMinutes.value,
-      performedOn: date.value,
-    })
-
-    activityDescription.value = ''
-    activityKcal.value = null
-    activityMinutes.value = null
-    await loadDay()
-  } catch (e) {
-    activityError.value = apiMessage(e, 'diary.activityFailed')
-  }
-}
 
 async function removeEntry(id: number): Promise<void> {
   await api.deleteEntry(id)
   await loadDay()
 }
 
-async function removeActivity(id: number): Promise<void> {
-  await api.deleteActivity(id)
-  await loadDay()
-}
 
 watch(date, loadDay)
 
@@ -339,16 +334,50 @@ onMounted(async () => {
 
         <div v-if="recipes.length" class="card">
           <h3>{{ t('diary.yourRecipes') }}</h3>
-          <div class="row servings-row">
-            <label for="servings">{{ t('diary.servings') }}</label>
-            <input id="servings" v-model.number="recipeServings" type="number" min="0.25" step="0.25" />
+
+          <!-- Amount and unit together, so the number on each row below always
+               says what clicking it would actually add. -->
+          <div class="row amount-row recipe-amount">
+            <div class="amount-field">
+              <label for="recipe-amount">{{ t('diary.amount') }}</label>
+              <input
+                v-if="recipeUnit === 'g'"
+                id="recipe-amount"
+                v-model.number="recipeGrams"
+                type="number"
+                min="1"
+                step="10"
+              />
+              <input
+                v-else
+                id="recipe-amount"
+                v-model.number="recipeServings"
+                type="number"
+                min="0.25"
+                step="0.25"
+              />
+            </div>
+
+            <div class="amount-field">
+              <label for="recipe-unit">{{ t('diary.unit') }}</label>
+              <select id="recipe-unit" v-model="recipeUnit">
+                <option value="portion">{{ t('diary.servings') }}</option>
+                <!-- A noun, not the unit suffix: "Servings / g" reads as two
+                     different kinds of word in the same dropdown. -->
+                <option value="g">{{ t('diary.gramsUnit') }}</option>
+              </select>
+            </div>
           </div>
+
           <ul class="results">
             <li v-for="recipe in recipes" :key="recipe.id">
               <button class="result" type="button" @click="logRecipe(recipe)">
                 <span class="result-name">{{ recipe.name }}</span>
                 <span class="muted small">
-                  {{ t('diary.kcalPerServing', { kcal: n(recipe.perServing.kcal) }) }}
+                  <!-- What this click adds, not an abstract rate: the amount is
+                       already chosen above, so showing it resolved saves the
+                       user doing the multiplication. -->
+                  {{ t('diary.recipeAdds', { kcal: n(recipeKcal(recipe)) }) }}
                 </span>
               </button>
             </li>
@@ -462,53 +491,6 @@ onMounted(async () => {
           </table>
         </div>
 
-        <div class="card">
-          <h3>{{ t('diary.activity') }}</h3>
-          <p class="muted small note">
-            {{ t('diary.activityIntro') }}
-          </p>
-
-          <form class="stack" @submit.prevent="logActivity">
-            <div>
-              <label for="activity">{{ t('diary.activityWhat') }}</label>
-              <input id="activity" v-model="activityDescription" type="text" :placeholder="t('diary.activityPlaceholder')" />
-            </div>
-
-            <div class="row">
-              <div class="amount-field">
-                <label for="kcal">{{ t('diary.activityKcal') }}</label>
-                <input id="kcal" v-model.number="activityKcal" type="number" min="0" />
-              </div>
-              <div class="amount-field">
-                <label for="minutes">{{ t('diary.activityMinutes') }}</label>
-                <input id="minutes" v-model.number="activityMinutes" type="number" min="1" />
-              </div>
-            </div>
-
-            <p v-if="activityError" class="alert alert-error small">{{ activityError }}</p>
-
-            <button class="secondary" type="submit">{{ t('diary.addActivity') }}</button>
-          </form>
-
-          <table v-if="day && day.activities.length" class="activity-table">
-            <tbody>
-              <tr v-for="activity in day.activities" :key="activity.id">
-                <td>
-                  {{ activity.description }}
-                  <span v-if="activity.durationMinutes" class="muted small">
-                    · {{ n(activity.durationMinutes) }} {{ t('diary.minutesShort') }}
-                  </span>
-                </td>
-                <td class="num">
-                  {{ n(activity.caloriesBurned) }} {{ t('common.kcal') }}
-                </td>
-                <td class="num shrink">
-                  <button class="ghost" type="button" @click="removeActivity(activity.id)">✕</button>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
       </div>
     </div>
   </div>
@@ -550,11 +532,9 @@ onMounted(async () => {
   font-size: 14px;
 }
 
-.servings-row { align-items: flex-end; margin-bottom: 4px; }
-.servings-row input { width: 90px; }
+.recipe-amount { align-items: flex-end; margin-bottom: 4px; }
 
 .unit { font-size: 14px; font-weight: 600; color: var(--text-muted); margin: 0 10px 0 5px; }
 .block { display: block; }
 .shrink { width: 1%; white-space: nowrap; }
-.activity-table { margin-top: 14px; }
 </style>

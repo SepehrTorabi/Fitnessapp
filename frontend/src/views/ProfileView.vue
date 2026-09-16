@@ -48,7 +48,22 @@ const ACTIVITY_LEVELS: ActivityLevel[] = [
   'extra_active',
 ]
 
-const GOALS: Goal[] = ['lose_weight', 'maintain_weight', 'gain_muscle']
+/**
+ * Ordered from the biggest deficit to the biggest surplus, with the two
+ * training-led goals last. A dropdown of eight is worth ordering deliberately:
+ * this way the list reads as a scale, and somebody looking for "a bit less
+ * aggressive than what I have now" finds it next to what they have now.
+ */
+const GOALS: Goal[] = [
+  'lose_weight',
+  'lose_fat_slowly',
+  'maintain_weight',
+  'recomposition',
+  'gain_muscle',
+  'gain_weight',
+  'endurance',
+  'strength',
+]
 
 const activityLevels = computed(() =>
   ACTIVITY_LEVELS.map((value) => ({ value, label: t(`activityLevel.${value}`) })),

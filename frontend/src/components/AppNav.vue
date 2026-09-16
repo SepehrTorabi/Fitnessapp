@@ -4,11 +4,14 @@ import { useI18n } from 'vue-i18n'
 import UserMenu from '@/components/UserMenu.vue'
 
 /**
- * The navigation holds the three places the app is actually used, and nothing
- * else. Body data, settings and signing out have moved under the user's own
- * name in {@see UserMenu} - they are not destinations you move between while
- * logging a meal, and having them here made the bar look like five equal
- * choices when only three of them are.
+ * The navigation holds the places the app is actually used, and nothing else.
+ * Body data, settings and signing out live under the user's own name in
+ * {@see UserMenu} - they are not destinations you move between while logging a
+ * meal, and having them here made the bar look like a list of equal choices
+ * when it is not.
+ *
+ * Account administration is not here either, for the same reason and one more:
+ * it would be a fourth item that most people can never use.
  */
 const { t } = useI18n()
 </script>
@@ -21,6 +24,7 @@ const { t } = useI18n()
       <nav class="links">
         <RouterLink to="/">{{ t('nav.dashboard') }}</RouterLink>
         <RouterLink to="/diary">{{ t('nav.diary') }}</RouterLink>
+        <RouterLink to="/activity">{{ t('nav.activity') }}</RouterLink>
         <RouterLink to="/foods">{{ t('nav.foods') }}</RouterLink>
       </nav>
 

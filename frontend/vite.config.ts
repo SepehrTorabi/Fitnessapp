@@ -33,6 +33,16 @@ export default defineConfig(({ command }) => ({
         target: 'http://127.0.0.1:8000',
         changeOrigin: false,
       },
+
+      // Uploaded exercise videos. In production these are static files next to
+      // the SPA and nginx serves them without PHP ever being involved; in
+      // development the two halves live on different ports, so without this
+      // Vite answers /uploads/... with its own index.html and the player sits
+      // there loading a video that is secretly a web page.
+      '/uploads': {
+        target: 'http://127.0.0.1:8000',
+        changeOrigin: false,
+      },
     },
   },
 }))

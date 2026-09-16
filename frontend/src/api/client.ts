@@ -1,13 +1,19 @@
 import type {
+  ActivityDay,
   ActivityEntry,
+  AdminUser,
   AppLocale,
   CalendarPreference,
   DashboardData,
   DayView,
   DiaryEntry,
+  Exercise,
+  ExercisePurpose,
+  ExerciseSuggestions,
   Food,
   FoodSearchResult,
   Recipe,
+  Role,
   ThemePreference,
   User,
 } from './types'
@@ -95,7 +101,14 @@ async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
     ...init,
     headers: {
       Accept: 'application/json',
-      ...(init.body ? { 'Content-Type': 'application/json' } : {}),
+      // Everything this client sends is JSON, except an upload. FormData must
+      // be left alone: its Content-Type carries the multipart boundary, only
+      // the browser knows what that boundary is, and stamping
+      // "application/json" over it produces a body the server cannot parse at
+      // all - which arrives as a puzzling "no file was sent".
+      ...(init.body && !(init.body instanceof FormData)
+        ? { 'Content-Type': 'application/json' }
+        : {}),
       ...init.headers,
     },
     // Authentication is a session cookie, so it has to ride along. Without this
@@ -242,12 +255,26 @@ export const api = {
 
   deleteEntry: (id: number) => request<void>(`/api/diary/entries/${id}`, { method: 'DELETE' }),
 
+  // --- Activity ---
+  // Their own endpoints rather than a corner of the diary: training is not a
+  // kind of eating, and the API follows the page.
+  activityDay: (date?: string) => request<ActivityDay>(withQuery('/api/activities', { date })),
+
   addActivity: (payload: {
     description: string
     caloriesBurned: number
     durationMinutes?: number | null
     performedOn?: string
-  }) => request<{ activity: ActivityEntry }>('/api/diary/activities', json(payload)),
+  }) => request<{ activity: ActivityEntry }>('/api/activities', json(payload)),
+
+  // The exercise's per-minute rate and the duration decide the calories, unless
+  // caloriesBurned overrides them.
+  addActivityFromExercise: (payload: {
+    exerciseId: number
+    durationMinutes: number
+    caloriesBurned?: number | null
+    performedOn?: string
+  }) => request<{ activity: ActivityEntry }>('/api/activities/from-exercise', json(payload)),
 
   updateActivity: (
     id: number,
@@ -258,13 +285,67 @@ export const api = {
       performedOn?: string
     },
   ) =>
-    request<{ activity: ActivityEntry }>(`/api/diary/activities/${id}`, {
+    request<{ activity: ActivityEntry }>(`/api/activities/${id}`, {
       ...json(payload),
       method: 'PATCH',
     }),
 
-  deleteActivity: (id: number) =>
-    request<void>(`/api/diary/activities/${id}`, { method: 'DELETE' }),
+  deleteActivity: (id: number) => request<void>(`/api/activities/${id}`, { method: 'DELETE' }),
+
+  activitySuggestions: () => request<ExerciseSuggestions>('/api/activities/suggestions'),
+
+  // --- Exercise catalogue ---
+  // Readable by anyone signed in; the writes answer 403 unless the caller is a
+  // trainer, which is why the interface hides them rather than relying on it.
+  exercises: (q?: string) => request<{ exercises: Exercise[] }>(withQuery('/api/exercises', { q })),
+
+  createExercise: (payload: {
+    name: string
+    kcalPerMinute: number
+    purposes: ExercisePurpose[]
+    description?: string | null
+  }) => request<{ exercise: Exercise }>('/api/exercises', json(payload)),
+
+  // A PUT, not a PATCH: an exercise is small enough that the form always sends
+  // the whole thing, and "no purposes" has to be distinguishable from "field
+  // omitted".
+  updateExercise: (
+    id: number,
+    payload: {
+      name: string
+      kcalPerMinute: number
+      purposes: ExercisePurpose[]
+      description?: string | null
+    },
+  ) => request<{ exercise: Exercise }>(`/api/exercises/${id}`, { ...json(payload), method: 'PUT' }),
+
+  deleteExercise: (id: number) => request<void>(`/api/exercises/${id}`, { method: 'DELETE' }),
+
+  /**
+   * Multipart, so the browser streams the file and shows its own progress -
+   * and deliberately without a Content-Type header. The boundary is part of
+   * that header and only the browser knows it; setting it by hand produces a
+   * body the server cannot parse.
+   */
+  uploadExerciseVideo: (id: number, file: File) => {
+    const body = new FormData()
+    body.append('video', file)
+
+    return request<{ exercise: Exercise }>(`/api/exercises/${id}/video`, { method: 'POST', body })
+  },
+
+  deleteExerciseVideo: (id: number) =>
+    request<{ exercise: Exercise }>(`/api/exercises/${id}/video`, { method: 'DELETE' }),
+
+  // --- Administration ---
+  adminUsers: (q?: string) =>
+    request<{ users: AdminUser[]; assignableRoles: Role[] }>(withQuery('/api/admin/users', { q })),
+
+  setUserRoles: (id: number, roles: Role[]) =>
+    request<{ user: AdminUser }>(`/api/admin/users/${id}/roles`, {
+      ...json({ roles }),
+      method: 'PUT',
+    }),
 
   // --- Recipes ---
   recipes: (q?: string) => request<{ recipes: Recipe[] }>(withQuery('/api/recipes', { q })),
