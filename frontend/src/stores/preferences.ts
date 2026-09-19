@@ -1,12 +1,19 @@
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
 import { api } from '@/api/client'
-import { applyLocale, isSupportedLocale, type SupportedLocale } from '@/i18n'
+import { applyLocale, directionOf, isSupportedLocale, type SupportedLocale } from '@/i18n'
 import { applyTheme, isTheme, resolveSystemTheme, type Theme } from '@/theme'
+import {
+  cacheCalendar,
+  defaultCalendarFor,
+  isCalendarSystem,
+  readCachedCalendar,
+  type CalendarSystem,
+} from '@/calendar'
 import { useAuthStore } from './auth'
 
 /**
- * Language and colour scheme.
+ * Language, colour scheme and calendar.
  *
  * Both live in two places on purpose. The account is the durable copy, so the
  * settings follow the user to another browser or another machine. localStorage
@@ -19,12 +26,34 @@ import { useAuthStore } from './auth'
 export const usePreferencesStore = defineStore('preferences', () => {
   const locale = ref<SupportedLocale>('en')
   const theme = ref<Theme>('system')
+  const calendar = ref<CalendarSystem>('gregorian')
   const error = ref('')
+
+  /**
+   * Whether the calendar was actually chosen, rather than inferred from the
+   * language.
+   *
+   * This is what keeps the two settings independent without making the first
+   * experience wrong. Picking Farsi before anything else has been decided moves
+   * the calendar to Shamsi, because that is overwhelmingly what is wanted and
+   * the backend seeds new accounts the same way. Once somebody has picked a
+   * calendar themselves, the language stops touching it - which is the case the
+   * separation exists for: Farsi text against the Gregorian dates a workplace
+   * runs on.
+   */
+  const calendarChosen = ref(false)
 
   /** What "system" currently resolves to - what is actually on screen. */
   const effectiveTheme = computed<'light' | 'dark'>(() =>
     theme.value === 'system' ? resolveSystemTheme() : theme.value,
   )
+
+  /**
+   * Which way the interface currently runs. Read by the few components whose
+   * direction is not just a matter of CSS - the chart has to mirror its own
+   * geometry, which no stylesheet can do for it.
+   */
+  const direction = computed<'rtl' | 'ltr'>(() => directionOf(locale.value))
 
   /**
    * Read the cached values and put them on screen immediately. Called once
@@ -36,6 +65,15 @@ export const usePreferencesStore = defineStore('preferences', () => {
 
     const cachedTheme = read('fitnessapp.theme')
     if (isTheme(cachedTheme)) theme.value = cachedTheme
+
+    const cachedCalendar = readCachedCalendar()
+
+    if (cachedCalendar !== null) {
+      calendar.value = cachedCalendar
+      calendarChosen.value = true
+    } else {
+      calendar.value = defaultCalendarFor(locale.value)
+    }
 
     applyLocale(locale.value)
     applyTheme(theme.value)
@@ -58,6 +96,14 @@ export const usePreferencesStore = defineStore('preferences', () => {
       theme.value = stored.theme
       applyTheme(stored.theme)
     }
+
+    if (isCalendarSystem(stored.calendar)) {
+      calendar.value = stored.calendar
+      // The account holds a settled choice, whatever it came from, so the
+      // language must not override it from here on.
+      calendarChosen.value = true
+      cacheCalendar(stored.calendar)
+    }
   }
 
   async function setLocale(next: SupportedLocale): Promise<void> {
@@ -65,6 +111,15 @@ export const usePreferencesStore = defineStore('preferences', () => {
     // is clicked, not after a round trip.
     locale.value = next
     applyLocale(next)
+
+    // Only while the calendar is still an assumption - see calendarChosen.
+    if (!calendarChosen.value) {
+      calendar.value = defaultCalendarFor(next)
+      await persist({ locale: next, calendar: calendar.value })
+
+      return
+    }
+
     await persist({ locale: next })
   }
 
@@ -75,11 +130,27 @@ export const usePreferencesStore = defineStore('preferences', () => {
   }
 
   /**
+   * Changing the calendar re-renders every date on screen and nothing else -
+   * no date that has been logged moves, because what is stored is always a
+   * Gregorian ISO string and only the rendering changes.
+   */
+  async function setCalendar(next: CalendarSystem): Promise<void> {
+    calendar.value = next
+    calendarChosen.value = true
+    cacheCalendar(next)
+    await persist({ calendar: next })
+  }
+
+  /**
    * Write through to the account. A failure is worth reporting but must not
    * roll the change back - the user can see it worked, and telling them it did
    * not would be more confusing than the setting being device-local for now.
    */
-  async function persist(payload: { locale?: SupportedLocale; theme?: Theme }): Promise<void> {
+  async function persist(payload: {
+    locale?: SupportedLocale
+    theme?: Theme
+    calendar?: CalendarSystem
+  }): Promise<void> {
     error.value = ''
 
     if (!useAuthStore().isAuthenticated) return
@@ -99,5 +170,17 @@ export const usePreferencesStore = defineStore('preferences', () => {
     }
   }
 
-  return { locale, theme, effectiveTheme, error, initFromCache, adoptFromUser, setLocale, setTheme }
+  return {
+    locale,
+    theme,
+    calendar,
+    effectiveTheme,
+    direction,
+    error,
+    initFromCache,
+    adoptFromUser,
+    setLocale,
+    setTheme,
+    setCalendar,
+  }
 })

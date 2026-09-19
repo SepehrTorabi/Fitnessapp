@@ -25,22 +25,56 @@ export type ActivityLevel =
   | 'very_active'
   | 'extra_active'
 
-export type Goal = 'lose_weight' | 'maintain_weight' | 'gain_muscle'
+export type Goal =
+  | 'lose_weight'
+  | 'lose_fat_slowly'
+  | 'maintain_weight'
+  | 'recomposition'
+  | 'gain_muscle'
+  | 'gain_weight'
+  | 'endurance'
+  | 'strength'
+
+/**
+ * What an exercise is good for. A trainer tags each exercise with one or more;
+ * the user's goal decides which of them get suggested.
+ */
+export type ExercisePurpose =
+  | 'build_muscle'
+  | 'fat_burning'
+  | 'endurance'
+  | 'strength'
+  | 'mobility'
+  | 'general_fitness'
+
+/**
+ * Symfony role strings. Everyone has ROLE_USER; the other two are granted by a
+ * user administrator.
+ */
+export type Role = 'ROLE_USER' | 'ROLE_TRAINER' | 'ROLE_USER_ADMIN'
 
 export type MealType = 'breakfast' | 'lunch' | 'dinner' | 'snack'
 
-export type AppLocale = 'en' | 'de'
+export type AppLocale = 'en' | 'de' | 'fa'
 
 export type ThemePreference = 'system' | 'light' | 'dark'
 
 /**
+ * Which calendar dates are read in. Independent of the language: Persian text
+ * with Gregorian dates and German text with Shamsi dates are both real
+ * requests, and stored dates never move either way.
+ */
+export type CalendarPreference = 'gregorian' | 'persian'
+
+/**
  * Interface settings. Unlike `profile` this is never null - a user who has
- * never opened the settings screen still has an effective language and theme,
- * and the client should not have to know the defaults itself.
+ * never opened the settings screen still has an effective language, theme and
+ * calendar, and the client should not have to know the defaults itself.
  */
 export interface UserPreferences {
   locale: AppLocale
   theme: ThemePreference
+  calendar: CalendarPreference
 }
 
 export interface UserProfile {
@@ -74,6 +108,11 @@ export interface User {
   email: string
   displayName: string
   verified: boolean
+  /**
+   * Used only to decide what to show. Every restricted endpoint checks the role
+   * itself, so hiding a button is a courtesy rather than the security boundary.
+   */
+  roles: Role[]
   createdAt: string
   /** Null until the user fills in the onboarding form. */
   profile: UserProfile | null
@@ -95,6 +134,24 @@ export interface FoodPortion {
   grams: number
 }
 
+/**
+ * The language versions an entry carries, keyed by locale.
+ *
+ * `name`/`description` on the entry itself are already resolved for the reader
+ * by the API, so a component that only displays them can ignore all of this.
+ * It exists for the editor, and for saying *which* language is on screen when
+ * the reader's own is not available.
+ */
+export interface ContentTranslation {
+  name: string
+  description: string | null
+}
+
+export interface FoodTranslationValue {
+  name: string
+  brand: string | null
+}
+
 export interface Food {
   id: number
   name: string
@@ -106,6 +163,11 @@ export interface Food {
   per100: Nutrients
   portions: FoodPortion[]
   availableUnits: AvailableUnit[]
+  /** The language `name` and `brand` above fall back to. */
+  sourceLocale: AppLocale
+  /** False when the reader is seeing the fallback rather than their own language. */
+  translated: boolean
+  translations: Partial<Record<AppLocale, FoodTranslationValue>>
 }
 
 /** A hit from the external database, not yet in our catalogue - so it has no id. */
@@ -124,6 +186,12 @@ export interface FoodSearchResult {
   query: string
   local: Food[]
   external: ExternalFood[]
+  /**
+   * False when the outside product database could not be reached. Distinct from
+   * `external` being empty, which means it was asked and had nothing - telling
+   * the two apart is what stops an outage reading as "this food does not exist".
+   */
+  externalAvailable: boolean
 }
 
 export interface DiaryEntry {
@@ -147,6 +215,52 @@ export interface ActivityEntry {
   description: string
   durationMinutes: number | null
   caloriesBurned: number
+  /** Null for a free-text activity, and null again once an exercise is retired. */
+  exerciseId: number | null
+  createdAt: string
+}
+
+/** One kind of training from the shared catalogue. */
+export interface Exercise {
+  id: number
+  name: string
+  description: string | null
+  purposes: ExercisePurpose[]
+  kcalPerMinute: number
+  /**
+   * Where the demonstration clip is, or null when the exercise has none. Its
+   * presence is what decides whether a play button is offered at all.
+   */
+  videoUrl: string | null
+  videoMimeType: string | null
+  /** The trainer's display name, or null for the seeded catalogue. */
+  createdBy: string | null
+  createdAt: string
+  updatedAt: string
+  sourceLocale: AppLocale
+  translated: boolean
+  translations: Partial<Record<AppLocale, ContentTranslation>>
+}
+
+export interface ActivityDay {
+  date: string
+  activities: ActivityEntry[]
+  caloriesBurned: number
+}
+
+export interface ExerciseSuggestions {
+  /** Null when the user has no profile yet, so there is no goal to suggest for. */
+  goal: Goal | null
+  exercises: Exercise[]
+}
+
+/** The administration screen's view of an account: identity and roles only. */
+export interface AdminUser {
+  id: number
+  email: string
+  displayName: string
+  verified: boolean
+  roles: Role[]
   createdAt: string
 }
 
@@ -198,6 +312,14 @@ export interface Recipe {
   gramsPerServing: number
   totalNutrients: Nutrients
   perServing: Nutrients
+  /**
+   * Per 100 g of the finished dish. Available because every ingredient is
+   * entered as a weight, and what makes logging a recipe by weight possible.
+   */
+  per100: Nutrients
   ingredients: RecipeIngredient[]
   createdAt: string
+  sourceLocale: AppLocale
+  translated: boolean
+  translations: Partial<Record<AppLocale, ContentTranslation>>
 }

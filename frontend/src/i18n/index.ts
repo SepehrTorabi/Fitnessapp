@@ -1,6 +1,7 @@
 import { createI18n } from 'vue-i18n'
 import en from './locales/en'
 import de from './locales/de'
+import fa from './locales/fa'
 
 /**
  * Translation setup.
@@ -12,7 +13,7 @@ import de from './locales/de'
  */
 export type MessageSchema = typeof en
 
-export const SUPPORTED_LOCALES = ['en', 'de'] as const
+export const SUPPORTED_LOCALES = ['en', 'de', 'fa'] as const
 export type SupportedLocale = (typeof SUPPORTED_LOCALES)[number]
 
 /** How each language names itself - a language picker has to be readable by
@@ -20,6 +21,24 @@ export type SupportedLocale = (typeof SUPPORTED_LOCALES)[number]
 export const LOCALE_ENDONYMS: Record<SupportedLocale, string> = {
   en: 'English',
   de: 'Deutsch',
+  fa: 'فارسی',
+}
+
+/**
+ * Which languages are written right to left.
+ *
+ * A property of the language, so it is declared once here rather than checked
+ * with `locale === 'fa'` in every component that cares. Adding Arabic or Hebrew
+ * later means adding a line here and nothing else.
+ */
+export const RTL_LOCALES: readonly SupportedLocale[] = ['fa']
+
+export function isRtl(locale: SupportedLocale): boolean {
+  return RTL_LOCALES.includes(locale)
+}
+
+export function directionOf(locale: SupportedLocale): 'rtl' | 'ltr' {
+  return isRtl(locale) ? 'rtl' : 'ltr'
 }
 
 export function isSupportedLocale(value: unknown): value is SupportedLocale {
@@ -64,7 +83,7 @@ export const i18n = createI18n<[MessageSchema], SupportedLocale, false>({
   legacy: false,
   locale: detectInitialLocale(),
   fallbackLocale: 'en',
-  messages: { en, de },
+  messages: { en, de, fa },
   // Missing keys already fail at compile time, so warning about them again at
   // runtime only adds noise to the console.
   missingWarn: false,
@@ -73,16 +92,40 @@ export const i18n = createI18n<[MessageSchema], SupportedLocale, false>({
 
 /**
  * Change the language everywhere at once: vue-i18n, the <html lang> attribute
- * that screen readers and browser translation rely on, and the copy in
- * localStorage that seeds the next cold start.
+ * that screen readers and browser translation rely on, the writing direction,
+ * and the copy in localStorage that seeds the next cold start.
+ *
+ * The direction goes on <html dir> rather than being handled in CSS, and that
+ * is the whole reason the right-to-left work is as small as it is. One
+ * attribute flips the block direction of the entire document, and every rule
+ * written with logical properties - margin-inline-start rather than
+ * margin-left, text-align: start rather than left - follows it without being
+ * told. What is left over is the handful of places where direction is not a
+ * property of a box at all: the chart's own geometry, and the runs of text that
+ * must stay left-to-right whatever surrounds them, like a URL or a barcode.
  */
 export function applyLocale(locale: SupportedLocale): void {
   i18n.global.locale.value = locale
   document.documentElement.setAttribute('lang', locale)
+  document.documentElement.setAttribute('dir', directionOf(locale))
 
   try {
     localStorage.setItem('fitnessapp.locale', locale)
   } catch {
     // A per-device convenience. The real copy lives on the account.
   }
+}
+
+/**
+ * Set the direction before Vue mounts, from the cached language.
+ *
+ * Called from main.ts alongside the cached theme: without it a Farsi user sees
+ * the first frame laid out left to right and then watches it flip, which is a
+ * good deal more jarring than a flash of the wrong colour.
+ */
+export function applyCachedDirectionEarly(): void {
+  const locale = detectInitialLocale()
+
+  document.documentElement.setAttribute('lang', locale)
+  document.documentElement.setAttribute('dir', directionOf(locale))
 }

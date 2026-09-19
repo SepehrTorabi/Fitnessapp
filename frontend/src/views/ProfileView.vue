@@ -5,6 +5,7 @@ import { api, ApiError } from '@/api/client'
 import { useApiMessage } from '@/composables/useApiMessage'
 import { useAuthStore } from '@/stores/auth'
 import type { ActivityLevel, Goal, Sex } from '@/api/types'
+import { useNumbers } from '@/composables/useNumbers'
 
 /**
  * Body data, and the calorie target that follows from it.
@@ -15,6 +16,7 @@ import type { ActivityLevel, Goal, Sex } from '@/api/types'
 const auth = useAuthStore()
 const { t } = useI18n()
 const apiMessage = useApiMessage()
+const { n, decimal } = useNumbers()
 
 const profile = reactive({
   birthDate: '',
@@ -46,7 +48,22 @@ const ACTIVITY_LEVELS: ActivityLevel[] = [
   'extra_active',
 ]
 
-const GOALS: Goal[] = ['lose_weight', 'maintain_weight', 'gain_muscle']
+/**
+ * Ordered from the biggest deficit to the biggest surplus, with the two
+ * training-led goals last. A dropdown of eight is worth ordering deliberately:
+ * this way the list reads as a scale, and somebody looking for "a bit less
+ * aggressive than what I have now" finds it next to what they have now.
+ */
+const GOALS: Goal[] = [
+  'lose_weight',
+  'lose_fat_slowly',
+  'maintain_weight',
+  'recomposition',
+  'gain_muscle',
+  'gain_weight',
+  'endurance',
+  'strength',
+]
 
 const activityLevels = computed(() =>
   ACTIVITY_LEVELS.map((value) => ({ value, label: t(`activityLevel.${value}`) })),
@@ -225,30 +242,30 @@ onMounted(() => {
           <h2>{{ t('profile.dailyTarget') }}</h2>
 
           <p class="stat-value">
-            {{ target.targetKcal }}<span class="unit">{{ t('common.kcal') }}</span>
+            {{ n(target.targetKcal) }}<span class="unit">{{ t('common.kcal') }}</span>
           </p>
 
           <table class="breakdown">
             <tbody>
               <tr>
                 <td>{{ t('profile.bmr') }}</td>
-                <td class="num">{{ target.bmr }} {{ t('common.kcal') }}</td>
+                <td class="num">{{ n(target.bmr) }} {{ t('common.kcal') }}</td>
               </tr>
               <tr>
                 <td>{{ t('profile.tdee') }}</td>
-                <td class="num">{{ target.tdee }} {{ t('common.kcal') }}</td>
+                <td class="num">{{ n(target.tdee) }} {{ t('common.kcal') }}</td>
               </tr>
               <tr>
                 <td>{{ t('profile.proteinRow') }}</td>
-                <td class="num">{{ target.macros.proteinG }} g</td>
+                <td class="num">{{ decimal(target.macros.proteinG) }} {{ t('common.grams') }}</td>
               </tr>
               <tr>
                 <td>{{ t('profile.carbsRow') }}</td>
-                <td class="num">{{ target.macros.carbsG }} g</td>
+                <td class="num">{{ decimal(target.macros.carbsG) }} {{ t('common.grams') }}</td>
               </tr>
               <tr>
                 <td>{{ t('profile.fatRow') }}</td>
-                <td class="num">{{ target.macros.fatG }} g</td>
+                <td class="num">{{ decimal(target.macros.fatG) }} {{ t('common.grams') }}</td>
               </tr>
             </tbody>
           </table>
@@ -268,7 +285,7 @@ onMounted(() => {
 <style scoped>
 .note { margin: 0 0 16px; }
 .hint { margin: 5px 0 0; }
-.unit { font-size: 14px; font-weight: 600; color: var(--text-muted); margin-left: 5px; }
-.target-card { border-left: 3px solid var(--good); }
+.unit { font-size: 14px; font-weight: 600; color: var(--text-muted); margin-inline-start: 5px; }
+.target-card { border-inline-start: 3px solid var(--good); }
 .breakdown { margin-top: 12px; }
 </style>

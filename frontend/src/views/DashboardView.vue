@@ -1,51 +1,155 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { RouterLink } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { api } from '@/api/client'
 import { useApiMessage } from '@/composables/useApiMessage'
 import { useAuthStore } from '@/stores/auth'
-import type { DashboardData } from '@/api/types'
+import { usePreferencesStore } from '@/stores/preferences'
+import { formatDate, todayIso } from '@/calendar'
+import { useNumbers } from '@/composables/useNumbers'
+import type { DashboardData, DayView } from '@/api/types'
 import WeeklyChart from '@/components/WeeklyChart.vue'
 import MacroBars from '@/components/MacroBars.vue'
-import { DsAlert, DsBadge, DsButton, DsCard, DsStatCard, DsTable } from '@/design-system/components'
+import DateField from '@/components/DateField.vue'
+import DiaryEntryTable from '@/components/DiaryEntryTable.vue'
+import ActivityTable from '@/components/ActivityTable.vue'
+import { DsAlert, DsButton, DsStatCard } from '@/design-system/components'
 
+/**
+ * The dashboard reads one week and one day, and the two are not the same thing.
+ *
+ *  - `anchor` is the last day of the week the chart draws. The date filter sets
+ *    it, and the chart shows that day and the six before it. A single date
+ *    rather than a week range on purpose: a week range would be a second
+ *    selection competing with the one below, and "the seven days up to here" is
+ *    a question people actually ask, while "calendar week 38" mostly is not.
+ *
+ *  - `selected` is the day every other card on the page describes. It follows
+ *    the anchor when the week moves, and it moves on its own when a bar in the
+ *    chart is clicked. That is what turns the chart from a picture into a way
+ *    around the week: click Tuesday, read Tuesday, correct Tuesday.
+ *
+ * They are fetched separately because they answer separately. The week comes
+ * from /api/dashboard and the day from /api/diary - the same endpoint the diary
+ * page uses, which is what lets the entries be edited here without a second
+ * implementation of anything.
+ */
 const auth = useAuthStore()
-const { t } = useI18n()
+const preferences = usePreferencesStore()
+const { t, locale } = useI18n()
 const apiMessage = useApiMessage()
+const { n } = useNumbers()
+
+const today = todayIso()
+
+const anchor = ref(today)
+const selected = ref(today)
 
 const data = ref<DashboardData | null>(null)
-const error = ref('')
-const loading = ref(true)
+const day = ref<DayView | null>(null)
 
-const today = computed(() => data.value?.today ?? null)
+const error = ref('')
+const dayError = ref('')
+const loading = ref(true)
+const dayLoading = ref(false)
+
+const summary = computed(() => day.value?.summary ?? null)
+const isToday = computed(() => selected.value === today)
+
+/** The selected day, written out in the user's language and calendar. */
+const selectedLabel = computed(() =>
+  formatDate(selected.value, locale.value, preferences.calendar),
+)
 
 /** Never below zero: "you have -300 kcal left" reads worse than "300 over". */
 const remaining = computed(() => {
-  const value = today.value?.remainingKcal
+  const value = summary.value?.remainingKcal
+
   return value === null || value === undefined ? null : Math.round(value)
 })
 
 const isOver = computed(() => remaining.value !== null && remaining.value < 0)
 
-onMounted(async () => {
+async function loadWeek(): Promise<void> {
+  loading.value = true
+  error.value = ''
+
   try {
-    data.value = await api.dashboard(undefined, 7)
+    data.value = await api.dashboard(anchor.value, 7)
   } catch (e) {
     error.value = apiMessage(e, 'dashboard.loadFailed')
   } finally {
     loading.value = false
   }
+}
+
+async function loadDay(): Promise<void> {
+  dayLoading.value = true
+  dayError.value = ''
+
+  try {
+    day.value = await api.day(selected.value)
+  } catch (e) {
+    dayError.value = apiMessage(e, 'dashboard.dayLoadFailed')
+  } finally {
+    dayLoading.value = false
+  }
+}
+
+/**
+ * Correcting an entry changes both the day and the week - the bar for that day
+ * is now a different height - so both are reloaded rather than patched locally.
+ * Two requests on an edit is a fair price for never showing a total that
+ * disagrees with the rows it is a total of.
+ */
+async function reload(): Promise<void> {
+  await Promise.all([loadWeek(), loadDay()])
+}
+
+function backToToday(): void {
+  anchor.value = today
+  selected.value = today
+}
+
+// Moving the week moves the day with it: the newly chosen date is almost always
+// the one the user wants to look at, and leaving the cards on a day that is no
+// longer in the chart would be confusing.
+watch(anchor, async () => {
+  selected.value = anchor.value
+  await loadWeek()
+})
+
+watch(selected, loadDay)
+
+onMounted(async () => {
+  await reload()
 })
 </script>
 
 <template>
   <div class="page">
-    <h1>{{ t('dashboard.greeting', { name: auth.user?.displayName ?? '' }) }}</h1>
+    <div class="head row-between">
+      <h1>{{ t('dashboard.greeting', { name: auth.user?.displayName ?? '' }) }}</h1>
+
+      <div class="filter">
+        <DateField
+          id="dashboard-week"
+          v-model="anchor"
+          :max="today"
+          :label="t('dashboard.weekEnding')"
+        />
+      </div>
+    </div>
 
     <!-- Without body data there is no target, and the whole dashboard is empty
          numbers. Say what is missing instead of showing zeroes. -->
-    <DsAlert v-if="auth.needsProfile || auth.needsWeight" status="info" :title="t('dashboard.onboardingTitle')" class="onboarding">
+    <DsAlert
+      v-if="auth.needsProfile || auth.needsWeight"
+      status="info"
+      :title="t('dashboard.onboardingTitle')"
+      class="onboarding"
+    >
       {{ auth.needsProfile ? t('dashboard.onboardingProfile') : t('dashboard.onboardingWeight') }}
 
       <RouterLink to="/profile" class="onboarding-action">
@@ -58,34 +162,11 @@ onMounted(async () => {
     <p v-if="loading" class="muted">{{ t('common.loading') }}</p>
     <DsAlert v-else-if="error" status="error">{{ error }}</DsAlert>
 
-    <template v-else-if="data && today">
-      <div class="grid grid-3 stats">
-        <DsStatCard
-          :label="t('dashboard.eatenToday')"
-          :value="`${Math.round(today.consumed.kcal)} ${t('common.kcal')}`"
-        />
-        <DsStatCard
-          :label="t('dashboard.burned')"
-          :value="`${Math.round(today.caloriesBurned)} ${t('common.kcal')}`"
-        />
-        <DsStatCard
-          :label="isOver ? t('dashboard.overBudget') : t('dashboard.leftToday')"
-          :value="
-            remaining === null
-              ? t('common.none')
-              : `${Math.abs(remaining)} ${t('common.kcal')}`
-          "
-          :trend="remaining === null ? undefined : isOver ? 'down' : 'up'"
-          :trend-label="
-            today.target ? t('dashboard.budget', { kcal: Math.round(today.budgetKcal ?? 0) }) : undefined
-          "
-        />
-      </div>
-
+    <template v-else-if="data">
       <!-- The week's chart gets the full width: seven bars and their budget
            markers need the room to stay readable. -->
-      <DsCard class="block">
-        <WeeklyChart :days="data.history" />
+      <section class="section block">
+        <WeeklyChart :days="data.history" :selected="selected" @select="selected = $event" />
 
         <!-- A plain link, not a fetch-and-blob: the endpoint is same-origin, so
              the session cookie rides along, and letting the browser handle the
@@ -97,63 +178,87 @@ onMounted(async () => {
             {{ t('dashboard.exportPdf') }}
           </DsButton>
         </div>
-      </DsCard>
+      </section>
 
-      <DsCard class="block">
-        <h3>{{ t('dashboard.macrosToday') }}</h3>
-        <MacroBars :consumed="today.consumed" :target="today.target?.macros ?? null" />
-
-        <p v-if="today.target" class="small muted target-detail">
-          {{
-            t('dashboard.targetExplain', {
-              target: today.target.targetKcal,
-              bmr: today.target.bmr,
-              tdee: today.target.tdee,
-              formula: t(`formula.${today.target.formula}`),
-            })
-          }}
+      <!-- Everything below describes the selected day, so it says which day that
+           is, once, rather than repeating the date in every card heading. -->
+      <div class="day-head row-between">
+        <p class="viewing">
+          <strong>{{ selectedLabel }}</strong>
+          <span v-if="isToday" class="muted small today-note">· {{ t('common.today') }}</span>
         </p>
-      </DsCard>
 
-      <DsCard class="block">
-        <div class="row-between">
-          <h3>{{ t('dashboard.todaysEntries') }}</h3>
-          <RouterLink to="/diary" class="small">{{ t('dashboard.addSomething') }}</RouterLink>
+        <button v-if="!isToday" class="secondary small-btn" type="button" @click="backToToday">
+          {{ t('dashboard.backToToday') }}
+        </button>
+      </div>
+
+      <DsAlert v-if="dayError" status="error" class="block">{{ dayError }}</DsAlert>
+
+      <template v-else-if="summary">
+        <div class="grid grid-3 stats">
+          <DsStatCard
+            :label="t('dashboard.eaten')"
+            :value="`${n(summary.consumed.kcal)} ${t('common.kcal')}`"
+          />
+          <DsStatCard
+            :label="t('dashboard.burned')"
+            :value="`${n(summary.caloriesBurned)} ${t('common.kcal')}`"
+          />
+          <DsStatCard
+            :label="isOver ? t('dashboard.overBudget') : t('dashboard.left')"
+            :value="
+              remaining === null ? t('common.none') : `${n(Math.abs(remaining))} ${t('common.kcal')}`
+            "
+            :trend="remaining === null ? undefined : isOver ? 'down' : 'up'"
+            :trend-label="
+              summary.target
+                ? t('dashboard.budget', { kcal: n(summary.budgetKcal ?? 0) })
+                : undefined
+            "
+          />
         </div>
 
-        <p v-if="data.recentEntries.length === 0" class="empty">
-          {{ t('dashboard.nothingToday') }}
-        </p>
+        <section class="section block">
+          <h3>{{ t('dashboard.macros') }}</h3>
+          <MacroBars :consumed="summary.consumed" :target="summary.target?.macros ?? null" />
 
-        <DsTable v-else v-slot="{ styles }">
-          <thead>
-            <tr>
-              <th :class="styles.headCell" scope="col">{{ t('dashboard.tableFood') }}</th>
-              <th :class="styles.headCell" scope="col">{{ t('dashboard.tableMeal') }}</th>
-              <th :class="[styles.headCell, 'num']" scope="col">{{ t('dashboard.tableAmount') }}</th>
-              <th :class="[styles.headCell, 'num']" scope="col">{{ t('common.kcal') }}</th>
-              <th :class="[styles.headCell, 'num']" scope="col">{{ t('dashboard.tableMacros') }}</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="entry in data.recentEntries" :key="entry.id" :class="styles.tableRow">
-              <td :class="styles.bodyCell">{{ entry.label }}</td>
-              <td :class="styles.bodyCell">
-                <DsBadge :label="t(`meal.${entry.mealType}`)" />
-              </td>
-              <td :class="[styles.bodyCell, 'num']">
-                {{ entry.quantity }} {{ entry.portionLabel ?? entry.unit }}
-              </td>
-              <td :class="[styles.bodyCell, 'num']">{{ Math.round(entry.nutrients.kcal) }}</td>
-              <td :class="[styles.bodyCell, 'num', 'muted']">
-                {{ Math.round(entry.nutrients.proteinG) }} /
-                {{ Math.round(entry.nutrients.carbsG) }} /
-                {{ Math.round(entry.nutrients.fatG) }}
-              </td>
-            </tr>
-          </tbody>
-        </DsTable>
-      </DsCard>
+          <p v-if="summary.target" class="small muted target-detail">
+            {{
+              t('dashboard.targetExplain', {
+                target: n(summary.target.targetKcal),
+                bmr: n(summary.target.bmr),
+                tdee: n(summary.target.tdee),
+                formula: t(`formula.${summary.target.formula}`),
+              })
+            }}
+          </p>
+        </section>
+
+        <section class="section block">
+          <div class="section-header">
+            <h3>{{ t('entry.title') }}</h3>
+            <RouterLink to="/diary" class="small">{{ t('entry.add') }}</RouterLink>
+          </div>
+
+          <p v-if="dayLoading" class="muted">{{ t('common.loading') }}</p>
+
+          <p v-else-if="!day || day.entries.length === 0" class="empty">
+            {{ isToday ? t('dashboard.nothingToday') : t('dashboard.nothingOnDay') }}
+          </p>
+
+          <DiaryEntryTable v-else :entries="day.entries" @changed="reload" />
+        </section>
+
+        <section v-if="day && day.activities.length" class="section block">
+          <h3>{{ t('activity.dayTitle') }}</h3>
+
+          <!-- The same table the activity page shows, so an activity looks
+               like an activity wherever it is read - and can be removed from
+               here too, which it could not before. -->
+          <ActivityTable :activities="day.activities" @changed="reload" />
+        </section>
+      </template>
 
       <p v-if="data.averages.daysLogged > 0" class="muted small averages">
         {{
@@ -161,8 +266,8 @@ onMounted(async () => {
             'dashboard.averages',
             {
               count: data.averages.daysLogged,
-              kcal: data.averages.kcal,
-              protein: data.averages.proteinG,
+              kcal: n(data.averages.kcal),
+              protein: n(data.averages.proteinG),
             },
             data.averages.daysLogged,
           )
@@ -173,12 +278,28 @@ onMounted(async () => {
 </template>
 
 <style scoped>
+.head { align-items: flex-end; margin-bottom: var(--spacing-medium); }
+.head h1 { margin: 0; }
+.filter { flex: none; }
+
 .onboarding { margin-bottom: var(--spacing-medium); }
 .onboarding-action { display: inline-block; margin-top: var(--spacing-small); }
 .onboarding-action:hover { text-decoration: none; }
 
 .stats { margin-bottom: var(--spacing-medium); }
 .block { margin-bottom: var(--spacing-medium); }
+
+/* The line that says which day the cards below belong to. Given a rule above it
+   so the page reads as two sections - the week, then one day of it. */
+.day-head {
+  margin-bottom: var(--spacing-small);
+  padding-top: var(--spacing-small);
+  border-top: var(--border-width-small) solid var(--border-primary);
+}
+
+.viewing { margin: 0; font-size: var(--fontsize-body-large); }
+.today-note { margin-inline-start: var(--spacing-3xs); }
+.small-btn { padding: 5px 11px; font-size: 13px; }
 
 .target-detail {
   margin: var(--spacing-medium) 0 0;

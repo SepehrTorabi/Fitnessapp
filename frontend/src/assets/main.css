@@ -95,11 +95,20 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-html {
-  /* <body> paints the page colour, but it only covers its own content box -
-     the canvas behind it would stay white when the page is short. */
-  background: var(--surface-page);
-}
+/*
+ * <html> deliberately paints nothing.
+ *
+ * It used to carry `background: var(--surface-page)` to cover the canvas on a
+ * short page, and that was the bug rather than the fix. Custom properties are
+ * substituted on the element that declares them, and the bridge that defines
+ * --surface-page for the dark palette is declared on <body> - so on <html> the
+ * name resolved to the light value and stayed white for the whole of dark mode,
+ * which is exactly the white band under a short page.
+ *
+ * Left unset, the browser propagates <body>'s background to the canvas and it
+ * covers the viewport however short the page is. That is the mechanism the rule
+ * was reaching for.
+ */
 
 /* The dark step of the chart green. Stepped for the dark surface rather than
    reused from light, the same way the design system steps its own palettes. */
@@ -146,17 +155,97 @@ a:hover {
 .row { display: flex; gap: var(--spacing-small); align-items: center; flex-wrap: wrap; }
 .row-between { display: flex; gap: var(--spacing-small); align-items: center; justify-content: space-between; flex-wrap: wrap; }
 
+/*
+ * Present for a screen reader, absent on screen.
+ *
+ * Not `display: none` and not `visibility: hidden` - both remove the element
+ * from the accessibility tree along with the layout, which is the opposite of
+ * what this is for. The clip-path-and-one-pixel recipe is the one that leaves
+ * the text readable to assistive technology.
+ */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
 .muted { color: var(--text-body); }
 .small { font-size: var(--fontsize-body-small); line-height: var(--line-height-body-small); }
-.right { text-align: right; }
+
+/*
+ * Aligned to the end of the inline axis rather than to the right, so it follows
+ * the writing direction: the right in English and German, the left once the
+ * document is mirrored for Farsi. The same reason every other physical
+ * direction in this file has become a logical one.
+ */
+.end { text-align: end; }
 
 /* A plain container for views not yet rebuilt on the design system's Card. */
+/*
+ * A box, for something that is deliberately set apart from the page.
+ *
+ * Worth being strict about, because it stopped being a signal: every region of
+ * every screen was a card, so the dashboard was seven stacked boxes and none of
+ * them stood out - which is the same as none of them being emphasised. A card
+ * now means "this is lifted off the page": the day's headline numbers, the
+ * calorie target, a form that is the whole point of its screen.
+ *
+ * Everything else is a `.section` below - the same content, grouped by a
+ * heading and a rule instead of by a border.
+ */
 .card {
   background: var(--surface-primary);
   border: var(--border-width-small) solid var(--border-primary);
   border-radius: var(--border-radius-medium);
   padding: var(--spacing-medium);
 }
+
+/*
+ * A run of related content, grouped by its heading rather than by a border.
+ *
+ * The default way to divide a page. The hairline above it does the work a card
+ * edge used to do, at a fraction of the visual weight, and it does not nest
+ * badly: a section inside a section still reads as one document, while a card
+ * inside a card reads as a mistake.
+ */
+.section {
+  padding-top: var(--spacing-medium);
+  border-top: var(--border-width-small) solid var(--border-primary);
+}
+
+/* The first section under a page heading has the heading above it already. */
+.section:first-of-type {
+  padding-top: 0;
+  border-top: none;
+}
+
+.section + .section {
+  margin-top: var(--spacing-medium);
+}
+
+/*
+ * The heading of a section, and the one control that belongs to it.
+ *
+ * Laid out as a row so an action ("Add food") sits on the baseline of the thing
+ * it acts on, rather than floating somewhere inside the group.
+ */
+.section-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--spacing-small);
+  margin-bottom: var(--spacing-small);
+}
+
+.section-header > :is(h2, h3) { margin: 0; }
+
+.section > :is(h2, h3):first-child { margin-top: 0; }
 
 /* ── Forms ──────────────────────────────────────────────────────────────── */
 
@@ -264,7 +353,7 @@ table { width: 100%; border-collapse: collapse; font-size: var(--fontsize-body-m
 
 th, td {
   padding: var(--spacing-2xs);
-  text-align: left;
+  text-align: start;
   border-bottom: var(--border-width-small) solid var(--border-primary);
 }
 
@@ -275,7 +364,36 @@ th {
 }
 
 tbody tr:last-child td { border-bottom: none; }
-td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+/* Numeric columns align to the end of the row in both directions, which is what
+   puts the units of every figure under each other. */
+td.num, th.num { text-align: end; font-variant-numeric: tabular-nums; }
+
+/* ── Right to left ──────────────────────────────────────────────────────── */
+
+/*
+ * Almost nothing belongs here, and that is the point.
+ *
+ * `applyLocale` puts dir="rtl" on <html> and the whole document mirrors: every
+ * rule in this file is written with logical properties (inline-start rather
+ * than left, text-align: start rather than left), so they follow the direction
+ * without a single override. Flexbox and grid are already direction-aware.
+ *
+ * What is left are the two kinds of exception that no stylesheet can infer:
+ *
+ *  1. The vendored design system, which is written with physical directions and
+ *     is never edited - see design-system/README.md. Its tables align their
+ *     cells to the left explicitly, so they need telling.
+ *
+ *  2. Runs of text that are not in the document's language at all. An e-mail
+ *     address, a URL or a barcode is a left-to-right string wherever it
+ *     appears; rendered right to left its parts come out reordered. These carry
+ *     their own dir="ltr" at the point of use rather than being listed here.
+ */
+[dir='rtl'] table :is(th, td, caption):not(.num) {
+  /* Excludes .num deliberately: numeric columns align to the end of the row in
+     both directions, which is what lines the digits up under each other. */
+  text-align: start;
+}
 
 /* ── Bits ───────────────────────────────────────────────────────────────── */
 

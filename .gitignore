@@ -9,6 +9,9 @@
 /app/.env.*.local
 /app/config/secrets/prod/prod.decrypt.private.php
 /app/public/bundles/
+# Uploaded demonstration clips. User data, not source - and like the database,
+# something a deployment has to back up rather than redeploy.
+/app/public/uploads/
 /app/var/
 /app/vendor/
 

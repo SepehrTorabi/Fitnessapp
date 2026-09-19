@@ -5,7 +5,11 @@ the day landed inside the budget your body data implies.
 
 - **Backend** — Symfony 8.1, JSON API, Doctrine ORM, PostgreSQL
 - **Frontend** — Vue 3 (Composition API), TypeScript, Vite, Pinia
-- **Tests** — PHPUnit, 128 tests
+- **Languages** — English, German and Farsi, with right-to-left layout and an
+  optional Shamsi (Solar Hijri) calendar
+- **Roles** — normal user, trainer (curates the exercise catalogue), user
+  administrator (manages accounts)
+- **Tests** — PHPUnit, 276 tests
 - **CI** — GitHub Actions: lint, static analysis, tests, and a packaged release
 
 ---
@@ -46,7 +50,7 @@ link — outside production no mail actually leaves the machine.
 
 ```bash
 cd app
-vendor/bin/phpunit                                  # 128 tests
+vendor/bin/phpunit                                  # 276 tests
 vendor/bin/phpstan analyse --memory-limit=1G        # level 6, clean
 ```
 
@@ -62,7 +66,12 @@ frontend/   Vue SPA. In development it proxies /api to :8000, so the browser
             sees one origin and the session cookie needs no CORS.
 app/        Symfony. Serves JSON only; Twig is used for the e-mail templates.
 deploy/     Install script and sample nginx / systemd units for a release.
+docs/       Diagrams: architecture, data model, key flows, deployment.
 ```
+
+**[📐 Visual documentation](docs/)** — the architecture, the schema and the
+flows as diagrams. They are Mermaid inside Markdown, so GitHub renders them with
+nothing installed and a change to one shows up as changed lines in a review.
 
 ### Some decisions worth knowing about
 
@@ -88,10 +97,61 @@ guessed weight would quietly corrupt every total it feeds into.
 **Unknown is not zero.** A food with no fibre figure stores `null`, not `0.0`.
 Summing a day keeps the known part rather than collapsing to unknown.
 
+**Roles are two independent grants, not a ladder.** A trainer curates the shared
+exercise catalogue; a user administrator manages accounts and roles. Neither
+implies the other, because defining a squat and reading the account list are
+unrelated powers — an application that ships them together can never give
+somebody only one of them. The one guard that matters is that the last remaining
+administrator cannot be demoted.
+
+**Demonstration clips are served by the web server, not by PHP.** Video needs
+HTTP range requests or the viewer cannot seek, nginx does that correctly for
+free, and streaming through PHP would occupy a worker for every second of
+playback. The trade is that the files sit behind an unguessable URL rather than
+behind the session — fine for instructional clips shared with every user, and
+not a pattern to reuse for anything private. See
+[deployment](docs/deployment.md#uploaded-videos).
+
+**A per-minute rate is reference data, not personal data.** That is the whole
+reason the catalogue is trainer-only: the number lands in other people's calorie
+budgets, and a wrong one is not obviously wrong on screen. It just quietly tells
+somebody they may eat three hundred calories they have not earned.
+
+**Language and calendar are separate settings.** They travel together often
+enough to be tempting to merge, but they answer different questions: the
+language is what you read, the calendar is how you count days. Farsi text
+against Gregorian dates is a real request from anyone working with colleagues
+abroad, and so is the reverse. The language seeds the calendar once, when an
+account is created, and never touches it again.
+
+**Dates are always stored as Gregorian ISO strings.** The calendar setting
+changes how a date is rendered and how the picker counts — never what is in the
+database or what goes over the wire. Switching calendars therefore cannot move
+anything you have already logged. The Jalaali conversion lives in
+[`frontend/src/calendar.ts`](frontend/src/calendar.ts); display goes through
+`Intl`, which knows both calendars, and only the month grid needs the
+arithmetic, because `Intl` will not say how long a Shamsi month is.
+
+**Right-to-left is one attribute and logical CSS.** `applyLocale` sets
+`<html dir>`, and every rule in the app's stylesheet is written with logical
+properties — `margin-inline-start`, `text-align: start` — so the layout mirrors
+without per-direction overrides. The exceptions are the places where direction
+is not a property of a box: the chart mirrors its own geometry because no
+stylesheet can move an SVG coordinate, and runs like e-mail addresses and URLs
+carry `dir="ltr"` so their parts are not reordered.
+
 **Food lookup goes through an interface.** `ExternalFoodProviderInterface` is
 implemented against Open Food Facts, which also covers barcode scanning. Search
 results are offered, not saved — a food row is written only when you pick one.
 Swapping in a different provider is one line in `config/services.yaml`.
+
+**An unreachable food database is not the same as an unknown food.** A search
+that cannot reach Open Food Facts throws rather than returning an empty list,
+and the response carries `externalAvailable: false` so the interface can say
+which of the two happened. The two used to be indistinguishable, and that is
+exactly how the retirement of the old `/cgi/search.pl` endpoint went unnoticed:
+every search silently found nothing, and it looked like a problem with the
+search terms rather than a dead upstream.
 
 ## Routes
 
@@ -111,8 +171,13 @@ Copy anything you need to override into `app/.env.local` — it is gitignored.
 | `DATABASE_URL` | PostgreSQL connection |
 | `MAILER_DSN` | `smtp://localhost:1025` locally (Mailpit) |
 | `FRONTEND_VERIFY_URL` | Where the confirmation link sends people |
+| `FRONTEND_RESET_URL` | Where the password reset link sends people |
 | `MAILER_SENDER_ADDRESS` / `MAILER_SENDER_NAME` | From-address of the mails |
 | `OPEN_FOOD_FACTS_USER_AGENT` | Open Food Facts asks callers to identify themselves |
+
+PHP's upload limits are set by [`app/public/.user.ini`](app/public/.user.ini)
+rather than by the machine's `php.ini`, so video uploads work on a fresh clone
+without anyone being told to go and edit a file in `/opt`.
 
 ## CI and releases
 
@@ -137,6 +202,7 @@ tar -xzf fitnessapp-v1.2.3.tar.gz
 cd fitnessapp-v1.2.3
 DATABASE_URL='postgresql://user:pass@host:5432/fitnessapp?serverVersion=16' \
 FRONTEND_VERIFY_URL='https://example.com/app/verify-email' \
+FRONTEND_RESET_URL='https://example.com/app/reset-password' \
   ./install.sh
 ```
 

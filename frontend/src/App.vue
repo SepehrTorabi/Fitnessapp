@@ -5,6 +5,7 @@ import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '@/stores/auth'
 import { usePreferencesStore } from '@/stores/preferences'
 import AppNav from '@/components/AppNav.vue'
+import AppearanceControls from '@/components/AppearanceControls.vue'
 
 const auth = useAuthStore()
 const preferences = usePreferencesStore()
@@ -27,11 +28,32 @@ onMounted(() => preferences.adoptFromUser())
 
   <template v-else>
     <AppNav v-if="auth.isAuthenticated" />
+
+    <!-- Before there is an account there is still a person, and they may not
+         read English. The language has to be reachable on the sign-in screen
+         itself - it decides what the confirmation mail is written in, which is
+         sent before the user can reach any settings page at all. Nothing here
+         touches the database: the store skips the network call while signed
+         out, and the sign-up form sends the choices along so they survive into
+         the new account. -->
+    <div v-else class="guest-bar">
+      <AppearanceControls />
+    </div>
+
     <RouterView />
   </template>
 </template>
 
 <style scoped>
+.guest-bar {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--spacing-small);
+  max-width: 1040px;
+  margin: 0 auto;
+  padding: var(--spacing-small) var(--spacing-medium) 0;
+}
+
 .boot {
   display: grid;
   place-items: center;

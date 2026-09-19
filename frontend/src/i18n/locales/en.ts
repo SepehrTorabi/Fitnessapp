@@ -25,6 +25,9 @@ export default {
     add: 'Add',
     saved: 'Saved.',
     day: 'Day',
+    today: 'Today',
+    edit: 'Edit',
+    close: 'Close',
     kcal: 'kcal',
     grams: 'g',
     optional: 'optional',
@@ -32,6 +35,8 @@ export default {
   },
 
   nav: {
+    activity: 'Activity',
+    admin: 'Accounts',
     brand: 'Fitnessapp',
     dashboard: 'Dashboard',
     diary: 'Log food',
@@ -39,9 +44,21 @@ export default {
     profile: 'Body data',
     settings: 'Settings',
     signOut: 'Sign out',
+    accountMenu: 'Your account',
+    signedInAs: 'Signed in as {email}',
+  },
+
+  /** The calendar popover, shared by the dashboard and the diary. */
+  datePicker: {
+    choose: 'Choose a date',
+    previousMonth: 'Previous month',
+    nextMonth: 'Next month',
+    today: 'Today',
   },
 
   titles: {
+    activity: 'Activity',
+    admin: 'Accounts',
     dashboard: 'Dashboard',
     diary: 'Log food',
     foods: 'Foods & recipes',
@@ -51,6 +68,8 @@ export default {
     register: 'Create an account',
     verify: 'Confirming your address',
     notFound: 'Not found',
+    forgotPassword: 'Forgotten password',
+    resetPassword: 'Choose a new password',
   },
 
   auth: {
@@ -82,20 +101,69 @@ export default {
     verifyUnreachable: 'Could not reach the server to confirm your address.',
     linkExpiredHint:
       'Confirmation links expire after 24 hours and can only be used once. Try signing in - if the account is still unconfirmed you can ask for a new link there.',
+
+    // Recovering a password nobody can remember.
+    forgotPrompt: 'Forgotten your password?',
+    forgotTitle: 'Forgotten password',
+    forgotIntro:
+      'Enter the address you signed up with and we will send you a link to choose a new password.',
+    forgotSubmit: 'Send me a link',
+    forgotSending: 'Sending…',
+    forgotUnreachable: 'Could not reach the server to send the link.',
+
+    resetTitle: 'Choose a new password',
+    resetIntro: 'Pick something you do not use anywhere else.',
+    newPasswordLabel: 'New password',
+    repeatPasswordLabel: 'Repeat the new password',
+    passwordsDiffer: 'The two passwords do not match.',
+    resetSubmit: 'Save the new password',
+    resetSaving: 'Saving…',
+    resetDone: 'Password changed',
+    resetDoneIntro: 'Your password has been changed. Sign in with it now.',
+    resetMissingToken: 'This link is missing its reset code.',
+    resetUnreachable: 'Could not reach the server to change your password.',
+    resetExpiredHint:
+      'Reset links expire after an hour and can only be used once. Ask for a new one, and use the most recent mail.',
+    askForNewLink: 'Ask for a new link',
   },
 
+  /**
+   * A logged amount of a food on a day.
+   *
+   * Its own group because three screens render this object - the dashboard, the
+   * food log and the printed diary - and the labels used to live under
+   * `dashboard`, which is where the table happened to be built first rather
+   * than what the words describe.
+   */
+  entry: {
+    title: 'Entries',
+    food: 'Food',
+    meal: 'Meal',
+    amount: 'Amount',
+    macros: 'Protein / Carbs / Fat',
+    edit: 'Edit this entry',
+    add: 'Add food',
+  },
   dashboard: {
     greeting: 'Hello, {name}',
-    eatenToday: 'Eaten today',
-    burned: 'Burned through activity',
-    leftToday: 'Left today',
+    eaten: 'Eaten',
+    burned: 'Burned',
+    left: 'Left',
     overBudget: 'Over budget',
     budget: 'Budget {kcal} kcal',
-    macrosToday: 'Macros today',
+    macros: 'Macros',
+
+    weekEnding: 'Week ending',
+    weekEndingHint: 'The chart shows this day and the six before it.',
+    viewingDay: 'Showing {date}',
+    backToToday: 'Back to today',
+    nothingOnDay: 'Nothing logged on this day.',
+    dayLoadFailed: 'Could not load that day.',
+
+    entryUpdateFailed: 'Could not update that entry.',
+    entryRemoveFailed: 'Could not remove that entry.',
     targetExplain:
       'Target {target} kcal — basal rate {bmr}, daily expenditure {tdee}, calculated with {formula}.',
-    todaysEntries: "Today's entries",
-    addSomething: 'Add something',
     nothingToday: 'Nothing logged today yet.',
     loadFailed: 'Could not load your dashboard.',
     averages:
@@ -105,10 +173,6 @@ export default {
       'Tell us your age, height and activity level so we can work out how much you need.',
     onboardingWeight: 'Add your current weight so we can work out your daily calories.',
     onboardingButton: 'Fill in your body data',
-    tableFood: 'Food',
-    tableMeal: 'Meal',
-    tableAmount: 'Amount',
-    tableMacros: 'P / C / F',
     exportPdf: 'Download as PDF',
     exportHint: 'Every day you have logged, laid out like the printed diary.',
   },
@@ -121,7 +185,9 @@ export default {
     withinBudget: 'Within budget',
     overBudget: 'Over budget',
     budgetLine: 'Budget',
-    hoverHint: 'Hover a day for details.',
+    hoverHint: 'Hover a day for details, or select one to see what was logged.',
+    selectDay: 'Show what was logged on {date}',
+    selectedDay: 'Selected day',
     eaten: '{kcal} kcal eaten',
     ofBudget: 'of {kcal} budget',
     kcalLeft: '{kcal} kcal left',
@@ -147,6 +213,7 @@ export default {
     queryTooShort: 'Type at least two characters.',
     nothingFound: 'Nothing found. You can define this food yourself under Foods & recipes.',
     searchFailed: 'Search failed.',
+    externalUnavailable: 'The product database could not be reached, so only your own foods are listed. Try again in a moment.',
     externalHeading: 'From Open Food Facts',
     perHundred: '{kcal} kcal / 100 g',
     importFailed: 'Could not import that product.',
@@ -159,6 +226,8 @@ export default {
     yourRecipes: 'Your recipes',
     servings: 'Servings',
     kcalPerServing: '{kcal} kcal per serving',
+    recipeAdds: 'adds {kcal} kcal',
+    gramsUnit: 'Grams',
     recipeFailed: 'Could not log that recipe.',
 
     amount: 'Amount',
@@ -169,10 +238,9 @@ export default {
     saveFailed: 'Could not save that entry.',
     preview: '· {grams} g · {protein} g protein · {carbs} g carbs · {fat} g fat',
 
-    totals: 'Totals for this day',
+    totals: 'Totals',
     left: '{kcal} left',
     over: '{kcal} over',
-    entries: 'Entries',
     nothingLogged: 'Nothing logged for this day.',
     loadDayFailed: 'Could not load that day.',
 
@@ -185,7 +253,6 @@ export default {
     addActivity: 'Add activity',
     activityIncomplete: 'Describe the activity and say how many calories it burned.',
     activityFailed: 'Could not save that activity.',
-    minutesShort: 'min',
   },
 
   scanner: {
@@ -204,7 +271,7 @@ export default {
   foods: {
     newFood: 'New food',
     newRecipe: 'New recipe',
-    defineFood: 'Define a food',
+    defineFood: 'New food',
     defineIntro:
       'All values per 100 g (or per 100 ml for liquids). Once saved it appears in your search straight away.',
     name: 'Name',
@@ -249,6 +316,7 @@ export default {
     yourRecipes: 'Your recipes',
     servingsColumn: 'Servings',
     kcalPerServingColumn: 'kcal / serving',
+    kcalPerHundredColumn: 'kcal / 100 g',
     perServingSummary:
       '{kcal} kcal per serving | · {grams} g · {protein} g protein · {carbs} g carbs · {fat} g fat',
     wholeRecipe: 'Whole recipe: {kcal} kcal, {grams} g',
@@ -282,7 +350,7 @@ export default {
     bmr: 'Basal metabolic rate',
     tdee: 'Total daily expenditure',
     proteinRow: 'Protein',
-    carbsRow: 'Carbohydrate',
+    carbsRow: 'Carbs',
     fatRow: 'Fat',
     calculatedWith: 'Calculated with the {formula} formula.',
   },
@@ -301,8 +369,31 @@ export default {
     themeDark: 'Dark',
     themeSystemHint: 'Follows your operating system and changes with it.',
 
+    calendarTitle: 'Calendar',
+    calendarIntro: 'Which calendar your dates are shown and picked in.',
+    calendarGregorian: 'Gregorian',
+    calendarPersian: 'Shamsi (Solar Hijri)',
+    calendarHint:
+      'Only changes how dates are shown. Nothing you have already logged moves to another day.',
+
+    guestNote: 'Kept on this device for now. Your choices move to your account when you sign in.',
+    guestTitle: 'Language & appearance',
+
     saveFailed: 'Could not save that setting.',
     offlineNote: 'Saved on this device only — we could not reach the server.',
+
+    passwordTitle: 'Password',
+    passwordIntro: 'Change the password you sign in with.',
+    currentPassword: 'Current password',
+    newPassword: 'New password',
+    repeatPassword: 'Repeat the new password',
+    passwordsDiffer: 'The two passwords do not match.',
+    changePassword: 'Change password',
+    changingPassword: 'Changing…',
+    passwordChanged: 'Your password has been changed.',
+    passwordChangeFailed: 'Could not change your password.',
+    passwordSessionsHint:
+      'Changing it signs you out on your other devices. You stay signed in here.',
   },
 
   sex: {
@@ -325,10 +416,109 @@ export default {
     extra_active: 'Extra active — physical job or training twice a day',
   },
 
+  activity: {
+    tableWhat: 'Activity',
+    tableMinutes: 'Minutes',
+    title: 'Activity',
+    intro: 'Calories you burned. These are added to the day\'s budget, so a day you trained lets you eat more.',
+    logTitle: 'Log a session',
+    fromCatalogue: 'From the catalogue',
+    ownWords: 'In your own words',
+    chooseExercise: 'Exercise',
+    choosePlaceholder: 'Choose an exercise…',
+    noMatchingExercise: 'No exercise matches that.',
+    minutes: 'Minutes',
+    estimateHint: 'Worked out from {rate} per minute. Change it if your session was harder or easier.',
+    overrideCalories: 'Calories burned',
+    add: 'Add activity',
+    adding: 'Adding…',
+    describeIt: 'What did you do?',
+    describePlaceholder: 'Helped a friend move',
+    caloriesLabel: 'Calories burned',
+    minutesOptional: 'Minutes (optional)',
+    incomplete: 'Describe the activity and say how many calories it burned.',
+    saveFailed: 'Could not save that activity.',
+    removeFailed: 'Could not remove that activity.',
+    loadFailed: 'Could not load that day.',
+    dayTitle: 'Activity',
+    burnedTotal: 'Burned',
+    nothingYet: 'Nothing logged for this day.',
+    suggestionsTitle: 'Suggested for your goal',
+    suggestionsFor: 'Because you are aiming to: {goal}',
+    suggestionsNoGoal: 'Fill in your body data and pick a goal, and suggestions will appear here.',
+    suggestionsEmpty: 'No exercises match your goal yet. A trainer can add some.',
+    useThis: 'Log this',
+    howTo: 'How to do it properly',
+    videoUnsupported: 'Your browser cannot play this video.',
+    catalogueTitle: 'Exercise catalogue',
+    catalogueIntro: 'Shared with everybody. The per-minute rate goes into other people\'s calorie budgets, so it is worth getting right.',
+    catalogueSearch: 'Search exercises',
+    newExercise: 'New exercise',
+    exerciseName: 'Name',
+    exerciseRate: 'Calories burned per minute',
+    exerciseRateHint: 'For a roughly 70 kg adult. Walking is about 4, running about 9, hard intervals about 11.',
+    exercisePurposes: 'What is it for?',
+    exercisePurposesHint: 'Pick at least one. This is what decides who gets it suggested.',
+    exerciseDescription: 'Notes (optional)',
+    exerciseVideo: 'Demonstration clip (optional)',
+    exerciseVideoHint: 'A short MP4, WebM or QuickTime video showing the movement done properly. Up to 25 MB.',
+    videoCurrent: 'Watch the current clip',
+    videoRemove: 'Remove it',
+    videoWillBeRemoved: 'The clip will be removed when you save.',
+    videoUploading: 'Uploading…',
+    videoLabel: 'Video',
+    exerciseSaveFailed: 'Could not save that exercise.',
+    exerciseDeleteFailed: 'Could not remove that exercise.',
+    confirmDelete: 'Remove "{name}" from the catalogue? Activities already logged against it are kept.',
+    definedBy: 'by {name}',
+    definedBySeed: 'built in',
+    perMinute: '{kcal} / min',
+    noExercises: 'No exercises yet.',
+    catalogueLoadFailed: 'Could not load the exercise catalogue.',
+  },
+
+  admin: {
+    title: 'Accounts',
+    intro: 'Who may do what. This screen shows names and roles only — never anybody\'s body data or diary.',
+    search: 'Search by name or e-mail',
+    tableUser: 'User',
+    tableRoles: 'Roles',
+    tableJoined: 'Joined',
+    unverified: 'Unconfirmed',
+    save: 'Save roles',
+    saved: 'Roles updated.',
+    saveFailed: 'Could not change those roles.',
+    loadFailed: 'Could not load the account list.',
+    noUsers: 'No accounts match.',
+    you: 'you',
+  },
+
   goal: {
     lose_weight: 'Lose weight — 20% below maintenance',
+    lose_fat_slowly: 'Lose fat slowly — 10% below maintenance, easier to keep up',
     maintain_weight: 'Maintain weight',
+    recomposition: 'Body recomposition — maintenance calories, high protein',
     gain_muscle: 'Gain muscle — 10% above maintenance',
+    gain_weight: 'Gain weight — 20% above maintenance',
+    endurance: 'Train for endurance — maintenance calories, more carbohydrate',
+    strength: 'Train for strength — 5% above maintenance, high protein',
+  },
+
+  purpose: {
+    build_muscle: 'Build muscle',
+    fat_burning: 'Fat burning',
+    endurance: 'Endurance',
+    strength: 'Strength',
+    mobility: 'Mobility',
+    general_fitness: 'General fitness',
+  },
+
+  role: {
+    ROLE_USER: 'User',
+    ROLE_TRAINER: 'Trainer',
+    ROLE_USER_ADMIN: 'User administrator',
+    trainerHint: 'May define and correct exercises for everybody.',
+    adminHint: 'May manage accounts and grant roles.',
   },
 
   formula: {
@@ -347,6 +537,19 @@ export default {
    * The API sends both; the client prefers a translation of the code and falls
    * back to the server's own wording for anything not listed here.
    */
+  translations: {
+    title: 'Languages',
+    writtenIn: 'Written in {language}. Add the other languages below.',
+    readOnly: 'Only the owner of this entry can change its languages.',
+    nameField: 'Name',
+    brandField: 'Brand',
+    descriptionField: 'Description',
+    nameRequired: 'Enter a name for this language.',
+    saveFailed: 'Could not save that language version.',
+    removeFailed: 'Could not remove that language version.',
+    shownIn: 'Shown in {language}',
+  },
+
   errors: {
     authentication_required: 'You must be signed in to use this endpoint.',
     authentication_failed: 'Invalid e-mail address or password.',
@@ -366,5 +569,12 @@ export default {
     unresolvable_portion: 'That amount cannot be converted for this food. Enter it in grams instead.',
     invalid_target: 'Send either a food or a recipe, not both and not neither.',
     http_error: 'Something went wrong. Please try again.',
+    invalid_reset_token: 'This reset link is invalid or has expired.',
+    invalid_current_password: 'That is not your current password.',
+    password_unchanged: 'The new password is the same as the current one.',
+    unknown_locale: 'This is not a language the app supports.',
+    source_locale: 'This entry is already written in that language. Edit it directly instead.',
+    translation_not_found: 'There is no version in that language.',
+    exercise_not_found: 'This exercise does not exist.',
   },
 }

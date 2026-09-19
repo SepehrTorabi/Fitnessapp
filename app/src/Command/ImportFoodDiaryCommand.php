@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace App\Command;
 
+use App\Import\FoodDiaryData;
 use App\Import\FoodDiaryImporter;
+use App\Import\ManualDiaryData;
 use App\Repository\UserRepository;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
@@ -21,7 +23,7 @@ use Symfony\Component\Console\Style\SymfonyStyle;
  */
 #[AsCommand(
     name: 'app:import:food-diary',
-    description: 'Import the Essenstagebuch PDF (17.08.2026 - 14.09.2026) for Sepehr and Cosima.',
+    description: 'Import diary days for Sepehr and Cosima - the Essenstagebuch PDF, or days entered by hand since.',
 )]
 final class ImportFoodDiaryCommand extends Command
 {
@@ -37,27 +39,47 @@ final class ImportFoodDiaryCommand extends Command
         $this
             ->addOption('sepehr', null, InputOption::VALUE_REQUIRED, 'E-mail of the account for Sepehr', 'sepehrt74@gmail.com')
             ->addOption('cosima', null, InputOption::VALUE_REQUIRED, 'E-mail of the account for Cosima', 'chuesken1@gmail.com')
-            ->addOption('dry-run', null, InputOption::VALUE_NONE, 'Only check the transcription; write nothing.');
+            ->addOption('source', null, InputOption::VALUE_REQUIRED, 'Which set of days: "pdf" or "manual"', 'pdf')
+            ->addOption('dry-run', null, InputOption::VALUE_NONE, 'Only check the data; write nothing.');
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $io = new SymfonyStyle($input, $output);
-        $io->title('Food diary import');
 
-        // Nothing is written until the transcription agrees with the PDF's own
-        // per-day totals - a mistyped figure should fail the import, not land in
+        $source = (string) $input->getOption('source');
+
+        $dataset = match ($source) {
+            'pdf' => ['Essenstagebuch PDF (17.08. - 14.09.2026)', FoodDiaryData::DAYS, FoodDiaryData::UNIT_WEIGHTS],
+            'manual' => ['Days entered by hand', ManualDiaryData::DAYS, ManualDiaryData::UNIT_WEIGHTS],
+            default => null,
+        };
+
+        if (null === $dataset) {
+            $io->error(\sprintf('Unknown source "%s". Use "pdf" or "manual".', $source));
+
+            return Command::FAILURE;
+        }
+
+        [$label, $days, $weights] = $dataset;
+
+        $io->title(\sprintf('Food diary import - %s', $label));
+
+        $this->importer->using($days, $weights);
+
+        // Nothing is written until the items agree with each day's own stated
+        // total - a mistyped figure should fail the import, not land in
         // somebody's diary.
         $problems = $this->importer->validate();
 
         if ([] !== $problems) {
-            $io->error(\sprintf('The data does not match the PDF totals (%d problems):', \count($problems)));
+            $io->error(\sprintf('The data does not match its stated totals (%d problems):', \count($problems)));
             $io->listing(\array_slice($problems, 0, 25));
 
             return Command::FAILURE;
         }
 
-        $io->success('Transcription checks out against every "Summe" line in the PDF.');
+        $io->success(\sprintf('Checks out against every stated daily total (%d days).', \count($days)));
 
         if ($input->getOption('dry-run')) {
             $io->note('Dry run - nothing written.');
@@ -91,13 +113,13 @@ final class ImportFoodDiaryCommand extends Command
         );
 
         if ([] !== $result['deviations']) {
-            $io->warning(\sprintf('%d day totals differ from the PDF by more than the tolerance:', \count($result['deviations'])));
+            $io->warning(\sprintf('%d day totals differ by more than the tolerance:', \count($result['deviations'])));
             $io->listing($result['deviations']);
 
             return Command::FAILURE;
         }
 
-        $io->success('Every imported day matches the PDF.');
+        $io->success('Every imported day matches its stated total.');
 
         return Command::SUCCESS;
     }

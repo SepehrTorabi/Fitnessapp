@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
 import { api, ApiError } from '@/api/client'
-import type { User } from '@/api/types'
+import type { Role, User } from '@/api/types'
 
 /**
  * Who is signed in.
@@ -26,6 +26,25 @@ export const useAuthStore = defineStore('auth', () => {
   )
 
   const dailyTarget = computed(() => user.value?.dailyTarget ?? null)
+
+  /**
+   * What this user is allowed to do.
+   *
+   * Read straight off the account the API sent, and used only to decide what to
+   * put on screen. It is not the security boundary: every restricted endpoint
+   * checks the role again, so a user who edits this in their console gains a
+   * button that answers 403. Hiding it is a courtesy - offering somebody a
+   * control that cannot work is worse than not offering it.
+   */
+  function hasRole(role: Role): boolean {
+    return user.value?.roles.includes(role) ?? false
+  }
+
+  const isTrainer = computed(() => hasRole('ROLE_TRAINER'))
+  const isUserAdmin = computed(() => hasRole('ROLE_USER_ADMIN'))
+
+  /** Trainers and administrators both curate the exercise catalogue. */
+  const canManageExercises = computed(() => isTrainer.value || isUserAdmin.value)
 
   /**
    * Ask the API who we are. A 401 is the expected answer for a visitor, not an
@@ -80,6 +99,10 @@ export const useAuthStore = defineStore('auth', () => {
     needsProfile,
     needsWeight,
     dailyTarget,
+    hasRole,
+    isTrainer,
+    isUserAdmin,
+    canManageExercises,
     restore,
     login,
     logout,

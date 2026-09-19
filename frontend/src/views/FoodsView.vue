@@ -4,6 +4,8 @@ import { useI18n } from 'vue-i18n'
 import { api, ApiError } from '@/api/client'
 import { useApiMessage } from '@/composables/useApiMessage'
 import type { Food, Recipe } from '@/api/types'
+import TranslationEditor from '@/components/TranslationEditor.vue'
+import { useNumbers } from '@/composables/useNumbers'
 
 /**
  * Defining new foods and building recipes.
@@ -14,6 +16,7 @@ import type { Food, Recipe } from '@/api/types'
 
 const { t } = useI18n()
 const apiMessage = useApiMessage()
+const { n } = useNumbers()
 
 type Tab = 'food' | 'recipe'
 const tab = ref<Tab>('food')
@@ -39,6 +42,8 @@ const foodError = ref('')
 const foodViolations = ref<Record<string, string>>({})
 const foodWarnings = ref<string[]>([])
 const foodSuccess = ref('')
+/** The food just created, kept only so its languages can be added at once. */
+const createdFood = ref<Food | null>(null)
 const savingFood = ref(false)
 
 /**
@@ -66,6 +71,7 @@ function removePortion(index: number): void {
 
 async function saveFood(): Promise<void> {
   savingFood.value = true
+  createdFood.value = null
   foodError.value = ''
   foodViolations.value = {}
   foodWarnings.value = []
@@ -93,6 +99,10 @@ async function saveFood(): Promise<void> {
 
     foodSuccess.value = t('foods.foodSaved', { label: response.food.label })
     foodWarnings.value = response.warnings
+    // Held on to only so the language editor below has something to act on.
+    // Adding a translation is most likely right after typing the name, and the
+    // alternative is searching for the food again to get back to it.
+    createdFood.value = response.food
 
     Object.assign(food, {
       name: '', brand: '', barcode: '', densityGPerMl: 1,
@@ -184,7 +194,7 @@ async function saveRecipe(): Promise<void> {
 
     recipeSuccess.value = t('foods.recipeSaved', {
       name: response.recipe.name,
-      kcal: Math.round(response.recipe.perServing.kcal),
+      kcal: n(response.recipe.perServing.kcal),
     })
 
     Object.assign(recipe, { name: '', description: '', servings: 1, public: false })
@@ -193,6 +203,16 @@ async function saveRecipe(): Promise<void> {
   } catch (e) {
     recipeError.value = apiMessage(e, 'foods.saveRecipeFailed')
   }
+}
+
+/**
+ * Swap in the recipe the API returned after a language was added or removed,
+ * rather than reloading the whole list for one row.
+ */
+function replaceRecipe(updated: Recipe): void {
+  const index = recipes.value.findIndex((r) => r.id === updated.id)
+
+  if (index !== -1) recipes.value[index] = updated
 }
 
 async function loadRecipes(): Promise<void> {
@@ -286,7 +306,7 @@ onMounted(loadRecipes)
 
         <!-- Warn while typing rather than only on save. -->
         <p v-if="energyMismatch" class="alert alert-info small">
-          {{ t('foods.energyMismatch', { implied: Math.round(impliedKcal), stated: food.kcal }) }}
+          {{ t('foods.energyMismatch', { implied: n(impliedKcal), stated: n(food.kcal) }) }}
         </p>
 
         <div>
@@ -315,8 +335,25 @@ onMounted(loadRecipes)
           </div>
         </div>
 
+        <template v-if="createdFood">
+          <p class="alert alert-success">{{ foodSuccess }}</p>
+          <!-- Offered here because this is the moment the name is fresh in the
+               user's mind. Collapsed, so anyone working in one language sees a
+               single extra line and nothing more. -->
+          <TranslationEditor
+            :key="createdFood.id"
+            kind="food"
+            :id="createdFood.id"
+            :source-locale="createdFood.sourceLocale"
+            :translations="createdFood.translations"
+            :can-edit="true"
+            @updated="createdFood = $event as Food"
+          />
+        </template>
+
         <p v-if="foodError" class="alert alert-error">{{ foodError }}</p>
-        <p v-if="foodSuccess" class="alert alert-success">{{ foodSuccess }}</p>
+        <!-- Only when the block above is not already showing it. -->
+        <p v-if="foodSuccess && !createdFood" class="alert alert-success">{{ foodSuccess }}</p>
         <p v-for="warning in foodWarnings" :key="warning" class="alert alert-info small">
           {{ warning }}
         </p>
@@ -372,7 +409,7 @@ onMounted(loadRecipes)
                 <button class="result" type="button" @click="addIngredient(item)">
                   <span class="result-name">{{ item.label }}</span>
                   <span class="muted small">
-                    {{ t('diary.perHundred', { kcal: Math.round(item.per100.kcal) }) }}
+                    {{ t('diary.perHundred', { kcal: n(item.per100.kcal) }) }}
                   </span>
                 </button>
               </li>
@@ -394,7 +431,7 @@ onMounted(loadRecipes)
                 <td class="num">
                   <input v-model.number="item.grams" type="number" min="1" class="grams-input" />
                 </td>
-                <td class="num">{{ Math.round((item.food.per100.kcal * item.grams) / 100) }}</td>
+                <td class="num">{{ n((item.food.per100.kcal * item.grams) / 100) }}</td>
                 <td class="num shrink">
                   <button class="ghost" type="button" @click="ingredients.splice(index, 1)">✕</button>
                 </td>
@@ -404,22 +441,22 @@ onMounted(loadRecipes)
 
           <p v-if="ingredients.length" class="preview">
             <strong>
-              {{ t('diary.kcalPerServing', { kcal: Math.round(recipeTotals.perServing.kcal) }) }}
+              {{ t('diary.kcalPerServing', { kcal: n(recipeTotals.perServing.kcal) }) }}
             </strong>
             <span class="muted">
               {{
                 t('diary.preview', {
-                  grams: Math.round(recipeTotals.perServing.grams),
-                  protein: Math.round(recipeTotals.perServing.proteinG),
-                  carbs: Math.round(recipeTotals.perServing.carbsG),
-                  fat: Math.round(recipeTotals.perServing.fatG),
+                  grams: n(recipeTotals.perServing.grams),
+                  protein: n(recipeTotals.perServing.proteinG),
+                  carbs: n(recipeTotals.perServing.carbsG),
+                  fat: n(recipeTotals.perServing.fatG),
                 })
               }}
               <br />
               {{
                 t('foods.wholeRecipe', {
-                  kcal: Math.round(recipeTotals.kcal),
-                  grams: Math.round(recipeTotals.grams),
+                  kcal: n(recipeTotals.kcal),
+                  grams: n(recipeTotals.grams),
                 })
               }}
             </span>
@@ -445,18 +482,40 @@ onMounted(loadRecipes)
               <th>{{ t('foods.recipeName') }}</th>
               <th class="num">{{ t('foods.servingsColumn') }}</th>
               <th class="num">{{ t('foods.kcalPerServingColumn') }}</th>
+              <!-- The figure that falls out of entering every ingredient by
+                   weight, and the one that makes logging a recipe by weight
+                   possible. Worth showing next to the per-serving one. -->
+              <th class="num">{{ t('foods.kcalPerHundredColumn') }}</th>
               <th></th>
             </tr>
           </thead>
           <tbody>
-            <tr v-for="item in recipes" :key="item.id">
-              <td>{{ item.name }}</td>
-              <td class="num">{{ item.servings }}</td>
-              <td class="num">{{ Math.round(item.perServing.kcal) }}</td>
-              <td class="num shrink">
-                <button class="ghost" type="button" @click="deleteRecipe(item.id)">✕</button>
-              </td>
-            </tr>
+            <template v-for="item in recipes" :key="item.id">
+              <tr>
+                <td>{{ item.name }}</td>
+                <td class="num">{{ item.servings }}</td>
+                <td class="num">{{ n(item.perServing.kcal) }}</td>
+                <td class="num muted">{{ n(item.per100.kcal) }}</td>
+                <td class="num shrink">
+                  <button class="ghost" type="button" @click="deleteRecipe(item.id)">✕</button>
+                </td>
+              </tr>
+              <!-- A row of its own rather than a control crammed into the name
+                   cell: the editor is a form, and a form inside a table cell
+                   makes the whole column jump about as soon as it opens. -->
+              <tr class="language-row">
+                <td colspan="5">
+                  <TranslationEditor
+                    kind="recipe"
+                    :id="item.id"
+                    :source-locale="item.sourceLocale"
+                    :translations="item.translations"
+                    :can-edit="true"
+                    @updated="replaceRecipe($event as Recipe)"
+                  />
+                </td>
+              </tr>
+            </template>
           </tbody>
         </table>
       </div>
@@ -481,7 +540,7 @@ onMounted(loadRecipes)
   display: flex;
   justify-content: space-between;
   gap: 12px;
-  text-align: left;
+  text-align: start;
   background: var(--surface-2);
   color: var(--text);
   border: 1px solid transparent;
@@ -499,7 +558,7 @@ onMounted(loadRecipes)
   line-height: 1.7;
 }
 
-.grams-input { width: 90px; text-align: right; }
+.grams-input { width: 90px; text-align: end; }
 .shrink { width: 1%; }
 
 .checkbox { display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--text); font-weight: 400; }

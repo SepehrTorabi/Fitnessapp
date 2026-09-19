@@ -98,6 +98,10 @@ async function resend(): Promise<void> {
       </form>
 
       <p class="muted small footer">
+        <RouterLink to="/forgot-password">{{ t('auth.forgotPrompt') }}</RouterLink>
+      </p>
+
+      <p class="muted small signup">
         {{ t('auth.noAccount') }} <RouterLink to="/register">{{ t('auth.createOne') }}</RouterLink>
       </p>
     </div>
@@ -106,5 +110,10 @@ async function resend(): Promise<void> {
 
 <style scoped>
 .narrow { max-width: 420px; padding-top: 64px; }
+
+/* The reset link sits closer to the form than the sign-up line does: it is the
+   next thing you need when the password you just typed did not work, while
+   creating an account is a different errand entirely. */
 .footer { margin: 20px 0 0; }
+.signup { margin: 8px 0 0; }
 </style>

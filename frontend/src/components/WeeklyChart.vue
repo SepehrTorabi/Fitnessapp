@@ -2,6 +2,9 @@
 import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import type { DaySummary } from '@/api/types'
+import { usePreferencesStore } from '@/stores/preferences'
+import { formatShortDate, formatWeekday } from '@/calendar'
+import { useNumbers } from '@/composables/useNumbers'
 
 /**
  * Calories eaten per day against that day's budget.
@@ -14,19 +17,52 @@ import type { DaySummary } from '@/api/types'
  *
  * Drawn as plain SVG rather than with a charting library: seven bars and a
  * marker do not justify the dependency, and the maths is worth seeing.
+ *
+ * The chart is also the dashboard's day selector. Clicking a bar is the obvious
+ * gesture for "show me that day", and it is what the rest of the page listens
+ * to - so every bar is a real control: focusable, operable with Enter or Space,
+ * and labelled with the day it stands for.
+ *
+ * Right-to-left is the one thing SVG cannot inherit from the page. A mirrored
+ * layout means the week has to run the other way and the value axis has to move
+ * to the other side, and no amount of `dir="rtl"` on an ancestor will move a
+ * coordinate. So the geometry reads the direction and mirrors itself.
  */
-const props = defineProps<{ days: DaySummary[] }>()
+const props = withDefaults(
+  defineProps<{
+    days: DaySummary[]
+    /** The day the dashboard is currently showing, as an ISO date. */
+    selected?: string | null
+  }>(),
+  { selected: null },
+)
+
+const emit = defineEmits<{ select: [date: string] }>()
 
 const { t, locale } = useI18n()
+const preferences = usePreferencesStore()
+const { n } = useNumbers()
 
 // A fixed drawing grid. The SVG scales to its container, so these are
 // proportions rather than pixels on screen.
 const W = 700
 const H = 260
-const PAD = { top: 24, right: 12, bottom: 42, left: 48 }
 
-const plotW = W - PAD.left - PAD.right
-const plotH = H - PAD.top - PAD.bottom
+/** Room for the value axis on one side, and a hair of breathing room on the other. */
+const AXIS_GUTTER = 52
+const EDGE_GUTTER = 12
+const PAD_TOP = 24
+const PAD_BOTTOM = 42
+
+const rtl = computed(() => preferences.direction === 'rtl')
+
+// The value axis belongs on the side the reading starts from, which swaps with
+// the direction. Everything below is expressed in terms of these two.
+const padStart = computed(() => (rtl.value ? EDGE_GUTTER : AXIS_GUTTER))
+const padEnd = computed(() => (rtl.value ? AXIS_GUTTER : EDGE_GUTTER))
+
+const plotW = computed(() => W - padStart.value - padEnd.value)
+const plotH = H - PAD_TOP - PAD_BOTTOM
 
 const hovered = ref<number | null>(null)
 const showTable = ref(false)
@@ -39,15 +75,28 @@ const maxValue = computed(() => {
   return peak * 1.15
 })
 
-const bandWidth = computed(() => plotW / Math.max(props.days.length, 1))
+const bandWidth = computed(() => plotW.value / Math.max(props.days.length, 1))
 const barWidth = computed(() => Math.min(48, bandWidth.value * 0.55))
 
 function y(value: number): number {
-  return PAD.top + plotH - (value / maxValue.value) * plotH
+  return PAD_TOP + plotH - (value / maxValue.value) * plotH
+}
+
+/**
+ * Where a day sits along the axis.
+ *
+ * The one place the mirroring happens: in a right-to-left layout the earliest
+ * day belongs on the right, so the index is flipped and every x coordinate in
+ * the chart follows from here.
+ */
+function bandStart(index: number): number {
+  const position = rtl.value ? props.days.length - 1 - index : index
+
+  return padStart.value + bandWidth.value * position
 }
 
 function bandCenter(index: number): number {
-  return PAD.left + bandWidth.value * (index + 0.5)
+  return bandStart(index) + bandWidth.value / 2
 }
 
 /** Four gridlines is enough to read a value off without fencing in the bars. */
@@ -72,17 +121,14 @@ function niceStep(raw: number): number {
   return step * magnitude
 }
 
-// Formatted with the app's language rather than the browser's, so switching to
-// German turns "Mon" into "Mo" along with everything else on the page.
+// Dates go through the calendar module, so the axis is labelled in whichever
+// calendar the user reads - the bars are the same days either way.
 function weekday(iso: string): string {
-  return new Date(`${iso}T00:00:00`).toLocaleDateString(locale.value, { weekday: 'short' })
+  return formatWeekday(iso, locale.value)
 }
 
 function dayNumber(iso: string): string {
-  return new Date(`${iso}T00:00:00`).toLocaleDateString(locale.value, {
-    day: 'numeric',
-    month: 'numeric',
-  })
+  return formatShortDate(iso, locale.value, preferences.calendar)
 }
 
 function barFill(day: DaySummary): string {
@@ -98,7 +144,36 @@ function difference(day: DaySummary): string {
 
   const kcal = Math.round(Math.abs(day.remainingKcal))
 
-  return day.remainingKcal >= 0 ? t('chart.kcalLeft', { kcal }) : t('chart.kcalOver', { kcal })
+  const formatted = n(kcal)
+
+  return day.remainingKcal >= 0
+    ? t('chart.kcalLeft', { kcal: formatted })
+    : t('chart.kcalOver', { kcal: formatted })
+}
+
+function isSelected(day: DaySummary): boolean {
+  return props.selected === day.date
+}
+
+/**
+ * How prominent a bar is.
+ *
+ * Three states rather than two: with a day selected, the others recede - so the
+ * chart shows at a glance which day the numbers below it belong to. Hovering
+ * temporarily brings a bar back, because that is what the readout is describing.
+ */
+function barOpacity(day: DaySummary, index: number): number {
+  if (hovered.value === index) return 1
+  if (props.selected !== null) return isSelected(day) ? 1 : 0.4
+
+  return hovered.value === null ? 1 : 0.45
+}
+
+function onKey(event: KeyboardEvent, date: string): void {
+  if ('Enter' === event.key || ' ' === event.key) {
+    event.preventDefault()
+    emit('select', date)
+  }
 }
 
 const anyOverBudget = computed(() => props.days.some((d) => d.withinBudget === false))
@@ -130,47 +205,59 @@ const anyWithinBudget = computed(() => props.days.some((d) => d.withinBudget ===
     </div>
 
     <div v-if="!showTable" class="plot-wrap">
-      <svg
-        :viewBox="`0 0 ${W} ${H}`"
-        class="plot"
-        role="img"
-        :aria-label="t('chart.ariaLabel')"
-      >
+      <svg :viewBox="`0 0 ${W} ${H}`" class="plot" role="img" :aria-label="t('chart.ariaLabel')">
         <!-- Gridlines sit behind the data and stay recessive. -->
         <g class="grid">
           <template v-for="tick in ticks" :key="tick">
-            <line :x1="PAD.left" :x2="W - PAD.right" :y1="y(tick)" :y2="y(tick)" />
-            <text :x="PAD.left - 8" :y="y(tick) + 4" class="tick-label">{{ tick }}</text>
+            <line :x1="padStart" :x2="W - padEnd" :y1="y(tick)" :y2="y(tick)" />
+            <text
+              :x="rtl ? W - padEnd + 8 : padStart - 8"
+              :y="y(tick) + 4"
+              class="tick-label"
+              :text-anchor="rtl ? 'start' : 'end'"
+            >
+              {{ n(tick) }}
+            </text>
           </template>
         </g>
 
-        <!-- The hover handlers sit on the group, not on the transparent band
-             below: the bar is painted on top of that band and would otherwise
+        <!-- The hover and click handlers sit on the group, not on the transparent
+             band below: the bar is painted on top of that band and would otherwise
              swallow the event, and a sibling's handler never sees it. On the
              group, whichever child is hit lets the event bubble up. -->
         <g
           v-for="(day, index) in days"
           :key="day.date"
+          class="day-group"
+          role="button"
+          tabindex="0"
+          :aria-pressed="isSelected(day)"
+          :aria-label="t('chart.selectDay', { date: `${weekday(day.date)} ${dayNumber(day.date)}` })"
           @mouseenter="hovered = index"
           @mouseleave="hovered = null"
+          @focus="hovered = index"
+          @blur="hovered = null"
+          @click="emit('select', day.date)"
+          @keydown="onKey($event, day.date)"
         >
-          <!-- A transparent band the full height of the plot, so the hover
-               target is the whole column rather than just the bar. -->
+          <!-- A transparent band the full height of the plot, so the target is
+               the whole column rather than just the bar. -->
           <rect
-            :x="PAD.left + bandWidth * index"
-            :y="PAD.top"
+            :x="bandStart(index)"
+            :y="PAD_TOP"
             :width="bandWidth"
             :height="plotH"
-            fill="transparent"
+            :class="{ 'band-selected': isSelected(day) }"
+            class="band"
           />
 
           <rect
             :x="bandCenter(index) - barWidth / 2"
             :y="y(day.consumed.kcal)"
             :width="barWidth"
-            :height="Math.max(plotH + PAD.top - y(day.consumed.kcal), 0)"
+            :height="Math.max(plotH + PAD_TOP - y(day.consumed.kcal), 0)"
             :fill="barFill(day)"
-            :opacity="hovered === null || hovered === index ? 1 : 0.45"
+            :opacity="barOpacity(day, index)"
             rx="4"
             class="bar"
           />
@@ -186,7 +273,14 @@ const anyWithinBudget = computed(() => props.days.some((d) => d.withinBudget ===
             class="target"
           />
 
-          <text :x="bandCenter(index)" :y="H - 22" class="axis-label">{{ weekday(day.date) }}</text>
+          <text
+            :x="bandCenter(index)"
+            :y="H - 22"
+            class="axis-label"
+            :class="{ 'axis-label-selected': isSelected(day) }"
+          >
+            {{ weekday(day.date) }}
+          </text>
           <text :x="bandCenter(index)" :y="H - 8" class="axis-sublabel">{{ dayNumber(day.date) }}</text>
         </g>
       </svg>
@@ -196,9 +290,9 @@ const anyWithinBudget = computed(() => props.days.some((d) => d.withinBudget ===
       <div class="readout" :class="{ 'readout-idle': hovered === null }">
         <template v-if="hovered !== null && days[hovered]">
           <strong>{{ weekday(days[hovered].date) }} {{ dayNumber(days[hovered].date) }}</strong>
-          <span>{{ t('chart.eaten', { kcal: Math.round(days[hovered].consumed.kcal) }) }}</span>
+          <span>{{ t('chart.eaten', { kcal: n(days[hovered].consumed.kcal) }) }}</span>
           <span v-if="days[hovered].budgetKcal !== null">
-            {{ t('chart.ofBudget', { kcal: Math.round(days[hovered].budgetKcal!) }) }}
+            {{ t('chart.ofBudget', { kcal: n(days[hovered].budgetKcal) }) }}
           </span>
           <span
             class="badge"
@@ -212,7 +306,9 @@ const anyWithinBudget = computed(() => props.days.some((d) => d.withinBudget ===
     </div>
 
     <!-- The same data as text. Required relief for the contrast warning on the
-         bar fills, and the only version a screen reader can actually read. -->
+         bar fills, and the only version a screen reader can actually read. The
+         rows select a day too, so the table is a complete alternative rather
+         than a read-only consolation. -->
     <table v-else>
       <thead>
         <tr>
@@ -223,10 +319,19 @@ const anyWithinBudget = computed(() => props.days.some((d) => d.withinBudget ===
         </tr>
       </thead>
       <tbody>
-        <tr v-for="day in days" :key="day.date">
-          <td>{{ weekday(day.date) }} {{ dayNumber(day.date) }}</td>
-          <td class="num">{{ Math.round(day.consumed.kcal) }}</td>
-          <td class="num">{{ day.budgetKcal === null ? '—' : Math.round(day.budgetKcal) }}</td>
+        <tr
+          v-for="day in days"
+          :key="day.date"
+          class="table-row"
+          :class="{ 'row-selected': isSelected(day) }"
+        >
+          <td>
+            <button type="button" class="ghost row-button" @click="emit('select', day.date)">
+              {{ weekday(day.date) }} {{ dayNumber(day.date) }}
+            </button>
+          </td>
+          <td class="num">{{ n(day.consumed.kcal) }}</td>
+          <td class="num">{{ n(day.budgetKcal) }}</td>
           <td class="num">
             <span
               class="badge"
@@ -275,12 +380,35 @@ const anyWithinBudget = computed(() => props.days.some((d) => d.withinBudget ===
   stroke-width: 1;
 }
 
+/*
+ * The one subtlety of drawing a chart inside a mirrored document.
+ *
+ * SVG's text-anchor is resolved against the *text* direction, not against the
+ * coordinate system - so in a right-to-left page "start" means the right-hand
+ * edge of the glyphs, and the axis labels get anchored the wrong way round and
+ * hang back into the plot. These labels are bare numbers, which are a
+ * left-to-right run in every script, so saying so fixes the anchoring and is
+ * what the digits want anyway.
+ */
 .tick-label {
   fill: var(--text-muted);
   font-size: 11px;
-  text-anchor: end;
   font-variant-numeric: tabular-nums;
+  direction: ltr;
 }
+
+.day-group { cursor: pointer; }
+
+/* The focus ring goes on the group rather than on the bar: a bar for a day with
+   nothing logged has no height, and an outline around nothing is invisible. */
+.day-group:focus { outline: none; }
+.day-group:focus-visible .band { stroke: var(--border-focus); stroke-width: 2; }
+
+.band { fill: transparent; }
+
+/* The selected column is tinted, so which day the page is showing survives even
+   when that day's bar is zero. */
+.band-selected { fill: var(--surface-subtle); }
 
 .bar { transition: opacity 0.12s ease; }
 
@@ -296,6 +424,8 @@ const anyWithinBudget = computed(() => props.days.some((d) => d.withinBudget ===
   font-weight: 600;
   text-anchor: middle;
 }
+
+.axis-label-selected { fill: var(--accent); }
 
 .axis-sublabel {
   fill: var(--text-muted);
@@ -317,4 +447,16 @@ const anyWithinBudget = computed(() => props.days.some((d) => d.withinBudget ===
 }
 
 .readout-idle { background: transparent; }
+
+.row-selected { background: var(--surface-subtle); }
+
+.row-button {
+  padding: 0;
+  font: inherit;
+  font-weight: 600;
+  color: var(--text-action);
+  text-align: start;
+}
+
+.row-button:hover { color: var(--text-action-hover); text-decoration: underline; }
 </style>
