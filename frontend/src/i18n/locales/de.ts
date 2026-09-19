@@ -64,6 +64,8 @@ const de: MessageSchema = {
     register: 'Konto erstellen',
     verify: 'Adresse wird bestätigt',
     notFound: 'Nicht gefunden',
+    forgotPassword: 'Passwort vergessen',
+    resetPassword: 'Neues Passwort wählen',
   },
 
   auth: {
@@ -96,36 +98,60 @@ const de: MessageSchema = {
     verifyUnreachable: 'Der Server war nicht erreichbar, um deine Adresse zu bestätigen.',
     linkExpiredHint:
       'Bestätigungslinks laufen nach 24 Stunden ab und lassen sich nur einmal verwenden. Versuch dich anzumelden - ist das Konto noch unbestätigt, kannst du dort einen neuen Link anfordern.',
+
+    forgotPrompt: 'Passwort vergessen?',
+    forgotTitle: 'Passwort vergessen',
+    forgotIntro:
+      'Gib die Adresse ein, mit der du dich registriert hast. Wir schicken dir einen Link, um ein neues Passwort zu wählen.',
+    forgotSubmit: 'Link schicken',
+    forgotSending: 'Wird gesendet…',
+    forgotUnreachable: 'Der Server war nicht erreichbar, um den Link zu senden.',
+
+    resetTitle: 'Neues Passwort wählen',
+    resetIntro: 'Wähle etwas, das du nirgendwo sonst verwendest.',
+    newPasswordLabel: 'Neues Passwort',
+    repeatPasswordLabel: 'Neues Passwort wiederholen',
+    passwordsDiffer: 'Die beiden Passwörter stimmen nicht überein.',
+    resetSubmit: 'Neues Passwort speichern',
+    resetSaving: 'Wird gespeichert…',
+    resetDone: 'Passwort geändert',
+    resetDoneIntro: 'Dein Passwort wurde geändert. Melde dich jetzt damit an.',
+    resetMissingToken: 'In diesem Link fehlt der Code zum Zurücksetzen.',
+    resetUnreachable: 'Der Server war nicht erreichbar, um dein Passwort zu ändern.',
+    resetExpiredHint:
+      'Links zum Zurücksetzen laufen nach einer Stunde ab und lassen sich nur einmal verwenden. Fordere einen neuen an und verwende die neueste E-Mail.',
+    askForNewLink: 'Neuen Link anfordern',
   },
 
+  entry: {
+    title: 'Einträge',
+    food: 'Lebensmittel',
+    meal: 'Mahlzeit',
+    amount: 'Menge',
+    macros: 'Eiweiß / Kohlenhydrate / Fett',
+    edit: 'Diesen Eintrag bearbeiten',
+    add: 'Essen hinzufügen',
+  },
   dashboard: {
     greeting: 'Hallo, {name}',
-    eatenToday: 'Heute gegessen',
-    eatenOnDay: 'Gegessen',
-    burned: 'Durch Aktivität verbrannt',
-    leftToday: 'Heute noch übrig',
-    leftOnDay: 'An dem Tag übrig',
+    eaten: 'Gegessen',
+    burned: 'Verbrannt',
+    left: 'Übrig',
     overBudget: 'Über dem Budget',
     budget: 'Budget {kcal} kcal',
-    macrosToday: 'Nährwerte heute',
-    macrosOnDay: 'Nährwerte',
+    macros: 'Nährwerte',
 
     weekEnding: 'Woche bis',
     weekEndingHint: 'Das Diagramm zeigt diesen Tag und die sechs davor.',
     viewingDay: 'Angezeigt: {date}',
     backToToday: 'Zurück zu heute',
-    entriesOnDay: 'Einträge',
     nothingOnDay: 'An diesem Tag wurde nichts erfasst.',
     dayLoadFailed: 'Dieser Tag konnte nicht geladen werden.',
 
-    editEntry: 'Diesen Eintrag bearbeiten',
     entryUpdateFailed: 'Der Eintrag konnte nicht geändert werden.',
     entryRemoveFailed: 'Der Eintrag konnte nicht entfernt werden.',
-    activityOnDay: 'Aktivität',
     targetExplain:
       'Ziel {target} kcal — Grundumsatz {bmr}, Gesamtumsatz {tdee}, berechnet mit {formula}.',
-    todaysEntries: 'Einträge von heute',
-    addSomething: 'Etwas hinzufügen',
     nothingToday: 'Heute noch nichts erfasst.',
     loadFailed: 'Deine Übersicht konnte nicht geladen werden.',
     averages:
@@ -135,10 +161,6 @@ const de: MessageSchema = {
       'Sag uns Alter, Größe und wie aktiv du bist, damit wir deinen Bedarf berechnen können.',
     onboardingWeight: 'Trag dein aktuelles Gewicht ein, damit wir deinen Tagesbedarf berechnen können.',
     onboardingButton: 'Körperdaten ausfüllen',
-    tableFood: 'Lebensmittel',
-    tableMeal: 'Mahlzeit',
-    tableAmount: 'Menge',
-    tableMacros: 'E / K / F',
     exportPdf: 'Als PDF herunterladen',
     exportHint: 'Alle erfassten Tage, im Layout des gedruckten Tagebuchs.',
   },
@@ -205,10 +227,9 @@ const de: MessageSchema = {
     saveFailed: 'Der Eintrag konnte nicht gespeichert werden.',
     preview: '· {grams} g · {protein} g Eiweiß · {carbs} g Kohlenhydrate · {fat} g Fett',
 
-    totals: 'Summe für diesen Tag',
+    totals: 'Summe',
     left: '{kcal} übrig',
     over: '{kcal} darüber',
-    entries: 'Einträge',
     nothingLogged: 'Für diesen Tag ist nichts erfasst.',
     loadDayFailed: 'Dieser Tag konnte nicht geladen werden.',
 
@@ -221,7 +242,6 @@ const de: MessageSchema = {
     addActivity: 'Aktivität hinzufügen',
     activityIncomplete: 'Beschreib die Aktivität und gib an, wie viele Kalorien sie verbrannt hat.',
     activityFailed: 'Die Aktivität konnte nicht gespeichert werden.',
-    minutesShort: 'Min.',
   },
 
   scanner: {
@@ -240,7 +260,7 @@ const de: MessageSchema = {
   foods: {
     newFood: 'Neues Lebensmittel',
     newRecipe: 'Neues Rezept',
-    defineFood: 'Lebensmittel anlegen',
+    defineFood: 'Neues Lebensmittel',
     defineIntro:
       'Alle Werte pro 100 g (bzw. pro 100 ml bei Flüssigkeiten). Nach dem Speichern taucht es sofort in deiner Suche auf.',
     name: 'Name',
@@ -351,6 +371,19 @@ const de: MessageSchema = {
 
     saveFailed: 'Die Einstellung konnte nicht gespeichert werden.',
     offlineNote: 'Nur auf diesem Gerät gespeichert — der Server war nicht erreichbar.',
+
+    passwordTitle: 'Passwort',
+    passwordIntro: 'Ändere das Passwort, mit dem du dich anmeldest.',
+    currentPassword: 'Aktuelles Passwort',
+    newPassword: 'Neues Passwort',
+    repeatPassword: 'Neues Passwort wiederholen',
+    passwordsDiffer: 'Die beiden Passwörter stimmen nicht überein.',
+    changePassword: 'Passwort ändern',
+    changingPassword: 'Wird geändert…',
+    passwordChanged: 'Dein Passwort wurde geändert.',
+    passwordChangeFailed: 'Dein Passwort konnte nicht geändert werden.',
+    passwordSessionsHint:
+      'Dadurch wirst du auf deinen anderen Geräten abgemeldet. Hier bleibst du angemeldet.',
   },
 
   sex: {
@@ -374,6 +407,8 @@ const de: MessageSchema = {
   },
 
   activity: {
+    tableWhat: 'Aktivität',
+    tableMinutes: 'Minuten',
     title: 'Aktivität',
     intro: 'Verbrannte Kalorien. Sie kommen zum Tagesbudget dazu — an einem Trainingstag darfst du also mehr essen.',
     logTitle: 'Einheit erfassen',
@@ -395,10 +430,9 @@ const de: MessageSchema = {
     saveFailed: 'Die Aktivität konnte nicht gespeichert werden.',
     removeFailed: 'Die Aktivität konnte nicht entfernt werden.',
     loadFailed: 'Dieser Tag konnte nicht geladen werden.',
-    dayTitle: 'Dieser Tag',
-    burnedTotal: 'An diesem Tag verbrannt',
+    dayTitle: 'Aktivität',
+    burnedTotal: 'Verbrannt',
     nothingYet: 'Für diesen Tag ist nichts erfasst.',
-    minutesShort: 'Min.',
     suggestionsTitle: 'Vorschläge für dein Ziel',
     suggestionsFor: 'Weil du anstrebst: {goal}',
     suggestionsNoGoal: 'Trag deine Körperdaten ein und wähl ein Ziel, dann erscheinen hier Vorschläge.',
@@ -488,6 +522,19 @@ const de: MessageSchema = {
     back: 'Zurück zur Übersicht',
   },
 
+  translations: {
+    title: 'Sprachen',
+    writtenIn: 'Verfasst auf {language}. Ergänze unten die anderen Sprachen.',
+    readOnly: 'Nur wer diesen Eintrag angelegt hat, kann seine Sprachen ändern.',
+    nameField: 'Name',
+    brandField: 'Marke',
+    descriptionField: 'Beschreibung',
+    nameRequired: 'Gib einen Namen für diese Sprache ein.',
+    saveFailed: 'Diese Sprachversion konnte nicht gespeichert werden.',
+    removeFailed: 'Diese Sprachversion konnte nicht entfernt werden.',
+    shownIn: 'Angezeigt auf {language}',
+  },
+
   errors: {
     authentication_required: 'Dafür musst du angemeldet sein.',
     authentication_failed: 'E-Mail-Adresse oder Passwort stimmen nicht.',
@@ -509,6 +556,13 @@ const de: MessageSchema = {
       'Diese Menge lässt sich für dieses Lebensmittel nicht umrechnen. Gib sie stattdessen in Gramm an.',
     invalid_target: 'Schick entweder ein Lebensmittel oder ein Rezept - nicht beides und nicht keines.',
     http_error: 'Etwas ist schiefgelaufen. Bitte versuch es noch einmal.',
+    invalid_reset_token: 'Dieser Link zum Zurücksetzen ist ungültig oder abgelaufen.',
+    invalid_current_password: 'Das ist nicht dein aktuelles Passwort.',
+    password_unchanged: 'Das neue Passwort ist dasselbe wie das aktuelle.',
+    unknown_locale: 'Diese Sprache unterstützt die App nicht.',
+    source_locale: 'Dieser Eintrag ist bereits in dieser Sprache verfasst. Bearbeite ihn direkt.',
+    translation_not_found: 'In dieser Sprache gibt es keine Version.',
+    exercise_not_found: 'Diese Übung existiert nicht.',
   },
 }
 

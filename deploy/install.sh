@@ -27,6 +27,7 @@ fail() { printf '\033[1;31mError:\033[0m %s\n' "$1" >&2; exit 1; }
 : "${APP_SECRET:=}"
 : "${MAILER_DSN:=null://null}"
 : "${FRONTEND_VERIFY_URL:=}"
+: "${FRONTEND_RESET_URL:=}"
 : "${MAILER_SENDER_ADDRESS:=no-reply@localhost}"
 : "${MAILER_SENDER_NAME:=Fitnessapp}"
 : "${OPEN_FOOD_FACTS_USER_AGENT:=Fitnessapp (self-hosted)}"
@@ -53,6 +54,14 @@ if [ -z "$FRONTEND_VERIFY_URL" ]; then
   say "FRONTEND_VERIFY_URL was not set - defaulting to $FRONTEND_VERIFY_URL"
 fi
 
+# Same for the password reset mail. A separate setting rather than a path
+# derived from the one above: the two land on different pages of the SPA, and
+# an installation that moves one has no reason to move both.
+if [ -z "$FRONTEND_RESET_URL" ]; then
+  FRONTEND_RESET_URL="http://localhost/app/reset-password"
+  say "FRONTEND_RESET_URL was not set - defaulting to $FRONTEND_RESET_URL"
+fi
+
 # --- Write the environment --------------------------------------------------
 say "Writing $APP_DIR/.env.local"
 cat > "$APP_DIR/.env.local" <<ENV
@@ -64,6 +73,7 @@ MAILER_DSN=$MAILER_DSN
 MAILER_SENDER_ADDRESS=$MAILER_SENDER_ADDRESS
 MAILER_SENDER_NAME="$MAILER_SENDER_NAME"
 FRONTEND_VERIFY_URL=$FRONTEND_VERIFY_URL
+FRONTEND_RESET_URL=$FRONTEND_RESET_URL
 OPEN_FOOD_FACTS_USER_AGENT="$OPEN_FOOD_FACTS_USER_AGENT"
 ENV
 chmod 600 "$APP_DIR/.env.local"

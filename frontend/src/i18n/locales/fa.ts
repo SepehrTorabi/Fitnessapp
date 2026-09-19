@@ -73,6 +73,8 @@ const fa: MessageSchema = {
     register: 'ساخت حساب',
     verify: 'در حال تأیید نشانی شما',
     notFound: 'پیدا نشد',
+    forgotPassword: 'گذرواژهٔ فراموش‌شده',
+    resetPassword: 'انتخاب گذرواژهٔ تازه',
   },
 
   auth: {
@@ -105,36 +107,60 @@ const fa: MessageSchema = {
     verifyUnreachable: 'برای تأیید نشانی شما، سرور در دسترس نبود.',
     linkExpiredHint:
       'پیوندهای تأیید پس از ۲۴ ساعت منقضی می‌شوند و فقط یک بار کار می‌کنند. وارد شوید - اگر حساب هنوز تأیید نشده باشد، آنجا می‌توانید پیوند تازه بخواهید.',
+
+    forgotPrompt: 'گذرواژه‌تان را فراموش کرده‌اید؟',
+    forgotTitle: 'گذرواژهٔ فراموش‌شده',
+    forgotIntro:
+      'نشانی‌ای را که با آن ثبت‌نام کرده‌اید وارد کنید تا پیوندی برای انتخاب گذرواژهٔ تازه برایتان بفرستیم.',
+    forgotSubmit: 'پیوند را برایم بفرست',
+    forgotSending: 'در حال فرستادن…',
+    forgotUnreachable: 'برای فرستادن پیوند، سرور در دسترس نبود.',
+
+    resetTitle: 'انتخاب گذرواژهٔ تازه',
+    resetIntro: 'چیزی انتخاب کنید که جای دیگری از آن استفاده نمی‌کنید.',
+    newPasswordLabel: 'گذرواژهٔ تازه',
+    repeatPasswordLabel: 'تکرار گذرواژهٔ تازه',
+    passwordsDiffer: 'دو گذرواژه یکسان نیستند.',
+    resetSubmit: 'ذخیرهٔ گذرواژهٔ تازه',
+    resetSaving: 'در حال ذخیره…',
+    resetDone: 'گذرواژه تغییر کرد',
+    resetDoneIntro: 'گذرواژهٔ شما تغییر کرد. اکنون با آن وارد شوید.',
+    resetMissingToken: 'این پیوند نشانهٔ بازنشانی را ندارد.',
+    resetUnreachable: 'برای تغییر گذرواژه، سرور در دسترس نبود.',
+    resetExpiredHint:
+      'پیوندهای بازنشانی پس از یک ساعت منقضی می‌شوند و فقط یک بار کار می‌کنند. پیوند تازه‌ای بخواهید و از آخرین ایمیل استفاده کنید.',
+    askForNewLink: 'درخواست پیوند تازه',
   },
 
+  entry: {
+    title: 'ثبت‌ها',
+    food: 'خوراکی',
+    meal: 'وعده',
+    amount: 'مقدار',
+    macros: 'پروتئین / کربوهیدرات / چربی',
+    edit: 'ویرایش این ثبت',
+    add: 'افزودن خوراک',
+  },
   dashboard: {
     greeting: 'سلام، {name}',
-    eatenToday: 'خورده‌شده امروز',
-    eatenOnDay: 'خورده‌شده',
-    burned: 'سوزانده‌شده با فعالیت',
-    leftToday: 'مانده برای امروز',
-    leftOnDay: 'ماندهٔ آن روز',
+    eaten: 'خورده‌شده',
+    burned: 'سوزانده‌شده',
+    left: 'مانده',
     overBudget: 'بیش از سقف',
     budget: 'سقف {kcal} کیلوکالری',
-    macrosToday: 'درشت‌مغذی‌های امروز',
-    macrosOnDay: 'درشت‌مغذی‌ها',
+    macros: 'درشت‌مغذی‌ها',
 
     weekEnding: 'هفتهٔ منتهی به',
     weekEndingHint: 'نمودار این روز و شش روز پیش از آن را نشان می‌دهد.',
     viewingDay: 'نمایش {date}',
     backToToday: 'بازگشت به امروز',
-    entriesOnDay: 'ثبت‌ها',
     nothingOnDay: 'در این روز چیزی ثبت نشده است.',
     dayLoadFailed: 'این روز بارگذاری نشد.',
 
-    editEntry: 'ویرایش این ثبت',
     entryUpdateFailed: 'این ثبت تغییر نکرد.',
     entryRemoveFailed: 'این ثبت حذف نشد.',
-    activityOnDay: 'فعالیت',
     targetExplain:
       'هدف {target} کیلوکالری — سوخت‌وساز پایه {bmr}، مصرف روزانه {tdee}، محاسبه‌شده با {formula}.',
-    todaysEntries: 'ثبت‌های امروز',
-    addSomething: 'چیزی اضافه کنید',
     nothingToday: 'امروز هنوز چیزی ثبت نشده است.',
     loadFailed: 'نمای کلی شما بارگذاری نشد.',
     averages:
@@ -144,10 +170,6 @@ const fa: MessageSchema = {
       'سن، قد و میزان فعالیتتان را بگویید تا نیاز روزانه‌تان را حساب کنیم.',
     onboardingWeight: 'وزن کنونی‌تان را وارد کنید تا کالری روزانه‌تان را حساب کنیم.',
     onboardingButton: 'اطلاعات بدنی را پر کنید',
-    tableFood: 'خوراک',
-    tableMeal: 'وعده',
-    tableAmount: 'مقدار',
-    tableMacros: 'پ / ک / چ',
     exportPdf: 'دریافت به‌صورت PDF',
     exportHint: 'همهٔ روزهایی که ثبت کرده‌اید، در قالب دفترچهٔ چاپی.',
   },
@@ -213,10 +235,9 @@ const fa: MessageSchema = {
     saveFailed: 'این ثبت ذخیره نشد.',
     preview: '· {grams} گرم · {protein} گرم پروتئین · {carbs} گرم کربوهیدرات · {fat} گرم چربی',
 
-    totals: 'جمع این روز',
+    totals: 'جمع',
     left: '{kcal} مانده',
     over: '{kcal} بیشتر',
-    entries: 'ثبت‌ها',
     nothingLogged: 'برای این روز چیزی ثبت نشده است.',
     loadDayFailed: 'این روز بارگذاری نشد.',
 
@@ -229,7 +250,6 @@ const fa: MessageSchema = {
     addActivity: 'افزودن فعالیت',
     activityIncomplete: 'فعالیت را شرح دهید و بگویید چند کالری سوزانده است.',
     activityFailed: 'این فعالیت ذخیره نشد.',
-    minutesShort: 'دقیقه',
   },
 
   scanner: {
@@ -248,7 +268,7 @@ const fa: MessageSchema = {
   foods: {
     newFood: 'خوراک تازه',
     newRecipe: 'دستور تازه',
-    defineFood: 'تعریف یک خوراک',
+    defineFood: 'خوراک تازه',
     defineIntro:
       'همهٔ مقادیر برای ۱۰۰ گرم (یا ۱۰۰ میلی‌لیتر برای مایعات). پس از ذخیره، بی‌درنگ در جست‌وجوی شما پیدا می‌شود.',
     name: 'نام',
@@ -358,6 +378,19 @@ const fa: MessageSchema = {
 
     saveFailed: 'این تنظیم ذخیره نشد.',
     offlineNote: 'فقط روی این دستگاه ذخیره شد — سرور در دسترس نبود.',
+
+    passwordTitle: 'گذرواژه',
+    passwordIntro: 'گذرواژه‌ای را که با آن وارد می‌شوید تغییر دهید.',
+    currentPassword: 'گذرواژهٔ کنونی',
+    newPassword: 'گذرواژهٔ تازه',
+    repeatPassword: 'تکرار گذرواژهٔ تازه',
+    passwordsDiffer: 'دو گذرواژه یکسان نیستند.',
+    changePassword: 'تغییر گذرواژه',
+    changingPassword: 'در حال تغییر…',
+    passwordChanged: 'گذرواژهٔ شما تغییر کرد.',
+    passwordChangeFailed: 'گذرواژهٔ شما تغییر نکرد.',
+    passwordSessionsHint:
+      'با این کار روی دستگاه‌های دیگرتان خارج می‌شوید. اینجا وارد می‌مانید.',
   },
 
   sex: {
@@ -381,6 +414,8 @@ const fa: MessageSchema = {
   },
 
   activity: {
+    tableWhat: 'فعالیت',
+    tableMinutes: 'دقیقه',
     title: 'فعالیت',
     intro: 'کالری‌ای که سوزانده‌اید. این‌ها به سقف روز افزوده می‌شوند، پس روزی که تمرین کرده‌اید می‌توانید بیشتر بخورید.',
     logTitle: 'ثبت یک جلسه',
@@ -402,10 +437,9 @@ const fa: MessageSchema = {
     saveFailed: 'این فعالیت ذخیره نشد.',
     removeFailed: 'این فعالیت حذف نشد.',
     loadFailed: 'این روز بارگذاری نشد.',
-    dayTitle: 'این روز',
-    burnedTotal: 'سوزانده‌شده در این روز',
+    dayTitle: 'فعالیت',
+    burnedTotal: 'سوزانده‌شده',
     nothingYet: 'برای این روز چیزی ثبت نشده است.',
-    minutesShort: 'دقیقه',
     suggestionsTitle: 'پیشنهاد برای هدف شما',
     suggestionsFor: 'چون هدفتان این است: {goal}',
     suggestionsNoGoal: 'اطلاعات بدنی‌تان را پر کنید و هدفی برگزینید تا پیشنهادها اینجا نمایان شوند.',
@@ -495,6 +529,19 @@ const fa: MessageSchema = {
     back: 'بازگشت به نمای کلی',
   },
 
+  translations: {
+    title: 'زبان‌ها',
+    writtenIn: 'به {language} نوشته شده است. زبان‌های دیگر را در زیر بیفزایید.',
+    readOnly: 'تنها سازندهٔ این مدخل می‌تواند زبان‌های آن را تغییر دهد.',
+    nameField: 'نام',
+    brandField: 'برند',
+    descriptionField: 'توضیح',
+    nameRequired: 'برای این زبان نامی وارد کنید.',
+    saveFailed: 'این نسخهٔ زبانی ذخیره نشد.',
+    removeFailed: 'این نسخهٔ زبانی حذف نشد.',
+    shownIn: 'نمایش به {language}',
+  },
+
   errors: {
     authentication_required: 'برای استفاده از این سرویس باید وارد شوید.',
     authentication_failed: 'نشانی ایمیل یا گذرواژه نادرست است.',
@@ -513,6 +560,13 @@ const fa: MessageSchema = {
     unresolvable_portion: 'این مقدار برای این خوراک قابل تبدیل نیست. به‌جایش آن را به گرم وارد کنید.',
     invalid_target: 'یا یک خوراک بفرستید یا یک دستور، نه هر دو و نه هیچ‌کدام.',
     http_error: 'مشکلی پیش آمد. دوباره تلاش کنید.',
+    invalid_reset_token: 'این پیوند بازنشانی نامعتبر است یا منقضی شده است.',
+    invalid_current_password: 'این گذرواژهٔ کنونی شما نیست.',
+    password_unchanged: 'گذرواژهٔ تازه همان گذرواژهٔ کنونی است.',
+    unknown_locale: 'برنامه از این زبان پشتیبانی نمی‌کند.',
+    source_locale: 'این مدخل همین حالا به این زبان نوشته شده است. مستقیم ویرایشش کنید.',
+    translation_not_found: 'نسخه‌ای به این زبان وجود ندارد.',
+    exercise_not_found: 'این تمرین وجود ندارد.',
   },
 }
 

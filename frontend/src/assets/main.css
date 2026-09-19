@@ -187,12 +187,65 @@ a:hover {
 .end { text-align: end; }
 
 /* A plain container for views not yet rebuilt on the design system's Card. */
+/*
+ * A box, for something that is deliberately set apart from the page.
+ *
+ * Worth being strict about, because it stopped being a signal: every region of
+ * every screen was a card, so the dashboard was seven stacked boxes and none of
+ * them stood out - which is the same as none of them being emphasised. A card
+ * now means "this is lifted off the page": the day's headline numbers, the
+ * calorie target, a form that is the whole point of its screen.
+ *
+ * Everything else is a `.section` below - the same content, grouped by a
+ * heading and a rule instead of by a border.
+ */
 .card {
   background: var(--surface-primary);
   border: var(--border-width-small) solid var(--border-primary);
   border-radius: var(--border-radius-medium);
   padding: var(--spacing-medium);
 }
+
+/*
+ * A run of related content, grouped by its heading rather than by a border.
+ *
+ * The default way to divide a page. The hairline above it does the work a card
+ * edge used to do, at a fraction of the visual weight, and it does not nest
+ * badly: a section inside a section still reads as one document, while a card
+ * inside a card reads as a mistake.
+ */
+.section {
+  padding-top: var(--spacing-medium);
+  border-top: var(--border-width-small) solid var(--border-primary);
+}
+
+/* The first section under a page heading has the heading above it already. */
+.section:first-of-type {
+  padding-top: 0;
+  border-top: none;
+}
+
+.section + .section {
+  margin-top: var(--spacing-medium);
+}
+
+/*
+ * The heading of a section, and the one control that belongs to it.
+ *
+ * Laid out as a row so an action ("Add food") sits on the baseline of the thing
+ * it acts on, rather than floating somewhere inside the group.
+ */
+.section-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--spacing-small);
+  margin-bottom: var(--spacing-small);
+}
+
+.section-header > :is(h2, h3) { margin: 0; }
+
+.section > :is(h2, h3):first-child { margin-top: 0; }
 
 /* ── Forms ──────────────────────────────────────────────────────────────── */
 

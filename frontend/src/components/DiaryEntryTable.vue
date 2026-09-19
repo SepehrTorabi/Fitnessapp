@@ -120,11 +120,11 @@ async function remove(entry: DiaryEntry): Promise<void> {
     <table>
       <thead>
         <tr>
-          <th scope="col">{{ t('dashboard.tableFood') }}</th>
-          <th scope="col">{{ t('dashboard.tableMeal') }}</th>
-          <th class="num" scope="col">{{ t('dashboard.tableAmount') }}</th>
+          <th scope="col">{{ t('entry.food') }}</th>
+          <th scope="col">{{ t('entry.meal') }}</th>
+          <th class="num" scope="col">{{ t('entry.amount') }}</th>
           <th class="num" scope="col">{{ t('common.kcal') }}</th>
-          <th class="num" scope="col">{{ t('dashboard.tableMacros') }}</th>
+          <th class="num" scope="col">{{ t('entry.macros') }}</th>
           <th class="shrink"><span class="visually-hidden">{{ t('common.edit') }}</span></th>
         </tr>
       </thead>
@@ -150,8 +150,8 @@ async function remove(entry: DiaryEntry): Promise<void> {
                 <button
                   class="ghost"
                   type="button"
-                  :title="t('dashboard.editEntry')"
-                  :aria-label="`${t('dashboard.editEntry')}: ${entry.label}`"
+                  :title="t('entry.edit')"
+                  :aria-label="`${t('entry.edit')}: ${entry.label}`"
                   @click="edit(entry)"
                 >
                   ✎

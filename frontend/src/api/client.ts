@@ -173,6 +173,16 @@ export const api = {
   resendVerification: (email: string) =>
     request<{ message: string }>('/api/auth/resend-verification', json({ email })),
 
+  // Answers the same whether or not the address has an account, so there is
+  // nothing here for the caller to branch on - just a message to show.
+  forgotPassword: (email: string) =>
+    request<{ message: string }>('/api/auth/forgot-password', json({ email })),
+
+  // No user comes back and no session is started: redeeming a link is not a
+  // way in, it only sets the password. The view sends the user to sign in.
+  resetPassword: (token: string, password: string) =>
+    request<{ message: string }>('/api/auth/reset-password', json({ token, password })),
+
   login: (email: string, password: string) =>
     request<{ user: User }>('/api/auth/login', json({ email, password })),
 
@@ -197,6 +207,12 @@ export const api = {
   }) => request<{ user: User }>('/api/me/measurements', json(payload)),
 
   measurements: () => request<{ measurements: unknown[] }>('/api/me/measurements'),
+
+  // The current password is required even though the session already proves
+  // who this is - see the endpoint for why. Every other session is signed out
+  // as a result; this one is not.
+  changePassword: (payload: { currentPassword: string; newPassword: string }) =>
+    request<{ message: string }>('/api/me/password', { ...json(payload), method: 'PUT' }),
 
   // Fields left out are left alone, so the settings screen can change the
   // language without also resending the theme.
@@ -336,6 +352,49 @@ export const api = {
 
   deleteExerciseVideo: (id: number) =>
     request<{ exercise: Exercise }>(`/api/exercises/${id}/video`, { method: 'DELETE' }),
+
+  // --- Translations ---
+  // One shape for all three kinds of catalogue content: PUT replaces the
+  // version for that language, DELETE removes it. Each returns the whole
+  // entity back, already resolved for the reader, so the caller can drop the
+  // response straight into its list without a second request.
+
+  putFoodTranslation: (id: number, locale: AppLocale, payload: { name: string; brand?: string | null }) =>
+    request<{ food: Food }>(`/api/foods/${id}/translations/${locale}`, {
+      ...json(payload),
+      method: 'PUT',
+    }),
+
+  deleteFoodTranslation: (id: number, locale: AppLocale) =>
+    request<{ food: Food }>(`/api/foods/${id}/translations/${locale}`, { method: 'DELETE' }),
+
+  putRecipeTranslation: (
+    id: number,
+    locale: AppLocale,
+    payload: { name: string; description?: string | null },
+  ) =>
+    request<{ recipe: Recipe }>(`/api/recipes/${id}/translations/${locale}`, {
+      ...json(payload),
+      method: 'PUT',
+    }),
+
+  deleteRecipeTranslation: (id: number, locale: AppLocale) =>
+    request<{ recipe: Recipe }>(`/api/recipes/${id}/translations/${locale}`, { method: 'DELETE' }),
+
+  putExerciseTranslation: (
+    id: number,
+    locale: AppLocale,
+    payload: { name: string; description?: string | null },
+  ) =>
+    request<{ exercise: Exercise }>(`/api/exercises/${id}/translations/${locale}`, {
+      ...json(payload),
+      method: 'PUT',
+    }),
+
+  deleteExerciseTranslation: (id: number, locale: AppLocale) =>
+    request<{ exercise: Exercise }>(`/api/exercises/${id}/translations/${locale}`, {
+      method: 'DELETE',
+    }),
 
   // --- Administration ---
   adminUsers: (q?: string) =>

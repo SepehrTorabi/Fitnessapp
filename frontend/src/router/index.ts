@@ -69,6 +69,23 @@ const router = createRouter({
       meta: { guestOnly: true, titleKey: 'titles.register' },
     },
     {
+      path: '/forgot-password',
+      name: 'forgot-password',
+      component: () => import('@/views/ForgotPasswordView.vue'),
+      meta: { guestOnly: true, titleKey: 'titles.forgotPassword' },
+    },
+    {
+      // Where the reset link in the e-mail lands, with the token in the query
+      // string. Not guestOnly: somebody who is signed in on this device and
+      // opens the link from their mail should get the form they asked for, not
+      // a silent bounce to the dashboard - the likeliest reason they asked is
+      // that they are about to lose access to the session they are in.
+      path: '/reset-password',
+      name: 'reset-password',
+      component: () => import('@/views/ResetPasswordView.vue'),
+      meta: { titleKey: 'titles.resetPassword' },
+    },
+    {
       // Where the confirmation link in the e-mail lands. The token arrives as a
       // query parameter and the view posts it to the API.
       path: '/verify-email',

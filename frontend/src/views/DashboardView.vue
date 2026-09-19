@@ -13,7 +13,8 @@ import WeeklyChart from '@/components/WeeklyChart.vue'
 import MacroBars from '@/components/MacroBars.vue'
 import DateField from '@/components/DateField.vue'
 import DiaryEntryTable from '@/components/DiaryEntryTable.vue'
-import { DsAlert, DsButton, DsCard, DsStatCard } from '@/design-system/components'
+import ActivityTable from '@/components/ActivityTable.vue'
+import { DsAlert, DsButton, DsStatCard } from '@/design-system/components'
 
 /**
  * The dashboard reads one week and one day, and the two are not the same thing.
@@ -164,7 +165,7 @@ onMounted(async () => {
     <template v-else-if="data">
       <!-- The week's chart gets the full width: seven bars and their budget
            markers need the room to stay readable. -->
-      <DsCard class="block">
+      <section class="section block">
         <WeeklyChart :days="data.history" :selected="selected" @select="selected = $event" />
 
         <!-- A plain link, not a fetch-and-blob: the endpoint is same-origin, so
@@ -177,7 +178,7 @@ onMounted(async () => {
             {{ t('dashboard.exportPdf') }}
           </DsButton>
         </div>
-      </DsCard>
+      </section>
 
       <!-- Everything below describes the selected day, so it says which day that
            is, once, rather than repeating the date in every card heading. -->
@@ -197,7 +198,7 @@ onMounted(async () => {
       <template v-else-if="summary">
         <div class="grid grid-3 stats">
           <DsStatCard
-            :label="isToday ? t('dashboard.eatenToday') : t('dashboard.eatenOnDay')"
+            :label="t('dashboard.eaten')"
             :value="`${n(summary.consumed.kcal)} ${t('common.kcal')}`"
           />
           <DsStatCard
@@ -205,13 +206,7 @@ onMounted(async () => {
             :value="`${n(summary.caloriesBurned)} ${t('common.kcal')}`"
           />
           <DsStatCard
-            :label="
-              isOver
-                ? t('dashboard.overBudget')
-                : isToday
-                  ? t('dashboard.leftToday')
-                  : t('dashboard.leftOnDay')
-            "
+            :label="isOver ? t('dashboard.overBudget') : t('dashboard.left')"
             :value="
               remaining === null ? t('common.none') : `${n(Math.abs(remaining))} ${t('common.kcal')}`
             "
@@ -224,8 +219,8 @@ onMounted(async () => {
           />
         </div>
 
-        <DsCard class="block">
-          <h3>{{ isToday ? t('dashboard.macrosToday') : t('dashboard.macrosOnDay') }}</h3>
+        <section class="section block">
+          <h3>{{ t('dashboard.macros') }}</h3>
           <MacroBars :consumed="summary.consumed" :target="summary.target?.macros ?? null" />
 
           <p v-if="summary.target" class="small muted target-detail">
@@ -238,12 +233,12 @@ onMounted(async () => {
               })
             }}
           </p>
-        </DsCard>
+        </section>
 
-        <DsCard class="block">
-          <div class="row-between">
-            <h3>{{ isToday ? t('dashboard.todaysEntries') : t('dashboard.entriesOnDay') }}</h3>
-            <RouterLink to="/diary" class="small">{{ t('dashboard.addSomething') }}</RouterLink>
+        <section class="section block">
+          <div class="section-header">
+            <h3>{{ t('entry.title') }}</h3>
+            <RouterLink to="/diary" class="small">{{ t('entry.add') }}</RouterLink>
           </div>
 
           <p v-if="dayLoading" class="muted">{{ t('common.loading') }}</p>
@@ -253,27 +248,16 @@ onMounted(async () => {
           </p>
 
           <DiaryEntryTable v-else :entries="day.entries" @changed="reload" />
-        </DsCard>
+        </section>
 
-        <DsCard v-if="day && day.activities.length" class="block">
-          <h3>{{ t('dashboard.activityOnDay') }}</h3>
+        <section v-if="day && day.activities.length" class="section block">
+          <h3>{{ t('activity.dayTitle') }}</h3>
 
-          <table>
-            <tbody>
-              <tr v-for="activity in day.activities" :key="activity.id">
-                <td>
-                  {{ activity.description }}
-                  <span v-if="activity.durationMinutes" class="muted small">
-                    · {{ n(activity.durationMinutes) }} {{ t('diary.minutesShort') }}
-                  </span>
-                </td>
-                <td class="num">
-                  {{ n(activity.caloriesBurned) }} {{ t('common.kcal') }}
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </DsCard>
+          <!-- The same table the activity page shows, so an activity looks
+               like an activity wherever it is read - and can be removed from
+               here too, which it could not before. -->
+          <ActivityTable :activities="day.activities" @changed="reload" />
+        </section>
       </template>
 
       <p v-if="data.averages.daysLogged > 0" class="muted small averages">

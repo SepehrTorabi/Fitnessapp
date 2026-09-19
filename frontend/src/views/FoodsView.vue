@@ -4,6 +4,7 @@ import { useI18n } from 'vue-i18n'
 import { api, ApiError } from '@/api/client'
 import { useApiMessage } from '@/composables/useApiMessage'
 import type { Food, Recipe } from '@/api/types'
+import TranslationEditor from '@/components/TranslationEditor.vue'
 import { useNumbers } from '@/composables/useNumbers'
 
 /**
@@ -41,6 +42,8 @@ const foodError = ref('')
 const foodViolations = ref<Record<string, string>>({})
 const foodWarnings = ref<string[]>([])
 const foodSuccess = ref('')
+/** The food just created, kept only so its languages can be added at once. */
+const createdFood = ref<Food | null>(null)
 const savingFood = ref(false)
 
 /**
@@ -68,6 +71,7 @@ function removePortion(index: number): void {
 
 async function saveFood(): Promise<void> {
   savingFood.value = true
+  createdFood.value = null
   foodError.value = ''
   foodViolations.value = {}
   foodWarnings.value = []
@@ -95,6 +99,10 @@ async function saveFood(): Promise<void> {
 
     foodSuccess.value = t('foods.foodSaved', { label: response.food.label })
     foodWarnings.value = response.warnings
+    // Held on to only so the language editor below has something to act on.
+    // Adding a translation is most likely right after typing the name, and the
+    // alternative is searching for the food again to get back to it.
+    createdFood.value = response.food
 
     Object.assign(food, {
       name: '', brand: '', barcode: '', densityGPerMl: 1,
@@ -195,6 +203,16 @@ async function saveRecipe(): Promise<void> {
   } catch (e) {
     recipeError.value = apiMessage(e, 'foods.saveRecipeFailed')
   }
+}
+
+/**
+ * Swap in the recipe the API returned after a language was added or removed,
+ * rather than reloading the whole list for one row.
+ */
+function replaceRecipe(updated: Recipe): void {
+  const index = recipes.value.findIndex((r) => r.id === updated.id)
+
+  if (index !== -1) recipes.value[index] = updated
 }
 
 async function loadRecipes(): Promise<void> {
@@ -317,8 +335,25 @@ onMounted(loadRecipes)
           </div>
         </div>
 
+        <template v-if="createdFood">
+          <p class="alert alert-success">{{ foodSuccess }}</p>
+          <!-- Offered here because this is the moment the name is fresh in the
+               user's mind. Collapsed, so anyone working in one language sees a
+               single extra line and nothing more. -->
+          <TranslationEditor
+            :key="createdFood.id"
+            kind="food"
+            :id="createdFood.id"
+            :source-locale="createdFood.sourceLocale"
+            :translations="createdFood.translations"
+            :can-edit="true"
+            @updated="createdFood = $event as Food"
+          />
+        </template>
+
         <p v-if="foodError" class="alert alert-error">{{ foodError }}</p>
-        <p v-if="foodSuccess" class="alert alert-success">{{ foodSuccess }}</p>
+        <!-- Only when the block above is not already showing it. -->
+        <p v-if="foodSuccess && !createdFood" class="alert alert-success">{{ foodSuccess }}</p>
         <p v-for="warning in foodWarnings" :key="warning" class="alert alert-info small">
           {{ warning }}
         </p>
@@ -455,15 +490,32 @@ onMounted(loadRecipes)
             </tr>
           </thead>
           <tbody>
-            <tr v-for="item in recipes" :key="item.id">
-              <td>{{ item.name }}</td>
-              <td class="num">{{ item.servings }}</td>
-              <td class="num">{{ n(item.perServing.kcal) }}</td>
-              <td class="num muted">{{ n(item.per100.kcal) }}</td>
-              <td class="num shrink">
-                <button class="ghost" type="button" @click="deleteRecipe(item.id)">✕</button>
-              </td>
-            </tr>
+            <template v-for="item in recipes" :key="item.id">
+              <tr>
+                <td>{{ item.name }}</td>
+                <td class="num">{{ item.servings }}</td>
+                <td class="num">{{ n(item.perServing.kcal) }}</td>
+                <td class="num muted">{{ n(item.per100.kcal) }}</td>
+                <td class="num shrink">
+                  <button class="ghost" type="button" @click="deleteRecipe(item.id)">✕</button>
+                </td>
+              </tr>
+              <!-- A row of its own rather than a control crammed into the name
+                   cell: the editor is a form, and a form inside a table cell
+                   makes the whole column jump about as soon as it opens. -->
+              <tr class="language-row">
+                <td colspan="5">
+                  <TranslationEditor
+                    kind="recipe"
+                    :id="item.id"
+                    :source-locale="item.sourceLocale"
+                    :translations="item.translations"
+                    :can-edit="true"
+                    @updated="replaceRecipe($event as Recipe)"
+                  />
+                </td>
+              </tr>
+            </template>
           </tbody>
         </table>
       </div>

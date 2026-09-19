@@ -6,6 +6,7 @@ import { useApiMessage } from '@/composables/useApiMessage'
 import type { DayView, ExternalFood, Food, MealType, Recipe } from '@/api/types'
 import MacroBars from '@/components/MacroBars.vue'
 import DateField from '@/components/DateField.vue'
+import DiaryEntryTable from '@/components/DiaryEntryTable.vue'
 import { todayIso } from '@/calendar'
 import { useNumbers } from '@/composables/useNumbers'
 
@@ -249,12 +250,6 @@ async function logRecipe(recipe: Recipe): Promise<void> {
 }
 
 
-async function removeEntry(id: number): Promise<void> {
-  await api.deleteEntry(id)
-  await loadDay()
-}
-
-
 watch(date, loadDay)
 
 onMounted(async () => {
@@ -276,7 +271,7 @@ onMounted(async () => {
     <div class="grid grid-2">
       <!-- ---------- Adding something ---------- -->
       <div class="stack">
-        <div class="card">
+        <section class="section">
           <h3>{{ t('diary.findFood') }}</h3>
 
           <form class="row" @submit.prevent="search">
@@ -314,9 +309,9 @@ onMounted(async () => {
               </li>
             </ul>
           </template>
-        </div>
+        </section>
 
-        <div class="card">
+        <section class="section">
           <h3>{{ t('diary.scanTitle') }}</h3>
 
           <template v-if="showScanner">
@@ -330,9 +325,9 @@ onMounted(async () => {
               {{ t('diary.openScanner') }}
             </button>
           </template>
-        </div>
+        </section>
 
-        <div v-if="recipes.length" class="card">
+        <section v-if="recipes.length" class="section">
           <h3>{{ t('diary.yourRecipes') }}</h3>
 
           <!-- Amount and unit together, so the number on each row below always
@@ -382,7 +377,7 @@ onMounted(async () => {
               </button>
             </li>
           </ul>
-        </div>
+        </section>
       </div>
 
       <!-- ---------- The day so far ---------- -->
@@ -464,39 +459,38 @@ onMounted(async () => {
           />
         </div>
 
-        <div v-if="day" class="card">
-          <h3>{{ t('diary.entries') }}</h3>
-
-          <p v-if="loading" class="muted">{{ t('common.loading') }}</p>
-          <p v-else-if="day.entries.length === 0" class="empty">{{ t('diary.nothingLogged') }}</p>
-
-          <table v-else>
-            <tbody>
-              <tr v-for="entry in day.entries" :key="entry.id">
-                <td>
-                  {{ entry.label }}
-                  <span class="muted small block">
-                    {{ entry.quantity }} {{ entry.portionLabel ?? entry.unit }} ·
-                    {{ t(`meal.${entry.mealType}`) }}
-                  </span>
-                </td>
-                <td class="num">{{ n(entry.nutrients.kcal) }} {{ t('common.kcal') }}</td>
-                <td class="num shrink">
-                  <button class="ghost" type="button" :title="t('common.remove')" @click="removeEntry(entry.id)">
-                    ✕
-                  </button>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
 
       </div>
     </div>
+
+      <!-- Full width, below both columns. Six columns of entry do not fit in
+           half a page - the macros header wrapped onto two lines - and the day's
+           record is the substance of this screen rather than a footnote to the
+           form that adds to it. -->
+      <section v-if="day" class="section day-entries">
+        <h2>{{ t('entry.title') }}</h2>
+
+        <p v-if="loading" class="muted">{{ t('common.loading') }}</p>
+        <p v-else-if="day.entries.length === 0" class="empty">{{ t('diary.nothingLogged') }}</p>
+
+        <DiaryEntryTable v-else :entries="day.entries" @changed="loadDay" />
+      </section>
   </div>
 </template>
 
 <style scoped>
+/*
+ * The entries sit directly under the two columns, so they are the first
+ * .section of their parent - which is exactly the case the shared rule strips
+ * the top border from, on the assumption that a page heading is above it. Here
+ * a form is above it instead, and the two need separating.
+ */
+.day-entries {
+  margin-top: var(--spacing-large);
+  padding-top: var(--spacing-medium);
+  border-top: var(--border-width-small) solid var(--border-primary);
+}
+
 .note { margin: 10px 0 0; }
 .section-label { margin: 16px 0 6px; font-weight: 600; }
 

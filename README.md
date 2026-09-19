@@ -171,6 +171,7 @@ Copy anything you need to override into `app/.env.local` — it is gitignored.
 | `DATABASE_URL` | PostgreSQL connection |
 | `MAILER_DSN` | `smtp://localhost:1025` locally (Mailpit) |
 | `FRONTEND_VERIFY_URL` | Where the confirmation link sends people |
+| `FRONTEND_RESET_URL` | Where the password reset link sends people |
 | `MAILER_SENDER_ADDRESS` / `MAILER_SENDER_NAME` | From-address of the mails |
 | `OPEN_FOOD_FACTS_USER_AGENT` | Open Food Facts asks callers to identify themselves |
 
@@ -201,6 +202,7 @@ tar -xzf fitnessapp-v1.2.3.tar.gz
 cd fitnessapp-v1.2.3
 DATABASE_URL='postgresql://user:pass@host:5432/fitnessapp?serverVersion=16' \
 FRONTEND_VERIFY_URL='https://example.com/app/verify-email' \
+FRONTEND_RESET_URL='https://example.com/app/reset-password' \
   ./install.sh
 ```
 

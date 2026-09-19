@@ -5,7 +5,9 @@ import { api } from '@/api/client'
 import { useApiMessage } from '@/composables/useApiMessage'
 import { useNumbers } from '@/composables/useNumbers'
 import type { Exercise, ExercisePurpose } from '@/api/types'
+import { LOCALE_ENDONYMS } from '@/i18n'
 import VideoPlayer from '@/components/VideoPlayer.vue'
+import TranslationEditor from '@/components/TranslationEditor.vue'
 import { DsBadge } from '@/design-system/components'
 
 /**
@@ -373,9 +375,17 @@ async function remove(exercise: Exercise): Promise<void> {
 
     <table v-else class="catalogue">
       <tbody>
-        <tr v-for="exercise in props.exercises" :key="exercise.id">
+        <template v-for="exercise in props.exercises" :key="exercise.id">
+        <tr>
           <td>
             <strong>{{ exercise.name }}</strong>
+            <!-- Said out loud when the name on screen is the fallback rather
+                 than this reader's language, so an English name in a German
+                 interface reads as "not translated yet" instead of as a
+                 mistake. -->
+            <span v-if="!exercise.translated" class="muted small block fallback">
+              {{ t('translations.shownIn', { language: LOCALE_ENDONYMS[exercise.sourceLocale] }) }}
+            </span>
             <span class="muted small block">
               {{
                 exercise.createdBy
@@ -424,6 +434,23 @@ async function remove(exercise: Exercise): Promise<void> {
             </div>
           </td>
         </tr>
+        <!-- Its own row rather than a control inside the name cell: the editor
+             is a form, and opening one inside a cell shoves the whole column
+             sideways. This component only renders for trainers, who are exactly
+             the people allowed to translate the catalogue. -->
+        <tr class="language-row">
+          <td colspan="3">
+            <TranslationEditor
+              kind="exercise"
+              :id="exercise.id"
+              :source-locale="exercise.sourceLocale"
+              :translations="exercise.translations"
+              :can-edit="true"
+              @updated="emit('changed')"
+            />
+          </td>
+        </tr>
+        </template>
       </tbody>
     </table>
     <VideoPlayer

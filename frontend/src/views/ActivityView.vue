@@ -12,6 +12,7 @@ import ExerciseCatalogue from '@/components/ExerciseCatalogue.vue'
 import ExercisePicker from '@/components/ExercisePicker.vue'
 import VideoPlayer from '@/components/VideoPlayer.vue'
 import { DsAlert, DsBadge, DsCard, DsStatCard } from '@/design-system/components'
+import ActivityTable from '@/components/ActivityTable.vue'
 
 /**
  * Everything to do with training, on one page.
@@ -169,17 +170,6 @@ async function logFreeText(): Promise<void> {
   }
 }
 
-async function remove(id: number): Promise<void> {
-  error.value = ''
-
-  try {
-    await api.deleteActivity(id)
-    await loadDay()
-  } catch (e) {
-    error.value = apiMessage(e, 'activity.removeFailed')
-  }
-}
-
 /** Pick a suggested exercise up into the form rather than logging it blind. */
 function useSuggestion(exercise: Exercise): void {
   mode.value = 'catalogue'
@@ -327,7 +317,7 @@ onMounted(async () => {
         </DsCard>
 
         <!-- ---------- Suggestions ---------- -->
-        <DsCard>
+        <section class="section">
           <h3>{{ t('activity.suggestionsTitle') }}</h3>
 
           <p v-if="goalLabel" class="muted small note">
@@ -380,7 +370,7 @@ onMounted(async () => {
               </button>
             </li>
           </ul>
-        </DsCard>
+        </section>
       </div>
 
       <!-- ---------- The day ---------- -->
@@ -390,7 +380,7 @@ onMounted(async () => {
           :value="`${n(day?.caloriesBurned ?? 0)} ${t('common.kcal')}`"
         />
 
-        <DsCard>
+        <section class="section">
           <h3>{{ t('activity.dayTitle') }}</h3>
 
           <p v-if="loading" class="muted">{{ t('common.loading') }}</p>
@@ -399,30 +389,8 @@ onMounted(async () => {
             {{ t('activity.nothingYet') }}
           </p>
 
-          <table v-else>
-            <tbody>
-              <tr v-for="activity in day.activities" :key="activity.id">
-                <td>
-                  {{ activity.description }}
-                  <span v-if="activity.durationMinutes" class="muted small block">
-                    {{ n(activity.durationMinutes) }} {{ t('activity.minutesShort') }}
-                  </span>
-                </td>
-                <td class="num">{{ n(activity.caloriesBurned) }} {{ t('common.kcal') }}</td>
-                <td class="num shrink">
-                  <button
-                    class="ghost"
-                    type="button"
-                    :aria-label="`${t('common.remove')}: ${activity.description}`"
-                    @click="remove(activity.id)"
-                  >
-                    ✕
-                  </button>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </DsCard>
+          <ActivityTable v-else :activities="day.activities" @changed="loadDay" />
+        </section>
       </div>
     </div>
 
@@ -488,27 +456,32 @@ onMounted(async () => {
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-2xs);
+
 }
 
 /*
- * The card is the row, not the button inside it.
+ * Rows separated by a hairline, not eight stacked boxes.
  *
- * The exercise and its "how to" link are one thing - a suggestion, and the way
- * to see it done - so the border goes round both. It used to sit on the button
- * alone, which left the link looking like a stray piece of interface that had
- * come loose underneath.
+ * Every suggestion used to carry its own fill and border, so a list of eight
+ * read as eight things competing for attention - inside a panel that was itself
+ * a box. None of them is emphasised over the others, so none of them needs the
+ * chrome. The exercise and its "how to" link are still one thing: they share a
+ * row, and the hairline falls between suggestions rather than between the two
+ * halves of one.
+ *
+ * The hover fill stays. It is the one state here that really is about a single
+ * row rather than the set.
  */
 .suggestion-row {
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  background: var(--surface-subtle);
-  border: var(--border-width-small) solid var(--border-action);
-  border-radius: var(--border-radius-small);
+  border-top: var(--border-width-small) solid var(--border-primary);
 }
 
-.suggestion-row:hover { background: var(--surface-action-hover); }
+.suggestion-row:first-child { border-top: none; }
+
+.suggestion-row:hover { background: var(--surface-subtle); }
 
 /*
  * Under the exercise rather than beside it: the label is a sentence, and at

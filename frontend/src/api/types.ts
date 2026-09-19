@@ -134,6 +134,24 @@ export interface FoodPortion {
   grams: number
 }
 
+/**
+ * The language versions an entry carries, keyed by locale.
+ *
+ * `name`/`description` on the entry itself are already resolved for the reader
+ * by the API, so a component that only displays them can ignore all of this.
+ * It exists for the editor, and for saying *which* language is on screen when
+ * the reader's own is not available.
+ */
+export interface ContentTranslation {
+  name: string
+  description: string | null
+}
+
+export interface FoodTranslationValue {
+  name: string
+  brand: string | null
+}
+
 export interface Food {
   id: number
   name: string
@@ -145,6 +163,11 @@ export interface Food {
   per100: Nutrients
   portions: FoodPortion[]
   availableUnits: AvailableUnit[]
+  /** The language `name` and `brand` above fall back to. */
+  sourceLocale: AppLocale
+  /** False when the reader is seeing the fallback rather than their own language. */
+  translated: boolean
+  translations: Partial<Record<AppLocale, FoodTranslationValue>>
 }
 
 /** A hit from the external database, not yet in our catalogue - so it has no id. */
@@ -214,6 +237,9 @@ export interface Exercise {
   createdBy: string | null
   createdAt: string
   updatedAt: string
+  sourceLocale: AppLocale
+  translated: boolean
+  translations: Partial<Record<AppLocale, ContentTranslation>>
 }
 
 export interface ActivityDay {
@@ -293,4 +319,7 @@ export interface Recipe {
   per100: Nutrients
   ingredients: RecipeIngredient[]
   createdAt: string
+  sourceLocale: AppLocale
+  translated: boolean
+  translations: Partial<Record<AppLocale, ContentTranslation>>
 }
