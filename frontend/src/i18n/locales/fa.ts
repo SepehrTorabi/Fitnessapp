@@ -1,0 +1,519 @@
+import type { MessageSchema } from '..'
+
+/**
+ * Persian messages.
+ *
+ * Written right to left. The interface mirrors with it - `applyLocale` puts
+ * dir="rtl" on <html> and everything laid out with logical CSS properties
+ * follows - so nothing here needs to describe a side. Where a string would have
+ * said "on the left", it says "before" or names the thing instead.
+ *
+ * Two conventions worth knowing when editing this file:
+ *
+ *  - Numbers inside a sentence stay as {placeholders}. They are formatted by
+ *    Intl at render time, which renders them in Persian digits (۱۲۳) for this
+ *    language - writing them out here would fix them as Latin digits.
+ *  - Half-spaces (ZWNJ) matter in Persian: "می‌خواهی" is one word, "می خواهی"
+ *    is two. They are already in the strings below and must be preserved.
+ *
+ * Typed against MessageSchema, which is derived from en.ts - a key missing here
+ * is a compile error rather than an English string turning up mid-sentence.
+ */
+const fa: MessageSchema = {
+  common: {
+    save: 'ذخیره',
+    saving: 'در حال ذخیره…',
+    cancel: 'انصراف',
+    search: 'جست‌وجو',
+    searching: 'در حال جست‌وجو…',
+    loading: 'در حال بارگذاری…',
+    remove: 'حذف',
+    add: 'افزودن',
+    saved: 'ذخیره شد.',
+    day: 'روز',
+    today: 'امروز',
+    edit: 'ویرایش',
+    close: 'بستن',
+    kcal: 'کیلوکالری',
+    grams: 'گرم',
+    optional: 'اختیاری',
+    none: '—',
+  },
+
+  nav: {
+    activity: 'فعالیت',
+    admin: 'حساب‌ها',
+    brand: 'Fitnessapp',
+    dashboard: 'نمای کلی',
+    diary: 'ثبت خوراک',
+    foods: 'خوراکی‌ها و دستورها',
+    profile: 'اطلاعات بدنی',
+    settings: 'تنظیمات',
+    signOut: 'خروج',
+    accountMenu: 'حساب شما',
+    signedInAs: 'واردشده با {email}',
+  },
+
+  datePicker: {
+    choose: 'انتخاب تاریخ',
+    previousMonth: 'ماه پیش',
+    nextMonth: 'ماه بعد',
+    today: 'امروز',
+  },
+
+  titles: {
+    activity: 'فعالیت',
+    admin: 'حساب‌ها',
+    dashboard: 'نمای کلی',
+    diary: 'ثبت خوراک',
+    foods: 'خوراکی‌ها و دستورها',
+    profile: 'اطلاعات بدنی شما',
+    settings: 'تنظیمات',
+    login: 'ورود',
+    register: 'ساخت حساب',
+    verify: 'در حال تأیید نشانی شما',
+    notFound: 'پیدا نشد',
+  },
+
+  auth: {
+    emailLabel: 'نشانی ایمیل',
+    passwordLabel: 'گذرواژه',
+    nameLabel: 'نام شما',
+    signIn: 'ورود',
+    signingIn: 'در حال ورود…',
+    noAccount: 'هنوز حساب ندارید؟',
+    createOne: 'یکی بسازید',
+    haveAccount: 'از قبل حساب دارید؟',
+    createAccount: 'ساخت حساب',
+    creating: 'در حال ساختن…',
+    passwordHint: 'دست‌کم ۱۰ نویسه.',
+    resendLink: 'پیوند تأیید را دوباره بفرست',
+    unreachable: 'سرور در دسترس نبود. آیا API در حال اجراست؟',
+    sendFailed: 'ایمیل فرستاده نشد.',
+
+    checkInbox: 'صندوق ورودی خود را ببینید',
+    confirmationSent:
+      'پیوند تأیید را به {email} فرستادیم. برای فعال‌سازی حسابتان بازش کنید و سپس وارد شوید.',
+    mailpitHint: 'به‌صورت محلی اجرا می‌کنید؟ ایمیل در Mailpit روی {link} منتظر است.',
+    backToSignIn: 'بازگشت به ورود',
+
+    confirming: 'در حال تأیید…',
+    oneMoment: 'یک لحظه.',
+    allSet: 'همه‌چیز آماده است',
+    linkFailed: 'این پیوند کار نکرد',
+    linkMissingToken: 'این پیوند نشانهٔ تأیید را ندارد.',
+    verifyUnreachable: 'برای تأیید نشانی شما، سرور در دسترس نبود.',
+    linkExpiredHint:
+      'پیوندهای تأیید پس از ۲۴ ساعت منقضی می‌شوند و فقط یک بار کار می‌کنند. وارد شوید - اگر حساب هنوز تأیید نشده باشد، آنجا می‌توانید پیوند تازه بخواهید.',
+  },
+
+  dashboard: {
+    greeting: 'سلام، {name}',
+    eatenToday: 'خورده‌شده امروز',
+    eatenOnDay: 'خورده‌شده',
+    burned: 'سوزانده‌شده با فعالیت',
+    leftToday: 'مانده برای امروز',
+    leftOnDay: 'ماندهٔ آن روز',
+    overBudget: 'بیش از سقف',
+    budget: 'سقف {kcal} کیلوکالری',
+    macrosToday: 'درشت‌مغذی‌های امروز',
+    macrosOnDay: 'درشت‌مغذی‌ها',
+
+    weekEnding: 'هفتهٔ منتهی به',
+    weekEndingHint: 'نمودار این روز و شش روز پیش از آن را نشان می‌دهد.',
+    viewingDay: 'نمایش {date}',
+    backToToday: 'بازگشت به امروز',
+    entriesOnDay: 'ثبت‌ها',
+    nothingOnDay: 'در این روز چیزی ثبت نشده است.',
+    dayLoadFailed: 'این روز بارگذاری نشد.',
+
+    editEntry: 'ویرایش این ثبت',
+    entryUpdateFailed: 'این ثبت تغییر نکرد.',
+    entryRemoveFailed: 'این ثبت حذف نشد.',
+    activityOnDay: 'فعالیت',
+    targetExplain:
+      'هدف {target} کیلوکالری — سوخت‌وساز پایه {bmr}، مصرف روزانه {tdee}، محاسبه‌شده با {formula}.',
+    todaysEntries: 'ثبت‌های امروز',
+    addSomething: 'چیزی اضافه کنید',
+    nothingToday: 'امروز هنوز چیزی ثبت نشده است.',
+    loadFailed: 'نمای کلی شما بارگذاری نشد.',
+    averages:
+      'در {count} روزی که این هفته ثبت کردید، میانگین {kcal} کیلوکالری و {protein} گرم پروتئین بود. | در {count} روزی که این هفته ثبت کردید، میانگین {kcal} کیلوکالری و {protein} گرم پروتئین بود.',
+    onboardingTitle: 'یک گام دیگر',
+    onboardingProfile:
+      'سن، قد و میزان فعالیتتان را بگویید تا نیاز روزانه‌تان را حساب کنیم.',
+    onboardingWeight: 'وزن کنونی‌تان را وارد کنید تا کالری روزانه‌تان را حساب کنیم.',
+    onboardingButton: 'اطلاعات بدنی را پر کنید',
+    tableFood: 'خوراک',
+    tableMeal: 'وعده',
+    tableAmount: 'مقدار',
+    tableMacros: 'پ / ک / چ',
+    exportPdf: 'دریافت به‌صورت PDF',
+    exportHint: 'همهٔ روزهایی که ثبت کرده‌اید، در قالب دفترچهٔ چاپی.',
+  },
+
+  chart: {
+    title: 'کالری در هر روز',
+    caption: 'میله‌ها آنچه خورده‌اید را نشان می‌دهند؛ خط، سقف همان روز است.',
+    showTable: 'نمایش جدول',
+    showChart: 'نمایش نمودار',
+    withinBudget: 'درون سقف',
+    overBudget: 'بیش از سقف',
+    budgetLine: 'سقف',
+    hoverHint: 'برای جزئیات روی یک روز بروید، یا روزی را برگزینید تا ثبت‌هایش را ببینید.',
+    selectDay: 'نمایش ثبت‌های {date}',
+    selectedDay: 'روز برگزیده',
+    eaten: '{kcal} کیلوکالری خورده‌شده',
+    ofBudget: 'از سقف {kcal}',
+    kcalLeft: '{kcal} کیلوکالری مانده',
+    kcalOver: '{kcal} کیلوکالری بیشتر',
+    noTarget: 'هدفی تعیین نشده',
+    ariaLabel: 'کالری خورده‌شده در هر روز در مقایسه با سقف روزانه',
+    tableDay: 'روز',
+    tableEaten: 'خورده‌شده',
+    tableBudget: 'سقف',
+    tableDifference: 'اختلاف',
+  },
+
+  macros: {
+    protein: 'پروتئین',
+    carbs: 'کربوهیدرات',
+    fat: 'چربی',
+    overTarget: '{grams} گرم بیش از هدف',
+  },
+
+  diary: {
+    findFood: 'یافتن خوراک',
+    searchPlaceholder: 'مثلاً جو دوسر، مرغ، موز',
+    queryTooShort: 'دست‌کم دو نویسه بنویسید.',
+    nothingFound: 'چیزی پیدا نشد. می‌توانید این خوراک را خودتان در بخش خوراکی‌ها و دستورها تعریف کنید.',
+    searchFailed: 'جست‌وجو ناموفق بود.',
+    externalUnavailable: 'پایگاه دادهٔ فرآورده‌ها در دسترس نبود، پس فقط خوراکی‌های خودتان فهرست شده‌اند. کمی بعد دوباره تلاش کنید.',
+    externalHeading: 'از Open Food Facts',
+    perHundred: '{kcal} کیلوکالری در ۱۰۰ گرم',
+    importFailed: 'این فرآورده وارد نشد.',
+    barcodeFailed: 'این بارکد یافت نشد.',
+
+    scanTitle: 'پویش یک فرآورده',
+    scanIntro: 'بارکد روی بسته را با دوربین بخوانید، یا شماره را بنویسید.',
+    openScanner: 'باز کردن پویشگر',
+
+    yourRecipes: 'دستورهای شما',
+    servings: 'وعده‌ها',
+    kcalPerServing: '{kcal} کیلوکالری در هر وعده',
+    recipeAdds: '{kcal} کیلوکالری اضافه می‌کند',
+    gramsUnit: 'گرم',
+    recipeFailed: 'این دستور ثبت نشد.',
+
+    amount: 'مقدار',
+    unit: 'یکا',
+    meal: 'وعده',
+    addToDiary: 'افزودن به دفترچه',
+    adding: 'در حال افزودن…',
+    saveFailed: 'این ثبت ذخیره نشد.',
+    preview: '· {grams} گرم · {protein} گرم پروتئین · {carbs} گرم کربوهیدرات · {fat} گرم چربی',
+
+    totals: 'جمع این روز',
+    left: '{kcal} مانده',
+    over: '{kcal} بیشتر',
+    entries: 'ثبت‌ها',
+    nothingLogged: 'برای این روز چیزی ثبت نشده است.',
+    loadDayFailed: 'این روز بارگذاری نشد.',
+
+    activity: 'فعالیت',
+    activityIntro: 'کالری‌ای که سوزانده‌اید. این‌ها به سقف روز افزوده می‌شوند.',
+    activityWhat: 'چه کردید؟',
+    activityPlaceholder: 'پنج کیلومتر دویدن',
+    activityKcal: 'کالری سوزانده‌شده',
+    activityMinutes: 'دقیقه (اختیاری)',
+    addActivity: 'افزودن فعالیت',
+    activityIncomplete: 'فعالیت را شرح دهید و بگویید چند کالری سوزانده است.',
+    activityFailed: 'این فعالیت ذخیره نشد.',
+    minutesShort: 'دقیقه',
+  },
+
+  scanner: {
+    scan: 'پویش بارکد',
+    stop: 'توقف پویش',
+    holdSteady: 'بارکد را درون کادر نگه دارید.',
+    manualPlaceholder: '…یا شمارهٔ بارکد را بنویسید',
+    manualLabel: 'شمارهٔ بارکد',
+    lookUp: 'جست‌وجو',
+    tooShort: 'بارکد دست‌کم ۸ رقم دارد.',
+    unsupported: 'این مرورگر نمی‌تواند از دوربین استفاده کند. به‌جایش شماره را بنویسید.',
+    denied: 'دسترسی به دوربین رد شد. به‌جایش شماره را بنویسید.',
+    failed: 'دوربین روشن نشد. به‌جایش شماره را بنویسید.',
+  },
+
+  foods: {
+    newFood: 'خوراک تازه',
+    newRecipe: 'دستور تازه',
+    defineFood: 'تعریف یک خوراک',
+    defineIntro:
+      'همهٔ مقادیر برای ۱۰۰ گرم (یا ۱۰۰ میلی‌لیتر برای مایعات). پس از ذخیره، بی‌درنگ در جست‌وجوی شما پیدا می‌شود.',
+    name: 'نام',
+    brand: 'برند (اختیاری)',
+    barcode: 'بارکد (اختیاری)',
+    calories: 'کالری (کیلوکالری)',
+    protein: 'پروتئین (گرم)',
+    carbs: 'کربوهیدرات (گرم)',
+    fat: 'چربی (گرم)',
+    fiber: 'فیبر (گرم، اختیاری)',
+    sugar: 'قند (گرم، اختیاری)',
+    density: 'چگالی (گرم در میلی‌لیتر)',
+    densityHint:
+      'فقط وقتی مهم است که این را با قاشق یا میلی‌لیتر اندازه بگیرید. آب ۱ است، روغن حدود ۰٫۹۲ و عسل حدود ۱٫۴۲.',
+    portions: 'وعده‌های نام‌دار (اختیاری)',
+    addPortion: 'افزودن وعده',
+    portionsHint:
+      'وزن یک برش، یک تکه یا یک پیمانه از این خوراک. بدون این‌ها فقط با وزن یا حجم می‌توانید ثبتش کنید.',
+    portionLabelPlaceholder: 'برش',
+    portionGramsPlaceholder: 'گرم',
+    saveFood: 'ذخیرهٔ خوراک',
+    foodSaved: '«{label}» اکنون در فهرست شماست.',
+    saveFoodFailed: 'این خوراک ذخیره نشد.',
+    energyMismatch:
+      'این درشت‌مغذی‌ها حدود {implied} کیلوکالری می‌شوند، ولی شما {stated} وارد کردید. ارزش دوباره نگاه کردن دارد — معمولاً یکی از مقادیر به‌جای ۱۰۰ گرم، برای یک وعده برداشته شده است.',
+
+    buildRecipe: 'ساختن یک دستور',
+    recipeIntro:
+      'یک دستور ارزش غذایی‌اش را از مواد تشکیل‌دهنده می‌گیرد، پس اصلاح یک ماده بعداً هر دستوری را که از آن استفاده می‌کند اصلاح می‌کند.',
+    recipeName: 'نام',
+    recipeServings: 'وعده‌ها',
+    recipeNotes: 'یادداشت (اختیاری)',
+    addIngredient: 'افزودن ماده',
+    searchYourFoods: 'جست‌وجو در خوراکی‌های شما',
+    ingredient: 'ماده',
+    gramsColumn: 'گرم',
+    needIngredient: 'دست‌کم یک ماده اضافه کنید.',
+    recipeSaved: '«{name}» ذخیره شد — {kcal} کیلوکالری در هر وعده.',
+    saveRecipeFailed: 'این دستور ذخیره نشد.',
+    sharePublicly: 'این دستور را با کاربران دیگر به اشتراک بگذار',
+    saveRecipe: 'ذخیرهٔ دستور',
+    yourRecipes: 'دستورهای شما',
+    servingsColumn: 'وعده‌ها',
+    kcalPerServingColumn: 'کیلوکالری در وعده',
+    kcalPerHundredColumn: 'کیلوکالری / ۱۰۰ گرم',
+    perServingSummary:
+      '{kcal} کیلوکالری در هر وعده | · {grams} گرم · {protein} گرم پروتئین · {carbs} گرم کربوهیدرات · {fat} گرم چربی',
+    wholeRecipe: 'کل دستور: {kcal} کیلوکالری، {grams} گرم',
+  },
+
+  profile: {
+    aboutYou: 'دربارهٔ شما',
+    aboutIntro: 'این‌ها به‌ندرت تغییر می‌کنند، پس فقط یک بار پرشان می‌کنید.',
+    birthDate: 'تاریخ تولد',
+    sex: 'جنسیت',
+    sexHint: 'فرمول‌های کالری برای هر جنسیت ثابت متفاوتی دارند؛ تنها دلیل پرسیدن همین است.',
+    height: 'قد (سانتی‌متر)',
+    activityQuestion: 'چقدر فعال هستید؟',
+    goalQuestion: 'هدفتان چیست؟',
+    saveFailed: 'نمایهٔ شما ذخیره نشد.',
+
+    weighIn: 'وزن امروز',
+    weighInIntro:
+      'اگر در یک روز دو بار وزن کنید، ثبت پیشین جایگزین می‌شود و ثبت دومی اضافه نمی‌شود.',
+    weight: 'وزن (کیلوگرم)',
+    muscleMass: 'تودهٔ عضلانی (کیلوگرم، اختیاری)',
+    fatMass: 'تودهٔ چربی (کیلوگرم، اختیاری)',
+    fatMassHint:
+      'اگر تودهٔ چربی‌تان را بدانید، محاسبه به فرمولی بر پایهٔ تودهٔ بدون چربی می‌رود که دقیق‌تر از فرمول مبتنی بر وزن کل است.',
+    saveWeighIn: 'ذخیرهٔ وزن',
+    weightRequired: 'وزنتان را وارد کنید.',
+    weighInFailed: 'این وزن ذخیره نشد.',
+
+    dailyTarget: 'هدف روزانهٔ شما',
+    noTargetYet: 'مشخصات و یک وزن را وارد کنید تا هدفتان اینجا نمایان شود.',
+    bmr: 'سوخت‌وساز پایه',
+    tdee: 'مصرف کل روزانه',
+    proteinRow: 'پروتئین',
+    carbsRow: 'کربوهیدرات',
+    fatRow: 'چربی',
+    calculatedWith: 'محاسبه‌شده با فرمول {formula}.',
+  },
+
+  settings: {
+    title: 'تنظیمات',
+    intro: 'این‌ها به حساب شما وابسته‌اند، پس روی هر دستگاهی که وارد شوید یکسان‌اند.',
+
+    languageTitle: 'زبان',
+    languageIntro: 'زبان محیط برنامه و ایمیل‌هایی که برایتان می‌فرستیم.',
+
+    themeTitle: 'ظاهر',
+    themeIntro: 'روشن، تیره، یا هر چه دستگاهتان تنظیم شده است.',
+    themeSystem: 'مانند دستگاهم',
+    themeLight: 'روشن',
+    themeDark: 'تیره',
+    themeSystemHint: 'از سیستم‌عامل شما پیروی می‌کند و با آن تغییر می‌کند.',
+
+    calendarTitle: 'گاه‌شمار',
+    calendarIntro: 'تاریخ‌های شما در کدام گاه‌شمار نمایش داده و انتخاب شوند.',
+    calendarGregorian: 'میلادی',
+    calendarPersian: 'شمسی (هجری خورشیدی)',
+    calendarHint:
+      'فقط نحوهٔ نمایش تاریخ‌ها را عوض می‌کند. هیچ‌چیزی که ثبت کرده‌اید به روز دیگری جابه‌جا نمی‌شود.',
+
+    guestNote: 'فعلاً روی همین دستگاه نگه داشته می‌شود. با ورود به حساب، انتخاب‌هایتان همراهتان می‌آیند.',
+    guestTitle: 'زبان و ظاهر',
+
+    saveFailed: 'این تنظیم ذخیره نشد.',
+    offlineNote: 'فقط روی این دستگاه ذخیره شد — سرور در دسترس نبود.',
+  },
+
+  sex: {
+    male: 'مرد',
+    female: 'زن',
+  },
+
+  meal: {
+    breakfast: 'صبحانه',
+    lunch: 'ناهار',
+    dinner: 'شام',
+    snack: 'میان‌وعده',
+  },
+
+  activityLevel: {
+    sedentary: 'کم‌تحرک — ورزش کم یا هیچ، کار پشت میز',
+    lightly_active: 'کمی فعال — ورزش ۱ تا ۳ روز در هفته',
+    moderately_active: 'نسبتاً فعال — ورزش ۳ تا ۵ روز در هفته',
+    very_active: 'بسیار فعال — ورزش سنگین ۶ تا ۷ روز در هفته',
+    extra_active: 'فوق‌العاده فعال — کار بدنی یا تمرین دو بار در روز',
+  },
+
+  activity: {
+    title: 'فعالیت',
+    intro: 'کالری‌ای که سوزانده‌اید. این‌ها به سقف روز افزوده می‌شوند، پس روزی که تمرین کرده‌اید می‌توانید بیشتر بخورید.',
+    logTitle: 'ثبت یک جلسه',
+    fromCatalogue: 'از فهرست تمرین‌ها',
+    ownWords: 'به زبان خودتان',
+    chooseExercise: 'تمرین',
+    choosePlaceholder: 'یک تمرین برگزینید…',
+    noMatchingExercise: 'تمرینی با این عبارت همخوان نیست.',
+    minutes: 'دقیقه',
+    estimateHint: 'بر پایهٔ {rate} در هر دقیقه حساب شده است. اگر جلسه‌تان سخت‌تر یا سبک‌تر بود، تغییرش دهید.',
+    overrideCalories: 'کالری سوزانده‌شده',
+    add: 'افزودن فعالیت',
+    adding: 'در حال افزودن…',
+    describeIt: 'چه کردید؟',
+    describePlaceholder: 'به یک دوست در اسباب‌کشی کمک کردم',
+    caloriesLabel: 'کالری سوزانده‌شده',
+    minutesOptional: 'دقیقه (اختیاری)',
+    incomplete: 'فعالیت را شرح دهید و بگویید چند کالری سوزانده است.',
+    saveFailed: 'این فعالیت ذخیره نشد.',
+    removeFailed: 'این فعالیت حذف نشد.',
+    loadFailed: 'این روز بارگذاری نشد.',
+    dayTitle: 'این روز',
+    burnedTotal: 'سوزانده‌شده در این روز',
+    nothingYet: 'برای این روز چیزی ثبت نشده است.',
+    minutesShort: 'دقیقه',
+    suggestionsTitle: 'پیشنهاد برای هدف شما',
+    suggestionsFor: 'چون هدفتان این است: {goal}',
+    suggestionsNoGoal: 'اطلاعات بدنی‌تان را پر کنید و هدفی برگزینید تا پیشنهادها اینجا نمایان شوند.',
+    suggestionsEmpty: 'هنوز تمرینی با هدف شما همخوان نیست. یک مربی می‌تواند اضافه کند.',
+    useThis: 'همین را ثبت کن',
+    howTo: 'روش درست انجام دادنش',
+    videoUnsupported: 'مرورگر شما نمی‌تواند این ویدیو را پخش کند.',
+    catalogueTitle: 'فهرست تمرین‌ها',
+    catalogueIntro: 'با همه به اشتراک گذاشته می‌شود. نرخ هر دقیقه در سقف کالری دیگران می‌نشیند، پس درست بودنش مهم است.',
+    catalogueSearch: 'جست‌وجوی تمرین‌ها',
+    newExercise: 'تمرین تازه',
+    exerciseName: 'نام',
+    exerciseRate: 'کالری سوزانده‌شده در هر دقیقه',
+    exerciseRateHint: 'برای فردی حدود ۷۰ کیلوگرم. پیاده‌روی حدود ۴، دویدن حدود ۹، اینتروال سنگین حدود ۱۱.',
+    exercisePurposes: 'برای چه خوب است؟',
+    exercisePurposesHint: 'دست‌کم یکی را برگزینید. همین تعیین می‌کند به چه کسی پیشنهاد شود.',
+    exerciseDescription: 'یادداشت (اختیاری)',
+    exerciseVideo: 'ویدیوی نمایشی (اختیاری)',
+    exerciseVideoHint: 'یک ویدیوی کوتاه MP4، WebM یا QuickTime که حرکت را درست نشان دهد. تا ۲۵ مگابایت.',
+    videoCurrent: 'تماشای ویدیوی کنونی',
+    videoRemove: 'حذفش کن',
+    videoWillBeRemoved: 'با ذخیره کردن، ویدیو حذف می‌شود.',
+    videoUploading: 'در حال بارگذاری…',
+    videoLabel: 'ویدیو',
+    exerciseSaveFailed: 'این تمرین ذخیره نشد.',
+    exerciseDeleteFailed: 'این تمرین حذف نشد.',
+    confirmDelete: '«{name}» از فهرست حذف شود؟ فعالیت‌هایی که پیش‌تر ثبت شده‌اند می‌مانند.',
+    definedBy: 'از {name}',
+    definedBySeed: 'پیش‌فرض',
+    perMinute: '{kcal} / دقیقه',
+    noExercises: 'هنوز تمرینی نیست.',
+    catalogueLoadFailed: 'فهرست تمرین‌ها بارگذاری نشد.',
+  },
+
+  admin: {
+    title: 'حساب‌ها',
+    intro: 'چه کسی چه کاری می‌تواند بکند. این صفحه فقط نام و نقش را نشان می‌دهد — هرگز اطلاعات بدنی یا دفترچهٔ کسی را.',
+    search: 'جست‌وجو با نام یا ایمیل',
+    tableUser: 'کاربر',
+    tableRoles: 'نقش‌ها',
+    tableJoined: 'عضو از',
+    unverified: 'تأییدنشده',
+    save: 'ذخیرهٔ نقش‌ها',
+    saved: 'نقش‌ها به‌روز شد.',
+    saveFailed: 'این نقش‌ها تغییر نکردند.',
+    loadFailed: 'فهرست حساب‌ها بارگذاری نشد.',
+    noUsers: 'حسابی همخوان نیست.',
+    you: 'شما',
+  },
+
+  goal: {
+    lose_weight: 'کاهش وزن — ۲۰٪ کمتر از حد نگه‌داشت',
+    lose_fat_slowly: 'کاهش آرام چربی — ۱۰٪ کمتر، آسان‌تر برای ادامه',
+    maintain_weight: 'حفظ وزن',
+    recomposition: 'بازسازی ترکیب بدن — کالری در حد نگه‌داشت، پروتئین بالا',
+    gain_muscle: 'افزایش عضله — ۱۰٪ بیشتر از حد نگه‌داشت',
+    gain_weight: 'افزایش وزن — ۲۰٪ بیشتر از حد نگه‌داشت',
+    endurance: 'تمرین استقامت — کالری در حد نگه‌داشت، کربوهیدرات بیشتر',
+    strength: 'تمرین قدرتی — ۵٪ بیشتر، پروتئین بالا',
+  },
+
+  purpose: {
+    build_muscle: 'عضله‌سازی',
+    fat_burning: 'چربی‌سوزی',
+    endurance: 'استقامت',
+    strength: 'قدرت',
+    mobility: 'تحرک‌پذیری',
+    general_fitness: 'تناسب عمومی',
+  },
+
+  role: {
+    ROLE_USER: 'کاربر',
+    ROLE_TRAINER: 'مربی',
+    ROLE_USER_ADMIN: 'مدیر کاربران',
+    trainerHint: 'می‌تواند تمرین‌ها را برای همه تعریف و اصلاح کند.',
+    adminHint: 'می‌تواند حساب‌ها را مدیریت کند و نقش بدهد.',
+  },
+
+  formula: {
+    'katch-mcardle': 'کچ-مک‌آردل',
+    'mifflin-st-jeor': 'میفلین-سنت جئور',
+  },
+
+  notFound: {
+    title: 'صفحه پیدا نشد',
+    body: 'این نشانی به جایی نمی‌رسد.',
+    back: 'بازگشت به نمای کلی',
+  },
+
+  errors: {
+    authentication_required: 'برای استفاده از این سرویس باید وارد شوید.',
+    authentication_failed: 'نشانی ایمیل یا گذرواژه نادرست است.',
+    access_denied: 'اجازهٔ این کار را ندارید.',
+    email_taken: 'حسابی با این نشانی ایمیل از قبل وجود دارد. به‌جایش وارد شوید.',
+    invalid_token: 'این پیوند تأیید نامعتبر است یا منقضی شده.',
+    too_many_requests: 'تلاش‌های بیش از حد. کمی صبر کنید و دوباره تلاش کنید.',
+    query_too_short: 'برای جست‌وجو دست‌کم دو نویسه وارد کنید.',
+    barcode_not_found: 'برای این بارکد فرآورده‌ای پیدا نشد. می‌توانید آن را به‌عنوان خوراک تازه اضافه کنید.',
+    barcode_taken: 'خوراکی با این بارکد از قبل در پایگاه داده هست.',
+    food_not_found: 'این خوراک وجود ندارد.',
+    recipe_not_found: 'این دستور وجود ندارد.',
+    entry_not_found: 'این ثبت وجود ندارد.',
+    activity_not_found: 'این فعالیت وجود ندارد.',
+    import_failed: 'این فرآورده وارد نشد. شاید از پایگاه دادهٔ مبدأ حذف شده باشد.',
+    unresolvable_portion: 'این مقدار برای این خوراک قابل تبدیل نیست. به‌جایش آن را به گرم وارد کنید.',
+    invalid_target: 'یا یک خوراک بفرستید یا یک دستور، نه هر دو و نه هیچ‌کدام.',
+    http_error: 'مشکلی پیش آمد. دوباره تلاش کنید.',
+  },
+}
+
+export default fa
